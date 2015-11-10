@@ -1,2 +1,2 @@
 # php_comp
-a php compiler
+a php compiler contains for now the lexer.
