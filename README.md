@@ -1,7 +1,14 @@
 # php_comp
 a php compiler contains for now the lexer.
 
-these includes to be replaced with : 
+these includes at line 23 :
+```
+#include <stdlib.h>
+class istream;
+#include <unistd.h>
+```
+
+to be replaced with : 
 
 ```
 #include<stdlib.h>
