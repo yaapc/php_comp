@@ -17,12 +17,20 @@
 			return yyparse();
 		}
 	};
-
-	enum type {
-		T_TYPE_INTEGER = 1,T_TYPE_FLOAT,T_TYPE_DOUBLE,T_TYPE_BOOLEAN,T_TYPE_
-	}
-	
+		
 %}
+
+%union{
+	struct R{
+		int i;
+		float f;
+		char c;
+		char* str;
+		int myLineNo;
+		int myColno;
+		int type;
+		}r;
+}
 
 %nonassoc _def_val_ CONFLICT_SR_LOWEST
 %left T_INCLUDE T_INCLUDE_ONCE T_EVAL T_REQUIRE T_REQUIRE_ONCE
@@ -136,30 +144,25 @@
 %token T_NS_SEPARATOR
 %token T_ELLIPSIS
 %token T_TYPE
-
+%token T_BOOLEAN_ARRAY
+%token T_BOOLEAN_CAST
+%token T_CALLBACK
+%token T_CHAR_ARRAY
+%token T_DOUBLE_ARRAY
+%token T_DOUBLE_COLON
+%token T_FLOAT_ARRAY
+%token T_INTEGER_ARRAY
+%token T_NAME
+%token T_STRING_ARRAY
+%token T_WRONG_VARIABLE
 %nonassoc right_arc left_arc
 %nonassoc CONFLICT_SR_HIGHEST
-
-%union{
-	struct R{
-		int i;
-		float f;
-		char c;
-		char* str;
-		int myLineNo;
-		int myColno;
-		int type;
-		}r;
-	}
-
-
-
 
 
 %%
 
 start:
-    top_statement_list                                      {  }
+    top_statement_list                                      {  cout << "HELLO WOOOORLD!"; }
 ;
 
 top_statement_list:
