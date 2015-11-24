@@ -3,6 +3,7 @@
 		#include <unistd.h>
 		#include <iostream>
 		#include <string>
+		#include "yacc.hpp"
 		using namespace std;
 		int lineNo = 0;
 		int colNo = 0;
@@ -13,8 +14,11 @@
 			yylval.r.myColno = colNo;
 			yylval.r.myLineNo = lineNo;
 			colNo += strlen(yytext);
-							*/
-}		
+							*/	   
+		}
+		enum type {
+		    T_TYPE_INTEGER = 1,T_TYPE_FLOAT,T_TYPE_DOUBLE,T_TYPE_BOOLEAN,T_TYPE_STRING,T_TYPE_CHAR
+	    };		
 %}
 DIGIT [0-9]
 LITERAL [a-zA-Z]
