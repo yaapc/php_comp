@@ -17,10 +17,14 @@
 			return yyparse();
 		}
 	};
+
+	enum type {
+		T_TYPE_INTEGER = 1,T_TYPE_FLOAT,T_TYPE_DOUBLE,T_TYPE_BOOLEAN,T_TYPE_
+	}
 	
 %}
 
-%nonassoc _def_val_ test test2
+%nonassoc _def_val_ CONFLICT_SR_LOWEST
 %left T_INCLUDE T_INCLUDE_ONCE T_EVAL T_REQUIRE T_REQUIRE_ONCE
 %left ','
 %left T_LOGICAL_OR
@@ -47,7 +51,7 @@
 %nonassoc T_INSTANCEOF
 %right '~' T_INC T_DEC T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST '@'
 %right T_POW
-%right '['
+%right '[' '{'
 %nonassoc T_NEW T_CLONE
 %token T_EXIT
 %token T_IF
@@ -131,10 +135,10 @@
 %token T_DIR
 %token T_NS_SEPARATOR
 %token T_ELLIPSIS
-
+%token T_TYPE
 
 %nonassoc right_arc left_arc
-
+%nonassoc CONFLICT_SR_HIGHEST
 
 %union{
 	struct R{
@@ -144,6 +148,7 @@
 		char* str;
 		int myLineNo;
 		int myColno;
+		int type;
 		}r;
 	}
 
@@ -286,7 +291,7 @@ inner_statement:
 
 statement:
       '{' inner_statement_list '}'                          
-    | T_IF parentheses_expr statement elseif_list else_single
+    | T_IF parentheses_expr statement elseif_list else_single %prec CONFLICT_SR_HIGHEST
           
     | T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';'
           
@@ -445,11 +450,10 @@ while_statement:
 
 elseif_list:
       /* empty */                                          
-    | elseif_list elseif                                   
-;
+    | elseif_list elseif
 
 elseif:
-      T_ELSEIF parentheses_expr statement                  
+      T_ELSEIF parentheses_expr statement               
 ;
 
 new_elseif_list:
@@ -462,9 +466,8 @@ new_elseif:
 ;
 
 else_single:
-      /* empty */                                          
-    | T_ELSE statement                                     
-;
+      /* empty */         %prec CONFLICT_SR_LOWEST                 
+    | T_ELSE statement    
 
 new_else_single:
       /* empty */                                          
@@ -956,7 +959,7 @@ new_expr_array_deref:
 ;
 
 object_access:
-      variable_or_new_expr T_OBJECT_OPERATOR object_property %prec test2
+      variable_or_new_expr T_OBJECT_OPERATOR object_property %prec CONFLICT_SR_LOWEST
           
     | variable_or_new_expr T_OBJECT_OPERATOR object_property argument_list
           
@@ -971,7 +974,7 @@ variable_or_new_expr:
 ;
 
 variable_without_objects:
-      reference_variable      %prec test            
+      reference_variable %prec CONFLICT_SR_LOWEST 
     | '$' variable_without_objects        
 ;
 
@@ -996,10 +999,10 @@ static_property_with_arrays:
 ;
 
 reference_variable:
-      reference_variable '[' dim_offset ']'     
-    | reference_variable '{' expr '}'           
-    | T_VARIABLE                                
-    | '$' '{' expr '}'                          
+      reference_variable '[' dim_offset ']' 
+    | reference_variable '{' expr '}' 
+    | T_VARIABLE 
+    | '$' '{' expr '}' 
 ;
 
 dim_offset:
