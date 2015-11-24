@@ -14,131 +14,7 @@
 			yylval.r.myLineNo = lineNo;
 			colNo += strlen(yytext);
 							*/
-		}
-		
-		enum yytokenType{
-			T_ABSTRACT = 258,
-			T_AND_EQUAL = 259,
-			T_ARRAY = 300,
-			T_ARRAY_CAST = 301, 
-			T_AS = 302,
-			T_BOOLEAN_AND = 303, 
-			T_BOOLEAN_CAST = 304,
-			T_BOOLEAN_OR = 305,
-			T_BREAK = 306,
-			T_CALLBACK = 307,
-			T_CASE = 308,
-			T_CATCH = 309,
-			T_CLASS = 310,
-			T_CLASS_C = 311,
-			T_CLONE = 312,
-			T_CLOSE_TAG = 313, 
-			T_CONCAT_EQUAL = 314,
-			T_CONST = 315,
-			T_CONTINUE = 316,
-			T_CURLY_OPEN = 317,
-			T_DEC = 318,
-			T_DECLARE =319, 
-			T_DEFAULT = 320,
-			T_DIR = 321,
-			T_DIV_EQUAL = 322,
-			T_DNUMBER = 323,
-			T_DO = 324,
-			T_DOUBLE_ARROW = 325, 
-			T_DOUBLE_CAST = 327,
-			T_DOUBLE_COLON = 328,
-			T_ECHO = 329,
-			T_ELLIPSIS =330, 
-			T_ELSE = 331,
-			T_ELSEIF = 332,
-			T_EMPTY = 333,
-			T_ENDDECLARE = 334,
-			T_ENDFOR = 335,
-			T_ENDFOREACH = 336,
-			T_ENDIF = 337,
-			T_ENDSWITCH =338, 
-			T_ENDWHILE = 339,
-			T_EVAL = 340,
-			T_EXIT = 341,
-			T_EXTENDS = 342,
-			T_FILE = 343,
-			T_FINAL = 344,
-			T_FINALLY = 345,
-			T_FOR = 346,
-			T_FOREACH =347, 
-			T_FUNCTION = 348,
-			T_GLOBAL =349,
-			T_GOTO = 350,
-			T_IF = 351,
-			T_IMPLEMENTS = 352,
-			T_INC = 353,
-			T_INCLUDE = 354, 
-			T_INCLUDE_ONCE = 355, 
-			T_INSTANCEOF = 356,
-			T_INSTEADOF = 357,
-			T_INTERFACE = 358,
-			T_INT_CAST = 359,
-			T_ISSET = 360,
-			T_IS_EQUAL = 361,
-			T_IS_GREATER_OR_EQUAL = 362, 
-			T_IS_IDENTICAL = 364,
-			T_IS_NOT_EQUAL = 365,
-			T_IS_NOT_IDENTICAL =366, 
-			T_IS_SMALLER_OR_EQUAL =367, 
-			T_LINE = 368,
-			T_LIST = 369,
-			T_LNUMBER = 370,
-			T_LOGICAL_AND =371, 
-			T_LOGICAL_OR = 372,
-			T_LOGICAL_XOR = 373,
-			T_MINUS_EQUAL = 374,
-			T_MOD_EQUAL = 375,
-			T_MUL_EQUAL = 376,
-			T_NAMESPACE = 377,
-			T_NEW = 378,
-			T_OBJECT_CAST = 379, 
-			T_OBJECT_OPERATOR =380, 
-			T_OPEN_TAG = 381,
-			T_OR_EQUAL = 382,
-			T_PLUS_EQUAL = 383,
-			T_POW = 384,
-			T_POW_EQUAL = 385, 
-			T_PRINT = 386,
-			T_PRIVATE = 387,
-			T_PUBLIC = 388,
-			T_PROTECTED = 389,
-			T_REQUIRE = 390,
-			T_REQUIRE_ONCE = 391, 
-			T_RETURN = 392,
-			T_SL = 393,
-			T_SL_EQUAL = 394, 
-			T_SR = 999,
-			T_SR_EQUAL = 395,
-			T_STATIC = 396,
-			T_STRING_CAST = 397, 
-			T_SWITCH = 398,
-			T_THROW = 399,
-			T_TRAIT = 400,
-			T_TRY = 401,
-			T_UNSET = 402,
-			T_UNSET_CAST = 403, 
-			T_USE = 404,
-			T_VAR = 405,
-			T_VARIABLE= 406, 
-			T_WHILE = 407,
-			T_XOR_EQUAL =408, 
-			T_YIELD = 409,
-			T_NAME = 410,
-			T_WRONG_VARIABLE = 411
-		};
-		
-		struct LVAL {
-			struct r {
-				int myColno = 0;
-				int myLineNo = 0;
-			} r;
-		} myyylval;
-		int yylval;
+}		
 %}
 DIGIT [0-9]
 LITERAL [a-zA-Z]
@@ -179,6 +55,11 @@ LITERAL [a-zA-Z]
 "(bool)"|"(boolean)"	{
 							doForReturn(yytext);
 							return T_BOOLEAN_CAST;	
+						}
+"boolean"               {
+							doForReturn(yytext);
+							yylval.r.type = T_TYPE_BOOLEAN;
+							return T_TYPE;
 						}
 "break"					{
 							doForReturn(yytext);
@@ -255,6 +136,16 @@ LITERAL [a-zA-Z]
 "=>"					{
 							doForReturn(yytext);
 							return T_DOUBLE_ARROW;	
+						}
+"double"			    {
+							doForReturn(yytext);
+							yylval.r.type = T_TYPE_DOUBLE;
+							return T_TYPE;
+						}
+"float"                 {
+							doForReturn(yytext);
+							yylval.r.type = T_TYPE_FLOAT;
+							return T_TYPE;
 						}
 "(real)"|"(double)"|"(float)"				{
 							doForReturn(yytext);
@@ -380,7 +271,12 @@ LITERAL [a-zA-Z]
 							doForReturn(yytext);
 							return T_INSTEADOF;	
 						}
-"(int)"|"(integer)"	{
+"int"                   {
+							doForReturn(yytext);
+							yylval.r.type = T_TYPE_INTEGER;
+							return T_TYPE;
+						}
+"(int)"|"(integer)"	    {
 							doForReturn(yytext);
 							return T_INT_CAST;	
 						}
@@ -532,6 +428,11 @@ LITERAL [a-zA-Z]
 							doForReturn(yytext);
 							return T_STATIC;	
 						}
+"string"				{
+							doForReturn(yytext);
+							yylval.r.type = T_TYPE_STRING;
+							return T_TYPE;
+						}
 "(string)"				{
 							doForReturn(yytext);
 							return T_STRING_CAST;	
@@ -580,6 +481,35 @@ LITERAL [a-zA-Z]
 							doForReturn(yytext);
 							return T_YIELD;	
 						}
+"char"					{
+							doForReturn(yytext);
+							yylval.r.type = T_TYPE_CHAR;
+							return T_TYPE;
+						}
+"boolean[]"				{
+							doForReturn(yytext);
+							return T_BOOLEAN_ARRAY;
+						}
+"string[]"				{
+							doForReturn(yytext);
+							return T_STRING_ARRAY;
+						}
+"char[]"				{
+							doForReturn(yytext);
+							return T_CHAR_ARRAY;
+						}
+"int[]"					{
+							doForReturn(yytext);
+							return T_INTEGER_ARRAY;
+						}
+"float[]"				{
+							doForReturn(yytext);
+							return T_FLOAT_ARRAY;
+						}
+"double[]"				{
+							doForReturn(yytext);
+							return T_DOUBLE_ARRAY;
+						}
 $[a-zA-Z_]({DIGIT}|{LITERAL})*	{
 							doForReturn(yytext);
 							return T_VARIABLE;
@@ -613,15 +543,13 @@ ${DIGIT}+.*             {
 <string>\"              {   
 							BEGIN INITIAL;
 							cout << "That was a STRING\n";
-						}
-
-
-						
+						}						
 .*	{
 		doForReturn(yytext);
 		return T_NAME;
 	}				
 %%
+/**
 int main()
 {	
 	FlexLexer* lexer = new yyFlexLexer;
@@ -632,7 +560,7 @@ int main()
 	cout << "Columns:" << colNo << "|Lines:" << lineNo;
     return 0;
 }
-/**
+
 	
 [+-]?[0-9]+                  {
 							doForReturn(yytext);
