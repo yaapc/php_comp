@@ -68,9 +68,9 @@
 %left T_ENDIF
 %token T_LNUMBER
 %token T_DNUMBER
+%token T_NS_SEPARATOR
 %token T_STRING
 %token T_STRING_VARNAME
-%token T_VARIABLE
 %token T_NUM_STRING
 %token T_INLINE_HTML
 %token T_CHARACTER
@@ -141,7 +141,6 @@
 %token T_NAMESPACE
 %token T_NS_C
 %token T_DIR
-%token T_NS_SEPARATOR
 %token T_ELLIPSIS
 %token T_TYPE
 %token T_BOOLEAN_ARRAY
@@ -155,6 +154,7 @@
 %token T_NAME
 %token T_STRING_ARRAY
 %token T_WRONG_VARIABLE
+%token T_VARIABLE
 %nonassoc right_arc left_arc
 %nonassoc CONFLICT_SR_HIGHEST
 
@@ -162,12 +162,13 @@
 %%
 
 start:
-    top_statement_list                                      {  cout << "HELLO WOOOORLD!"; }
+    top_statement_list                                      {  cout << "HELLO WOOOORLD!" << endl; }
+	| 'b'                                                   {  cout << "this is a lit";}
 ;
 
 top_statement_list:
       top_statement_list top_statement                      { }
-    | /* empty */                                           { }
+	  | /* empty */                                           { cout << "EMPTY" << endl; }
 ;
 
 reserved_non_modifiers:
@@ -189,9 +190,10 @@ identifier:
     | semi_reserved                                         { }
 ;
 
+
 namespace_name_parts:
       T_STRING                                              { }
-    | namespace_name_parts T_NS_SEPARATOR T_STRING          { }
+    | namespace_name_parts T_NS_SEPARATOR T_STRING %prec CONFLICT_SR_HIGHEST  { } 
 ;
 
 namespace_name:
@@ -199,9 +201,10 @@ namespace_name:
 ;
 
 top_statement:
-      statement                                             { }
+      statement                                             { cout << "this is a statement";}
     | function_declaration_statement                        { }
     | class_declaration_statement                           { }
+	| variable_decleration_statements                        { cout << "we have a variable declaration."; }
     | T_HALT_COMPILER
           {}
     | T_NAMESPACE namespace_name ';'                        { }
@@ -211,6 +214,20 @@ top_statement:
     | T_USE use_type use_declarations ';'                   
     | group_use_declaration ';'                             
     | T_CONST constant_declaration_list ';'                 
+;
+
+variable_decleration_statements:
+      type variable_list ';' { }
+; 
+
+variable_declaration_statement:
+      T_VARIABLE 
+	| T_VARIABLE '=' static_scalar
+;
+
+variable_list:
+	  variable_list ',' variable_declaration_statement { }
+	| variable_declaration_statement { }
 ;
 
 use_type:
@@ -293,8 +310,8 @@ inner_statement:
 ;
 
 statement:
-      '{' inner_statement_list '}'                          
-    | T_IF parentheses_expr statement elseif_list else_single %prec CONFLICT_SR_HIGHEST
+      '{' inner_statement_list '}'                           
+    | T_IF parentheses_expr statement elseif_list else_single %prec CONFLICT_SR_HIGHEST   
           
     | T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';'
           
@@ -321,13 +338,13 @@ statement:
     | T_FOREACH left_arc expr T_AS variable T_DOUBLE_ARROW foreach_variable right_arc foreach_statement
           
     | T_DECLARE left_arc declare_list right_arc declare_statement    
-    | ';'                                                 
+    | ';'                                              
     | T_TRY '{' inner_statement_list '}' catches optional_finally
           
     | T_THROW expr ';'  
     | T_GOTO T_STRING ';'                                  
-    | T_STRING ':'                                         
-    | error                                                
+    | T_STRING ':'                                       
+                                                
 ;
 
 catches:
@@ -504,6 +521,7 @@ type:
       name
     | T_ARRAY 
     | T_CALLABLE 
+	| T_TYPE
 ;
 
 optional_param_type:
@@ -650,7 +668,7 @@ for_expr:
 expr:
       variable       
     | list_expr '=' expr        
-    | variable '=' expr         
+    | variable '=' expr
     | variable '=' '&' variable 
     | variable '=' '&' new_expr 
     | new_expr      %prec _def_val_                                  
@@ -803,9 +821,9 @@ class_name:
 ;
 
 name:
-      namespace_name_parts                             
-    | T_NS_SEPARATOR namespace_name_parts              
-    | T_NAMESPACE T_NS_SEPARATOR namespace_name_parts  
+      namespace_name_parts                          
+    | T_NS_SEPARATOR namespace_name_parts         
+	| T_NAMESPACE T_NS_SEPARATOR namespace_name_parts 
 ;
 
 class_name_reference:
@@ -1004,7 +1022,7 @@ static_property_with_arrays:
 reference_variable:
       reference_variable '[' dim_offset ']' 
     | reference_variable '{' expr '}' 
-    | T_VARIABLE 
+    | type T_VARIABLE 
     | '$' '{' expr '}' 
 ;
 
@@ -1092,7 +1110,9 @@ int yylex()
 }
 void main(void)
 {
+	freopen("program.txt","r",stdin);
 	Parser* p = new Parser();
 	p->parse();
+	return; 
 	
 }
