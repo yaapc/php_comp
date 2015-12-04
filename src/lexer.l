@@ -113,6 +113,7 @@ inline_html.push_back(yytext[0]);
   "=" |
   "?" |
   ":" |
+  ";" |
   "|" |
   "^" |
   "&" |
