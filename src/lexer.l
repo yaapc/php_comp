@@ -28,7 +28,7 @@ DIGIT [0-9]
 LITERAL [a-zA-Z]
 %option noyywrap
 
-%x multiLineComment
+%x multi_line_comment
 %x string
 %x php eof_return
 
@@ -88,7 +88,7 @@ LITERAL [a-zA-Z]
   inline_html.push_back(yytext[0]);
 }
 
-<<EOF>> {
+<INITIAL><<EOF>> {
   inline_html.push_back(yytext[0]);
   l.log("T_INLINE_HTML");
   l.log(inline_html);
@@ -108,19 +108,50 @@ LITERAL [a-zA-Z]
   return 0;
 }
 
+<php>{
+  ("//"|"#").* {
+    l.log("SINGLE_LINE_COMMENT");
+  }
+
+  "/*" {
+    BEGIN multi_line_comment;
+    col_no += 2;
+    l.log("MULTI_LINE_COMMENT");
+  }
+
+  \n   {
+    col_no =0;
+    line_no++;
+  }
+
+  [ \t\r] {
+    ++col_no;
+  }
+}
+
+<multi_line_comment>{
+  "*/" {
+    BEGIN php;
+    col_no += 2;
+    l.log("END_MULTI_LINE_COMMENT");
+  }
+
+  <<EOF>> {l.log("unclosed comment"); return 0;}
+
+  . {
+    ++col_no;
+  }
+
+  \n {
+    ++line_no;
+    col_no = 0;
+  }
+}
+
 <php>"abstract"  {
   doForReturn(yytext);
   l.log("T_ABSTRACT");
   return T_ABSTRACT;
-}
-
-<php>\n   {
-  col_no =0;
-  line_no++;
-}
-
-<php>[ \t\r] {
-  ++col_no;
 }
 
 <php>{
@@ -861,18 +892,6 @@ LITERAL [a-zA-Z]
   l.log("T_DNUMBER");
   return T_DNUMBER;
 }
-
-<php>\/\*  {
-  BEGIN multiLineComment;
-  l.log("MULTI_LINE_COMMENT");
-}
-
-<multiLineComment>\*\/  {
-  BEGIN INITIAL;
-  l.log("END_MULTI_LINE_COMMENT");
-}
-
-<multiLineComment>[^\*\/]* {;}
 
 <php>\"  {
   BEGIN string;
