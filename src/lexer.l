@@ -7,7 +7,7 @@
   using namespace std;
   int line_no = 0;
   int col_no = 0;
-
+  string inline_html;
   void doForReturn(string yytext){
   //cout << yytext << endl;
   /*
@@ -25,629 +25,673 @@ LITERAL [a-zA-Z]
 
 %x multiLineComment
 %x string
+%x php eof_return
 
 %%
-"abstract"  {
+
+"<?php" |
+"<?" |
+"<%" {
+  BEGIN php;
+  yylval.r.token_type = NORMAL;
+  doForReturn(yytext);
+  return T_OPEN_TAG;
+}
+
+"<?=" |
+"<%=" {
+  BEGIN php;
+  yylval.r.token_type = WITH_ECHO;
+  doForReturn(yytext);
+  return T_OPEN_TAG;
+}
+
+<php>("?>"|"%>") {
+  BEGIN INITIAL;
+  return T_CLOSE_TAG;
+}
+
+(.|\n)/"<?" {
+  inline_html.push_back(yytext[0]);
+  yylval.r.str = new char[inline_html.size() + 1];
+  for (int i = 0; i < inline_html.size(); ++i)
+    yylval.r.str[i] = inline_html[i];
+  yylval.r.str[inline_html.size() + 1] = '\0';
+  inline_html.clear();
+  return T_INLINE_HTML;
+}
+
+. |
+\n {
+  inline_html.push_back(yytext[0]);
+}
+
+<<EOF>> {
+inline_html.push_back(yytext[0]);
+  yylval.r.str = new char[inline_html.size() + 1];
+  for (int i = 0; i < inline_html.size(); ++i)
+    yylval.r.str[i] = inline_html[i];
+  yylval.r.str[inline_html.size() + 1] = '\0';
+  inline_html.clear();
+  // put a dummy to input, and then switch to eof_return which is gonna return EOF
+  unput('e');
+  BEGIN eof_return;
+  return T_INLINE_HTML;
+}
+
+<eof_return>e return 0;
+
+<php>"abstract"  {
   doForReturn(yytext);
   return T_ABSTRACT;
 }
 
-"&="  {
+<php>"&="  {
   doForReturn(yytext);
   return T_AND_EQUAL;
 }
 
-"array()"  {
+<php>"array()"  {
   doForReturn(yytext);
   return T_ARRAY;
 }
 
-"(array)"  {
+<php>"(array)"  {
   doForReturn(yytext);
   return T_ARRAY_CAST;
 }
 
-"as"  {
+<php>"as"  {
   doForReturn(yytext);
   return T_AS;
 }
 
-"&&"  {
+<php>"&&"  {
   doForReturn(yytext);
   return T_BOOLEAN_AND;
 }
 
-"||"  {
+<php>"||"  {
   doForReturn(yytext);
   return T_BOOLEAN_OR;
 }
 
-"(bool)"|"(boolean)"  {
+<php>"(bool)"|"(boolean)"  {
   doForReturn(yytext);
 }
 
-"boolean"   {
+<php>"boolean"   {
   doForReturn(yytext);
   yylval.r.token_type = T_TYPE_BOOLEAN;
   return T_TYPE;
 }
 
-"break"  {
+<php>"break"  {
   doForReturn(yytext);
   return T_BREAK;
 }
 
-"callable"  {
+<php>"callable"  {
   doForReturn(yytext);
   return T_CALLBACK;
 }
 
-"case"  {
+<php>"case"  {
   doForReturn(yytext);
   return T_CASE;
 }
 
-"catch"  {
+<php>"catch"  {
   doForReturn(yytext);
   return T_CATCH;
 }
 
-"class"  {
+<php>"class"  {
   doForReturn(yytext);
   return T_CLASS;
 }
 
-"__CLASS__"  {
+<php>"__CLASS__"  {
   doForReturn(yytext);
   return T_CLASS_C;
 }
 
-"clone"  {
+<php>"clone"  {
   doForReturn(yytext);
   return T_CLONE;
 }
 
-"?>"|"%>"  {
-  doForReturn(yytext);
-  return T_CLOSE_TAG;
-}
-
-".="  {
+<php>".="  {
   doForReturn(yytext);
   return T_CONCAT_EQUAL;
 }
 
-"const"  {
+<php>"const"  {
   doForReturn(yytext);
   return T_CONST;
 }
 
-"continue"  {
+<php>"continue"  {
   doForReturn(yytext);
   return T_CONTINUE;
 }
 
-"{$"  {
+<php>"{$"  {
   doForReturn(yytext);
   return T_CURLY_OPEN;
 }
 
-"--"  {
+<php>"--"  {
   doForReturn(yytext);
   return T_DEC;
 }
 
-"declare"  {
+<php>"declare"  {
   doForReturn(yytext);
   return T_DECLARE;
 }
 
-"default"  {
+<php>"default"  {
   doForReturn(yytext);
   return T_DEFAULT;
 }
 
-"__DIR__"  {
+<php>"__DIR__"  {
   doForReturn(yytext);
   return T_DIR;
 }
 
-"/="  {
+<php>"/="  {
   doForReturn(yytext);
   return T_DIV_EQUAL;
 }
 
-"do"  {
+<php>"do"  {
   doForReturn(yytext);
   return T_DO;
 }
 
-"=>"  {
+<php>"=>"  {
   doForReturn(yytext);
   return T_DOUBLE_ARROW;
 }
 
-"double"  {
+<php>"double"  {
   doForReturn(yytext);
   yylval.r.token_type = T_TYPE_DOUBLE;
   return T_TYPE;
 }
 
-"float"   {
+<php>"float"   {
   doForReturn(yytext);
   yylval.r.token_type = T_TYPE_FLOAT;
   return T_TYPE;
 }
 
-"(real)"|"(double)"|"(float)"  {
+<php>("(real)"|"(double)"|"(float)")  {
   doForReturn(yytext);
   return T_DOUBLE_CAST;
 }
 
-"::"  {
+<php>"::"  {
   doForReturn(yytext);
   return T_PAAMAYIM_NEKUDOTAYIM;
 }
 
-"echo"  {
+<php>"echo"  {
   doForReturn(yytext);
   return T_ECHO;
 }
 
-"..."  {
+<php>"..."  {
   doForReturn(yytext);
   return T_ELLIPSIS;
 }
 
-"else"  {
+<php>"else"  {
   doForReturn(yytext);
   return T_ELSE;
 }
 
-"elseif"  {
+<php>"elseif"  {
   doForReturn(yytext);
   return T_ELSEIF;
 }
 
-"empty"  {
+<php>"empty"  {
   doForReturn(yytext);
   return T_EMPTY;
 }
 
-"enddeclare"  {
+<php>"enddeclare"  {
   doForReturn(yytext);
   return T_ENDDECLARE;
 }
 
-"endfor"  {
+<php>"endfor"  {
   doForReturn(yytext);
   return T_ENDFOR;
 }
 
-"endforeach"  {
+<php>"endforeach"  {
   doForReturn(yytext);
   return T_ENDFOREACH;
 }
 
-"endif"  {
+<php>"endif"  {
   doForReturn(yytext);
   return T_ENDIF;
 }
 
-"endswitch"  {
+<php>"endswitch"  {
   doForReturn(yytext);
   return T_ENDSWITCH;
 }
 
-"endwhile"  {
+<php>"endwhile"  {
   doForReturn(yytext);
   return T_ENDWHILE;
 }
 
-"eval()"  {
+<php>"eval()"  {
   doForReturn(yytext);
   return T_EVAL;
 }
 
-"exit"|"die"  {
+<php>("exit"|"die") {
   doForReturn(yytext);
   return T_EXIT;
 }
 
-"extends"  {
+<php>"extends"  {
   doForReturn(yytext);
   return T_EXTENDS;
 }
 
-"__FILE__"  {
+<php>"__FILE__"  {
   doForReturn(yytext);
   return T_FILE;
 }
 
-"final"  {
+<php>"final"  {
   doForReturn(yytext);
   return T_FINAL;
 }
 
-"finally"  {
+<php>"finally"  {
   doForReturn(yytext);
   return T_FINALLY;
 }
 
-"for"  {
+<php>"for"  {
   doForReturn(yytext);
   return T_FOR;
 }
 
-"foreach"  {
+<php>"foreach"  {
   doForReturn(yytext);
   return T_FOREACH;
 }
 
-"function"  {
+<php>"function"  {
   doForReturn(yytext);
   return T_FUNCTION;
 }
 
-"global"  {
+<php>"global"  {
   doForReturn(yytext);
   return T_GLOBAL;
 }
 
-"goto"  {
+<php>"goto"  {
   doForReturn(yytext);
   return T_GOTO;
 }
 
-"if"  {
+<php>"if"  {
   doForReturn(yytext);
   return T_IF;
 }
 
-"implements"  {
+<php>"implements"  {
   doForReturn(yytext);
   return T_IMPLEMENTS;
 }
 
-"++"  {
+<php>"++"  {
   doForReturn(yytext);
   return T_INC;
 }
 
-"include"  {
+<php>"include"  {
   doForReturn(yytext);
   return T_INCLUDE;
 }
 
-"include_once"  {
+<php>"include_once"  {
   doForReturn(yytext);
   return T_INCLUDE_ONCE;
 }
 
-"instanceof"  {
+<php>"instanceof"  {
   doForReturn(yytext);
   return T_INSTANCEOF;
 }
 
-"insteadof"  {
+<php>"insteadof"  {
   doForReturn(yytext);
   return T_INSTEADOF;
 }
 
-"int"   {
+<php>"int"   {
   doForReturn(yytext);
   yylval.r.token_type = T_TYPE_INTEGER;
   return T_TYPE;
 }
 
-"(int)"|"(integer)"  {
+<php>"(int)"|"(integer)"  {
   doForReturn(yytext);
   return T_INT_CAST;
 }
 
-"interface"  {
+<php>"interface"  {
   doForReturn(yytext);
   return T_INTERFACE;
 }
 
-"isset"  {
+<php>"isset"  {
   doForReturn(yytext);
   return T_ISSET;
 }
 
-"=="  {
+<php>"=="  {
   doForReturn(yytext);
   return T_IS_EQUAL;
 }
 
-">="  {
+<php>">="  {
   doForReturn(yytext);
   return T_IS_GREATER_OR_EQUAL;
 }
 
-"==="  {
+<php>"==="  {
   doForReturn(yytext);
   return T_IS_IDENTICAL;
 }
 
-"!="|"<>"  {
+<php>("!="|"<>")  {
   doForReturn(yytext);
   return T_IS_NOT_EQUAL;
 }
 
-"!=="  {
+<php>"!=="  {
   doForReturn(yytext);
   return T_IS_NOT_IDENTICAL;
 }
 
-"<="  {
+<php>"<="  {
   doForReturn(yytext);
   return T_IS_SMALLER_OR_EQUAL;
 }
 
-"__LINE__"  {
+<php>"__LINE__"  {
   doForReturn(yytext);
   return T_LINE;
 }
 
-"list()"  {
+<php>"list()"  {
   doForReturn(yytext);
   return T_LIST;
 }
 
-"and"  {
+<php>"and"  {
   doForReturn(yytext);
   return T_LOGICAL_AND;
 }
 
-"or"  {
+<php>"or"  {
   doForReturn(yytext);
   return T_LOGICAL_OR;
 }
 
-"xor"  {
+<php>"xor"  {
   doForReturn(yytext);
   return T_LOGICAL_XOR;
 }
 
-"-="  {
+<php>"-="  {
   doForReturn(yytext);
   return T_MINUS_EQUAL;
 }
 
-"%="  {
+<php>"%="  {
   doForReturn(yytext);
   return T_MOD_EQUAL;
 }
 
-"*="  {
+<php>"*="  {
   doForReturn(yytext);
   return T_MUL_EQUAL;
 }
 
-"namespace"  {
+<php>"namespace"  {
   doForReturn(yytext);
   return T_NAMESPACE;
 }
 
-"new"  {
+<php>"new"  {
   doForReturn(yytext);
   return T_NEW;
 }
 
-"(object)"  {
+<php>"(object)"  {
   doForReturn(yytext);
   return T_OBJECT_CAST;
 }
 
-"->"  {
+<php>"->"  {
   doForReturn(yytext);
   return T_OBJECT_OPERATOR;
 }
 
-"<?php"|"<?"|"<%"  {
-  doForReturn(yytext);
-  return T_OPEN_TAG;
-}
-
-"|="  {
+<php>"|="  {
   doForReturn(yytext);
   return T_OR_EQUAL;
 }
 
-"+="  {
+<php>"+="  {
   doForReturn(yytext);
   return T_PLUS_EQUAL;
 }
 
-"**"  {
+<php>"**"  {
   doForReturn(yytext);
   return T_POW;
 }
 
-"**="  {
+<php>"**="  {
   doForReturn(yytext);
   return T_POW_EQUAL;
 }
 
-"print()"  {
+<php>"print()"  {
   doForReturn(yytext);
   return T_PRINT;
 }
 
-"private"  {
+<php>"private"  {
   doForReturn(yytext);
   return T_PRIVATE;
 }
 
-"public"  {
+<php>"public"  {
   doForReturn(yytext);
   return T_PUBLIC;
 }
 
-"protected"  {
+<php>"protected"  {
   doForReturn(yytext);
   return T_PROTECTED;
 }
 
-"require"  {
+<php>"require"  {
   doForReturn(yytext);
   return T_REQUIRE;
 }
 
-"require_once"  {
+<php>"require_once"  {
   doForReturn(yytext);
   return T_REQUIRE_ONCE;
 }
 
-"return"  {
+<php>"return"  {
   doForReturn(yytext);
   return T_RETURN;
 }
 
-"<<"  {
+<php>"<<"  {
   doForReturn(yytext);
   return T_SL;
 }
 
-"<<="  {
+<php>"<<="  {
   doForReturn(yytext);
   return T_SL_EQUAL;
 }
 
-">>"  {
+<php>">>"  {
   doForReturn(yytext);
   return T_SR;
 }
 
-">>="  {
+<php>">>="  {
   doForReturn(yytext);
   return T_SR_EQUAL;
 }
 
-"static"  {
+<php>"static"  {
   doForReturn(yytext);
   return T_STATIC;
 }
 
-"string"  {
+<php>"string"  {
   doForReturn(yytext);
   yylval.r.token_type = T_TYPE_STRING;
   return T_TYPE;
 }
 
-"(string)"  {
+<php>"(string)"  {
   doForReturn(yytext);
   return T_STRING_CAST;
 }
 
-"switch"  {
+<php>"switch"  {
   doForReturn(yytext);
   return T_SWITCH;
 }
 
-"throw"  {
+<php>"throw"  {
   doForReturn(yytext);
   return T_THROW;
 }
 
-"trait"  {
+<php>"trait"  {
   doForReturn(yytext);
   return T_TRAIT;
 }
 
-"try"  {
+<php>"try"  {
   doForReturn(yytext);
   return T_TRY;
 }
 
-"unset()"  {
+<php>"unset()"  {
   doForReturn(yytext);
   return T_UNSET;
 }
 
-"(unset)"  {
+<php>"(unset)"  {
   doForReturn(yytext);
   return T_UNSET_CAST;
 }
 
-"use"  {
+<php>"use"  {
   doForReturn(yytext);
   return T_USE;
 }
 
-"var"  {
+<php>"var"  {
   doForReturn(yytext);
   return T_VAR;
 }
 
-"while"  {
+<php>"while"  {
   doForReturn(yytext);
   return T_WHILE;
 }
 
-"^="  {
+<php>"^="  {
   doForReturn(yytext);
   return T_XOR_EQUAL;
 }
 
-"yield"  {
+<php>"yield"  {
   doForReturn(yytext);
   return T_YIELD;
 }
 
-"char"  {
+<php>"char"  {
   doForReturn(yytext);
   yylval.r.token_type = T_TYPE_CHAR;
   return T_TYPE;
 }
 
-"boolean[]"  {
+<php>"boolean[]"  {
   doForReturn(yytext);
 }
 
-"string[]"  {
+<php>"string[]"  {
   doForReturn(yytext);
 }
 
-"char[]"  {
+<php>"char[]"  {
   doForReturn(yytext);
 }
 
-"int[]"  {
+<php>"int[]"  {
   doForReturn(yytext);
 }
 
-"float[]"  {
+<php>"float[]"  {
   doForReturn(yytext);
 }
 
-"double[]"  {
+<php>"double[]"  {
   doForReturn(yytext);
 }
 
-$[a-zA-Z_]({DIGIT}|{LITERAL})*  {
+<php>$[a-zA-Z_]({DIGIT}|{LITERAL})*  {
   doForReturn(yytext);
   return T_VARIABLE;
 }
 
-${DIGIT}+.*   {
+<php>${DIGIT}+.*   {
   doForReturn(yytext);
 }
 
-[+-]?({DIGIT}*\.?{DIGIT}+|{DIGIT}+\.) {
+<php>[+-]?({DIGIT}*\.?{DIGIT}+|{DIGIT}+\.) {
   doForReturn(yytext);
   return T_DNUMBER;
 }
 
-\n   {
+<php>\n   {
   //yylval.r.col_no = col_no;
   //yylval.r.line_no = line_no;
   col_no =0;
   line_no++;
 }
 
-\/\*  {
+<php>\/\*  {
   BEGIN multiLineComment;
 }
 
@@ -657,7 +701,7 @@ ${DIGIT}+.*   {
 }
 
 <multiLineComment>[^\*\/]* {;}
-\"  {
+<php>\"  {
   BEGIN string;
 }
 
@@ -668,7 +712,7 @@ ${DIGIT}+.*   {
   cout << "That was a STRING\n";
 }
 
-.  {
+<php>.  {
   doForReturn(yytext);
   return T_BAD_INPUT;
 }

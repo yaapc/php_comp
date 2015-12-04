@@ -5,7 +5,7 @@
 
 %}
 
-%nonassoc _def_val_ test test2
+%nonassoc _def_val_ test test2 low_prec
 %left T_INCLUDE T_INCLUDE_ONCE T_EVAL T_REQUIRE T_REQUIRE_ONCE
 %left ','
 %left T_LOGICAL_OR
@@ -104,7 +104,6 @@
 %token T_COMMENT
 %token T_DOC_COMMENT
 %token T_OPEN_TAG
-%token T_OPEN_TAG_WITH_ECHO
 %token T_CLOSE_TAG
 %token T_WHITESPACE
 %token T_START_HEREDOC
@@ -138,7 +137,12 @@
 %%
 
 start:
-  top_statement_list                    {  }
+  optional_inline_html T_OPEN_TAG top_statement_list T_CLOSE_TAG optional_inline_html  {  }
+;
+
+optional_inline_html:
+    T_INLINE_HTML
+  | /* empty */ %prec low_prec
 ;
 
 top_statement_list:
