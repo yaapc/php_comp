@@ -86,6 +86,37 @@ inline_html.push_back(yytext[0]);
   return T_ABSTRACT;
 }
 
+<php>{
+  "\\" |
+  "," |
+  "=" |
+  "?" |
+  ":" |
+  "|" |
+  "^" |
+  "&" |
+  "<" |
+  ">" |
+  "+" |
+  "-" |
+  "." |
+  "*" |
+  "/" |
+  "%" |
+  "!" |
+  "~" |
+  "@" |
+  "[" |
+  "]" |
+  "{" |
+  "}" |
+  "(" |
+  ")" {
+    doForReturn(yytext);
+    return yytext[0];
+  }
+}
+
 <php>"&="  {
   doForReturn(yytext);
   return T_AND_EQUAL;

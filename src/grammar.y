@@ -32,7 +32,7 @@
 %nonassoc T_INSTANCEOF
 %right '~' T_INC T_DEC T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST '@'
 %right T_POW
-%right '[' '{'
+%left '[' '{' ']' '}'
 %nonassoc T_NEW T_CLONE
 %token T_EXIT
 %token T_IF
@@ -118,7 +118,7 @@
 %token T_ELLIPSIS
 %token T_CALLBACK
 %token T_BAD_INPUT
-%nonassoc right_arc left_arc
+%left '(' ')'
 
 
 %union {
@@ -280,7 +280,7 @@ statement:
 
   | T_WHILE parentheses_expr while_statement
   | T_DO statement T_WHILE parentheses_expr ';'
-  | T_FOR left_arc for_expr ';'  for_expr ';' for_expr right_arc for_statement
+  | T_FOR '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
 
   | T_SWITCH parentheses_expr switch_case_list
   | T_BREAK ';'
@@ -295,12 +295,12 @@ statement:
   | T_ECHO expr_list ';'
   | T_INLINE_HTML
   | expr ';'
-  | T_UNSET left_arc variables_list right_arc ';'
-  | T_FOREACH left_arc expr T_AS foreach_variable right_arc foreach_statement
+  | T_UNSET '(' variables_list ')' ';'
+  | T_FOREACH '(' expr T_AS foreach_variable ')' foreach_statement
 
-  | T_FOREACH left_arc expr T_AS variable T_DOUBLE_ARROW foreach_variable right_arc foreach_statement
+  | T_FOREACH '(' expr T_AS variable T_DOUBLE_ARROW foreach_variable ')' foreach_statement
 
-  | T_DECLARE left_arc declare_list right_arc declare_statement
+  | T_DECLARE '(' declare_list ')' declare_statement
   | ';'
   | T_TRY '{' inner_statement_list '}' catches optional_finally
 
@@ -315,7 +315,7 @@ catches:
 ;
 
 catch:
-  T_CATCH left_arc name T_VARIABLE right_arc '{' inner_statement_list '}'
+  T_CATCH '(' name T_VARIABLE ')' '{' inner_statement_list '}'
 
 ;
 
@@ -340,7 +340,7 @@ optional_ellipsis:
 ;
 
 function_declaration_statement:
-  T_FUNCTION optional_ref T_STRING left_arc parameter_list right_arc optional_return_type '{' inner_statement_list '}'
+  T_FUNCTION optional_ref T_STRING '(' parameter_list ')' optional_return_type '{' inner_statement_list '}'
 
 ;
 
@@ -498,9 +498,9 @@ optional_return_type:
 ;
 
 argument_list:
-    left_arc right_arc
-  | left_arc non_empty_argument_list right_arc
-  | left_arc yield_expr right_arc
+    '(' ')'
+  | '(' non_empty_argument_list ')'
+  | '(' yield_expr ')'
 ;
 
 non_empty_argument_list:
@@ -543,7 +543,7 @@ class_statement_list:
 class_statement:
     variable_modifiers property_declaration_list ';'
   | T_CONST class_const_list ';'
-  | method_modifiers T_FUNCTION optional_ref identifier left_arc parameter_list right_arc optional_return_type method_body
+  | method_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body
 
   | T_USE name_list trait_adaptations
 ;
@@ -683,13 +683,13 @@ expr:
   | expr T_IS_GREATER_OR_EQUAL expr
   | expr T_INSTANCEOF class_name_reference
   | parentheses_expr
-  /* we need a separate left_arc new_expr right_arc rule to avoid problems caused by a s/r conflict */
-  | left_arc new_expr right_arc
+  /* we need a separate '(' new_expr ')' rule to avoid problems caused by a s/r conflict */
+  | '(' new_expr ')'
   | expr '?' expr ':' expr
   | expr '?' ':' expr
   | expr T_COALESCE expr
-  | T_ISSET left_arc variables_list right_arc
-  | T_EMPTY left_arc expr right_arc
+  | T_ISSET '(' variables_list ')'
+  | T_EMPTY '(' expr ')'
   | T_INCLUDE expr
   | T_INCLUDE_ONCE expr
   | T_EVAL parentheses_expr
@@ -711,15 +711,15 @@ expr:
   | T_PRINT expr
   | T_YIELD
   | T_YIELD_FROM expr
-  | T_FUNCTION optional_ref left_arc parameter_list right_arc lexical_vars optional_return_type    '{' inner_statement_list '}'
+  | T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars optional_return_type    '{' inner_statement_list '}'
 
-  | T_STATIC T_FUNCTION optional_ref left_arc parameter_list right_arc lexical_vars optional_return_type    '{' inner_statement_list '}'
+  | T_STATIC T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars optional_return_type    '{' inner_statement_list '}'
 
 ;
 
 parentheses_expr:
-    left_arc expr right_arc
-  | left_arc yield_expr right_arc
+    '(' expr ')'
+  | '(' yield_expr ')'
 ;
 
 yield_expr:
@@ -728,7 +728,7 @@ yield_expr:
 ;
 
 array_expr:
-    T_ARRAY left_arc array_pair_list right_arc
+    T_ARRAY '(' array_pair_list ')'
   | '[' array_pair_list ']'
 ;
 
@@ -753,7 +753,7 @@ new_expr:
 
 lexical_vars:
     /* empty */
-  | T_USE left_arc lexical_var_list right_arc
+  | T_USE '(' lexical_var_list ')'
 ;
 
 lexical_var_list:
@@ -815,7 +815,7 @@ object_access_for_dcnr:
 
 exit_expr:
     /* empty */
-  | left_arc right_arc
+  | '(' ')'
   | parentheses_expr
 ;
 
@@ -853,7 +853,7 @@ static_scalar:
     common_scalar
   | class_name T_PAAMAYIM_NEKUDOTAYIM identifier
   | name
-  | T_ARRAY left_arc static_array_pair_list right_arc
+  | T_ARRAY '(' static_array_pair_list ')'
   | '[' static_array_pair_list ']'
   | static_operation
 ;
@@ -891,7 +891,7 @@ static_operation:
   | static_scalar '?' static_scalar ':' static_scalar
   | static_scalar '?' ':' static_scalar
   | static_scalar '[' static_scalar ']'
-  | left_arc static_scalar right_arc
+  | '(' static_scalar ')'
 ;
 
 constant:
@@ -937,7 +937,7 @@ variable:
 ;
 
 new_expr_array_deref:
-    left_arc new_expr right_arc '[' dim_offset ']'
+    '(' new_expr ')' '[' dim_offset ']'
   | new_expr_array_deref '[' dim_offset ']'
     /* alternative array syntax missing intentionally */
 ;
@@ -954,7 +954,7 @@ object_access:
 
 variable_or_new_expr:
     variable
-  | left_arc new_expr right_arc
+  | '(' new_expr ')'
 ;
 
 variable_without_objects:
@@ -1001,7 +1001,7 @@ object_property:
 ;
 
 list_expr:
-    T_LIST left_arc list_expr_elements right_arc
+    T_LIST '(' list_expr_elements ')'
 ;
 
 list_expr_elements:
