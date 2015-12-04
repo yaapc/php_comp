@@ -4,3 +4,4 @@ src/grammar.cpp
 src/grammar.hpp
 src/grammar.output
 src/lexer.cpp
+lexer_log.txt
