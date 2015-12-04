@@ -5,15 +5,15 @@
   #include "grammar.hpp"
   #include "definitions.hpp"
   using namespace std;
-  int lineNo = 0;
-  int colNo = 0;
+  int line_no = 0;
+  int col_no = 0;
 
   void doForReturn(string yytext){
   //cout << yytext << endl;
   /*
-  yylval.r.myColno = colNo;
-  yylval.r.myLineNo = lineNo;
-  colNo += strlen(yytext);
+  yylval.r.col_no = col_no;
+  yylval.r.line_no = line_no;
+  col_no += strlen(yytext);
   */
   }
 
@@ -58,7 +58,7 @@ LITERAL [a-zA-Z]
   }
 "boolean"   {
   doForReturn(yytext);
-  yylval.r.type = T_TYPE_BOOLEAN;
+  yylval.r.token_type = T_TYPE_BOOLEAN;
   return T_TYPE;
   }
 "break"  {
@@ -139,12 +139,12 @@ LITERAL [a-zA-Z]
   }
 "double"  {
   doForReturn(yytext);
-  yylval.r.type = T_TYPE_DOUBLE;
+  yylval.r.token_type = T_TYPE_DOUBLE;
   return T_TYPE;
   }
 "float"   {
   doForReturn(yytext);
-  yylval.r.type = T_TYPE_FLOAT;
+  yylval.r.token_type = T_TYPE_FLOAT;
   return T_TYPE;
   }
 "(real)"|"(double)"|"(float)"  {
@@ -273,7 +273,7 @@ LITERAL [a-zA-Z]
   }
 "int"   {
   doForReturn(yytext);
-  yylval.r.type = T_TYPE_INTEGER;
+  yylval.r.token_type = T_TYPE_INTEGER;
   return T_TYPE;
   }
 "(int)"|"(integer)"  {
@@ -430,7 +430,7 @@ LITERAL [a-zA-Z]
   }
 "string"  {
   doForReturn(yytext);
-  yylval.r.type = T_TYPE_STRING;
+  yylval.r.token_type = T_TYPE_STRING;
   return T_TYPE;
   }
 "(string)"  {
@@ -483,7 +483,7 @@ LITERAL [a-zA-Z]
   }
 "char"  {
   doForReturn(yytext);
-  yylval.r.type = T_TYPE_CHAR;
+  yylval.r.token_type = T_TYPE_CHAR;
   return T_TYPE;
   }
 "boolean[]"  {
@@ -516,10 +516,10 @@ ${DIGIT}+.*   {
   return T_DNUMBER;
   }
 \n   {
-  //yylval.r.myColno = colNo;
-  //yylval.r.myLineNo = lineNo;
-  colNo =0;
-  lineNo++;
+  //yylval.r.col_no = col_no;
+  //yylval.r.line_no = line_no;
+  col_no =0;
+  line_no++;
   }
 \/\*  {
   BEGIN multiLineComment;

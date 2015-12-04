@@ -128,9 +128,9 @@
   float f;
   char c;
   char* str;
-  int myLineNo;
-  int myColno;
-  int type;
+  int line_no;
+  int col_no;
+  int token_type;
   } r;
 }
 
