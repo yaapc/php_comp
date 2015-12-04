@@ -43,7 +43,7 @@
 %token T_DNUMBER
 %token T_STRING
 %token T_STRING_VARNAME
-%token T_TYPE
+%token T_PRIMITIVE
 %token T_VARIABLE
 %token T_NUM_STRING
 %left T_INLINE_HTML

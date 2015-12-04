@@ -5,11 +5,11 @@ int yylex(void);
 int yyparse();
 void yyerror(char *);
 
-enum type {
-  T_TYPE_INTEGER = 1,T_TYPE_FLOAT,T_TYPE_DOUBLE,T_TYPE_BOOLEAN,T_TYPE_STRING,T_TYPE_CHAR
+enum primitive {
+  T_PRIMITIVE_INTEGER = 1,T_PRIMITIVE_FLOAT,T_PRIMITIVE_DOUBLE,T_PRIMITIVE_BOOLEAN,T_PRIMITIVE_STRING,T_PRIMITIVE_CHAR
 };
 
-enum tag_type {
+enum open_tag_type {
   NORMAL, WITH_ECHO
 };
 

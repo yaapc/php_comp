@@ -227,13 +227,6 @@ LITERAL [a-zA-Z]
   doForReturn(yytext);
 }
 
-<php>"boolean"   {
-  doForReturn(yytext);
-  l.log("T_PRIMITIVE: BOOLEAN");
-  yylval.r.token_type = T_TYPE_BOOLEAN;
-  return T_TYPE;
-}
-
 <php>"break"  {
   doForReturn(yytext);
   l.log("T_BREAK");
@@ -340,20 +333,6 @@ LITERAL [a-zA-Z]
   doForReturn(yytext);
   l.log("T_DOUBLE_ARROW");
   return T_DOUBLE_ARROW;
-}
-
-<php>"double"  {
-  doForReturn(yytext);
-  l.log("T_PRIMITIVE: T_DOUBLE");
-  yylval.r.token_type = T_TYPE_DOUBLE;
-  return T_TYPE;
-}
-
-<php>"float"   {
-  doForReturn(yytext);
-  l.log("T_PRIMITIVE: T_FLOAT");
-  yylval.r.token_type = T_TYPE_FLOAT;
-  return T_TYPE;
 }
 
 <php>("(real)"|"(double)"|"(float)")  {
@@ -539,13 +518,6 @@ LITERAL [a-zA-Z]
   doForReturn(yytext);
   l.log("T_INSTEADOF");
   return T_INSTEADOF;
-}
-
-<php>"int"   {
-  doForReturn(yytext);
-  l.log("T_PRIMITIVE: T_INT");
-  yylval.r.token_type = T_TYPE_INTEGER;
-  return T_TYPE;
 }
 
 <php>"(int)"|"(integer)"  {
@@ -768,13 +740,6 @@ LITERAL [a-zA-Z]
   return T_STATIC;
 }
 
-<php>"string"  {
-  doForReturn(yytext);
-  l.log("T_PRIMITIVE: STRING");
-  yylval.r.token_type = T_TYPE_STRING;
-  return T_TYPE;
-}
-
 <php>"(string)"  {
   doForReturn(yytext);
   return T_STRING_CAST;
@@ -845,35 +810,53 @@ LITERAL [a-zA-Z]
   return T_YIELD;
 }
 
+<php>"int"   {
+  doForReturn(yytext);
+  l.log("T_PRIMITIVE: T_INT");
+  yylval.r.token_type = T_PRIMITIVE_INTEGER;
+  return T_PRIMITIVE;
+}
+
+<php>"double"  {
+  doForReturn(yytext);
+  l.log("T_PRIMITIVE: T_DOUBLE");
+  yylval.r.token_type = T_PRIMITIVE_DOUBLE;
+  return T_PRIMITIVE;
+}
+
+<php>"float"   {
+  doForReturn(yytext);
+  l.log("T_PRIMITIVE: T_FLOAT");
+  yylval.r.token_type = T_PRIMITIVE_FLOAT;
+  return T_PRIMITIVE;
+}
+
 <php>"char"  {
   doForReturn(yytext);
   l.log("T_PRIMITIVE: T_CHAR");
-  yylval.r.token_type = T_TYPE_CHAR;
-  return T_TYPE;
+  yylval.r.token_type = T_PRIMITIVE_CHAR;
+  return T_PRIMITIVE;
 }
 
-<php>"boolean[]"  {
+<php>"boolean"   {
   doForReturn(yytext);
+  l.log("T_PRIMITIVE: BOOLEAN");
+  yylval.r.token_type = T_PRIMITIVE_BOOLEAN;
+  return T_PRIMITIVE;
 }
 
-<php>"string[]"  {
+<php>"string"   {
   doForReturn(yytext);
+  l.log("T_PRIMITIVE: STRING");
+  yylval.r.token_type = T_PRIMITIVE_STRING;
+  return T_PRIMITIVE;
 }
 
-<php>"char[]"  {
+<php>"boolean"   {
   doForReturn(yytext);
-}
-
-<php>"int[]"  {
-  doForReturn(yytext);
-}
-
-<php>"float[]"  {
-  doForReturn(yytext);
-}
-
-<php>"double[]"  {
-  doForReturn(yytext);
+  l.log("T_PRIMITIVE: BOOLEAN");
+  yylval.r.token_type = T_PRIMITIVE_BOOLEAN;
+  return T_PRIMITIVE;
 }
 
 <php>$[a-zA-Z_]({DIGIT}|{LITERAL})*  {
