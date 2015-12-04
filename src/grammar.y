@@ -449,7 +449,7 @@ new_elseif:
 ;
 
 else_single:
-    /* empty */
+    /* empty */ %prec low_prec
   | T_ELSE statement
 ;
 
