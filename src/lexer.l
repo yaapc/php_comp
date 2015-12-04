@@ -186,7 +186,7 @@ LITERAL [a-zA-Z]
 
 "::"  {
   doForReturn(yytext);
-  return T_DOUBLE_COLON;
+  return T_PAAMAYIM_NEKUDOTAYIM;
 }
 
 "echo"  {
