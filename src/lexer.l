@@ -52,6 +52,12 @@ LITERAL [a-zA-Z]
 }
 
 (.|\n)/"<?" {
+  if (yytext[0] == '\n') {
+    ++line_no;
+    col_no = 0;
+  } else {
+    ++col_no;
+  }
   inline_html.push_back(yytext[0]);
   yylval.r.str = new char[inline_html.size() + 1];
   for (int i = 0; i < inline_html.size(); ++i)
@@ -63,6 +69,12 @@ LITERAL [a-zA-Z]
 
 . |
 \n {
+  if (yytext[0] == '\n') {
+    ++line_no;
+    col_no = 0;
+  } else {
+    ++col_no;
+  }
   inline_html.push_back(yytext[0]);
 }
 
@@ -84,6 +96,15 @@ inline_html.push_back(yytext[0]);
 <php>"abstract"  {
   doForReturn(yytext);
   return T_ABSTRACT;
+}
+
+<php>\n   {
+  col_no =0;
+  line_no++;
+}
+
+<php>[ \t\r] {
+  ++col_no;
 }
 
 <php>{
@@ -713,13 +734,6 @@ inline_html.push_back(yytext[0]);
 <php>[+-]?({DIGIT}*\.?{DIGIT}+|{DIGIT}+\.) {
   doForReturn(yytext);
   return T_DNUMBER;
-}
-
-<php>\n   {
-  //yylval.r.col_no = col_no;
-  //yylval.r.line_no = line_no;
-  col_no =0;
-  line_no++;
 }
 
 <php>\/\*  {
