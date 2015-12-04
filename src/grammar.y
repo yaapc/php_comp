@@ -182,8 +182,7 @@ top_statement:
     statement                       { }
   | function_declaration_statement            { }
   | class_declaration_statement               { }
-  | T_HALT_COMPILER
-      {}
+  | T_HALT_COMPILER      {}
   | T_NAMESPACE namespace_name ';'            { }
   | T_NAMESPACE namespace_name '{' top_statement_list '}' { }
   | T_NAMESPACE '{' top_statement_list '}'        { }
@@ -201,18 +200,13 @@ use_type:
 /* Using namespace_name_parts here to avoid s/r conflict on '\\' */
 group_use_declaration:
     T_USE use_type namespace_name_parts '\\' '{' unprefixed_use_declarations '}'
-
   | T_USE use_type '\\' namespace_name_parts '\\' '{' unprefixed_use_declarations '}'
-
   | T_USE namespace_name_parts '\\' '{' inline_use_declarations '}'
-
   | T_USE '\\' namespace_name_parts '\\' '{' inline_use_declarations '}'
-
 ;
 
 unprefixed_use_declarations:
     unprefixed_use_declarations ',' unprefixed_use_declaration
-
   | unprefixed_use_declaration
 ;
 
@@ -269,19 +263,15 @@ inner_statement:
   | function_declaration_statement
   | class_declaration_statement
   | T_HALT_COMPILER
-
 ;
 
 statement:
     '{' inner_statement_list '}'
   | T_IF parentheses_expr statement elseif_list else_single
-
   | T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';'
-
   | T_WHILE parentheses_expr while_statement
   | T_DO statement T_WHILE parentheses_expr ';'
   | T_FOR '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
-
   | T_SWITCH parentheses_expr switch_case_list
   | T_BREAK ';'
   | T_BREAK expr ';'
@@ -297,13 +287,10 @@ statement:
   | expr ';'
   | T_UNSET '(' variables_list ')' ';'
   | T_FOREACH '(' expr T_AS foreach_variable ')' foreach_statement
-
   | T_FOREACH '(' expr T_AS variable T_DOUBLE_ARROW foreach_variable ')' foreach_statement
-
   | T_DECLARE '(' declare_list ')' declare_statement
   | ';'
   | T_TRY '{' inner_statement_list '}' catches optional_finally
-
   | T_THROW expr ';'
   | T_GOTO T_STRING ';'
   | T_STRING ':'
@@ -316,7 +303,6 @@ catches:
 
 catch:
   T_CATCH '(' name T_VARIABLE ')' '{' inner_statement_list '}'
-
 ;
 
 optional_finally:
@@ -341,16 +327,12 @@ optional_ellipsis:
 
 function_declaration_statement:
   T_FUNCTION optional_ref T_STRING '(' parameter_list ')' optional_return_type '{' inner_statement_list '}'
-
 ;
 
 class_declaration_statement:
     class_entry_type T_STRING extends_from implements_list '{' class_statement_list '}'
-
   | T_INTERFACE T_STRING interface_extends_list '{' class_statement_list '}'
-
   | T_TRAIT T_STRING '{' class_statement_list '}'
-
 ;
 
 class_entry_type:
@@ -476,9 +458,7 @@ non_empty_parameter_list:
 
 parameter:
     optional_param_type optional_ref optional_ellipsis T_VARIABLE
-
   | optional_param_type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
-
 ;
 
 type:
@@ -544,7 +524,6 @@ class_statement:
     variable_modifiers property_declaration_list ';'
   | T_CONST class_const_list ';'
   | method_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body
-
   | T_USE name_list trait_adaptations
 ;
 
@@ -560,20 +539,16 @@ trait_adaptation_list:
 
 trait_adaptation:
     trait_method_reference_fully_qualified T_INSTEADOF name_list ';'
-
   | trait_method_reference T_AS member_modifier identifier ';'
-
   | trait_method_reference T_AS member_modifier ';'
-
   | trait_method_reference T_AS T_STRING ';'
-
   | trait_method_reference T_AS reserved_non_modifiers ';'
-
 ;
 
 trait_method_reference_fully_qualified:
     name T_PAAMAYIM_NEKUDOTAYIM identifier
 ;
+
 trait_method_reference:
     trait_method_reference_fully_qualified
   | identifier
@@ -712,9 +687,7 @@ expr:
   | T_YIELD
   | T_YIELD_FROM expr
   | T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars optional_return_type    '{' inner_statement_list '}'
-
   | T_STATIC T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars optional_return_type    '{' inner_statement_list '}'
-
 ;
 
 parentheses_expr:
@@ -735,7 +708,6 @@ array_expr:
 scalar_dereference:
     array_expr '[' dim_offset ']'
   | T_CONSTANT_ENCAPSED_STRING '[' dim_offset ']'
-
   | constant '[' dim_offset ']'
   | scalar_dereference '[' dim_offset ']'
   /* alternative array syntax missing intentionally */
@@ -743,12 +715,11 @@ scalar_dereference:
 
 anonymous_class:
     T_CLASS ctor_arguments extends_from implements_list '{' class_statement_list '}'
-
+;
 
 new_expr:
     T_NEW class_name_reference ctor_arguments
   | T_NEW anonymous_class
-
 ;
 
 lexical_vars:
@@ -768,12 +739,9 @@ lexical_var:
 function_call:
     name argument_list
   | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM identifier argument_list
-
   | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '{' expr '}' argument_list
-
   | static_property argument_list
   | variable_without_objects argument_list
-
   | function_call '[' dim_offset ']'
     /* alternative array syntax missing intentionally */
 ;
@@ -806,9 +774,7 @@ class_name_or_var:
 
 object_access_for_dcnr:
     base_variable T_OBJECT_OPERATOR object_property
-
   | object_access_for_dcnr T_OBJECT_OPERATOR object_property
-
   | object_access_for_dcnr '[' dim_offset ']'
   | object_access_for_dcnr '{' expr '}'
 ;
@@ -822,7 +788,6 @@ exit_expr:
 backticks_expr:
     /* empty */
   | T_ENCAPSED_AND_WHITESPACE
-
   | encaps_list
 ;
 
@@ -844,9 +809,7 @@ common_scalar:
   | T_FUNC_C
   | T_NS_C
   | T_START_HEREDOC T_ENCAPSED_AND_WHITESPACE T_END_HEREDOC
-
   | T_START_HEREDOC T_END_HEREDOC
-
 ;
 
 static_scalar:
@@ -897,16 +860,13 @@ static_operation:
 constant:
     name
   | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM identifier
-
 ;
 
 scalar:
     common_scalar
   | constant
   | '"' encaps_list '"'
-
   | T_START_HEREDOC encaps_list T_END_HEREDOC
-
 ;
 
 static_array_pair_list:
@@ -944,9 +904,7 @@ new_expr_array_deref:
 
 object_access:
     variable_or_new_expr T_OBJECT_OPERATOR object_property %prec test2
-
   | variable_or_new_expr T_OBJECT_OPERATOR object_property argument_list
-
   | object_access argument_list
   | object_access '[' dim_offset ']'
   | object_access '{' expr '}'
@@ -969,15 +927,12 @@ base_variable:
 
 static_property:
     class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '$' reference_variable
-
   | static_property_with_arrays
 ;
 
 static_property_with_arrays:
     class_name_or_var T_PAAMAYIM_NEKUDOTAYIM T_VARIABLE
-
   | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '$' '{' expr '}'
-
   | static_property_with_arrays '[' dim_offset ']'
   | static_property_with_arrays '{' expr '}'
 ;
@@ -1046,7 +1001,6 @@ encaps_var:
   | T_DOLLAR_OPEN_CURLY_BRACES expr '}'
   | T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME '}'
   | T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME '[' expr ']' '}'
-
   | T_CURLY_OPEN variable '}'
 ;
 
@@ -1056,11 +1010,7 @@ encaps_var_offset:
   | T_VARIABLE
 ;
 
-
-
 %%
-
-
 
 void yyerror(char *s)
 {
