@@ -114,7 +114,7 @@
 %token T_NAMESPACE
 %token T_NS_C
 %token T_DIR
-%token T_NS_SEPARATOR
+%token '\'
 %token T_ELLIPSIS
 %token T_CALLBACK
 %token T_BAD_INPUT
@@ -171,7 +171,7 @@ identifier:
 
 namespace_name_parts:
     T_STRING                        { }
-  | namespace_name_parts T_NS_SEPARATOR T_STRING      { }
+  | namespace_name_parts '\' T_STRING      { }
 ;
 
 namespace_name:
@@ -198,15 +198,15 @@ use_type:
   | T_CONST
 ;
 
-/* Using namespace_name_parts here to avoid s/r conflict on T_NS_SEPARATOR */
+/* Using namespace_name_parts here to avoid s/r conflict on '\' */
 group_use_declaration:
-    T_USE use_type namespace_name_parts T_NS_SEPARATOR '{' unprefixed_use_declarations '}'
+    T_USE use_type namespace_name_parts '\' '{' unprefixed_use_declarations '}'
 
-  | T_USE use_type T_NS_SEPARATOR namespace_name_parts T_NS_SEPARATOR '{' unprefixed_use_declarations '}'
+  | T_USE use_type '\' namespace_name_parts '\' '{' unprefixed_use_declarations '}'
 
-  | T_USE namespace_name_parts T_NS_SEPARATOR '{' inline_use_declarations '}'
+  | T_USE namespace_name_parts '\' '{' inline_use_declarations '}'
 
-  | T_USE T_NS_SEPARATOR namespace_name_parts T_NS_SEPARATOR '{' inline_use_declarations '}'
+  | T_USE '\' namespace_name_parts '\' '{' inline_use_declarations '}'
 
 ;
 
@@ -233,7 +233,7 @@ unprefixed_use_declaration:
 
 use_declaration:
     unprefixed_use_declaration
-  | T_NS_SEPARATOR unprefixed_use_declaration
+  | '\' unprefixed_use_declaration
 ;
 
 inline_use_declaration:
@@ -785,8 +785,8 @@ class_name:
 
 name:
     namespace_name_parts
-  | T_NS_SEPARATOR namespace_name_parts
-  | T_NAMESPACE T_NS_SEPARATOR namespace_name_parts
+  | '\' namespace_name_parts
+  | T_NAMESPACE '\' namespace_name_parts
 ;
 
 class_name_reference:
