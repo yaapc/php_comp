@@ -5,7 +5,7 @@
 
 %}
 
-%nonassoc _def_val_ test test2 low_prec
+%nonassoc _def_val_ low_prec
 %left T_INCLUDE T_INCLUDE_ONCE T_EVAL T_REQUIRE T_REQUIRE_ONCE
 %left ','
 %left T_LOGICAL_OR
@@ -907,7 +907,7 @@ new_expr_array_deref:
 ;
 
 object_access:
-    variable_or_new_expr T_OBJECT_OPERATOR object_property %prec test2
+    variable_or_new_expr T_OBJECT_OPERATOR object_property %prec low_prec
   | variable_or_new_expr T_OBJECT_OPERATOR object_property argument_list
   | object_access argument_list
   | object_access '[' dim_offset ']'
@@ -920,7 +920,7 @@ variable_or_new_expr:
 ;
 
 variable_without_objects:
-    reference_variable    %prec test
+    reference_variable    %prec low_prec
   | '$' variable_without_objects
 ;
 
