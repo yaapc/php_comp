@@ -46,7 +46,7 @@
 %token T_TYPE
 %token T_VARIABLE
 %token T_NUM_STRING
-%token T_INLINE_HTML
+%left T_INLINE_HTML
 %token T_CHARACTER
 %token T_BAD_CHARACTER
 %token T_ENCAPSED_AND_WHITESPACE
@@ -135,8 +135,12 @@
 
 
 %%
-
 start:
+    start_part
+  | start start_part
+;
+
+start_part:
   optional_inline_html T_OPEN_TAG top_statement_list T_CLOSE_TAG optional_inline_html  {  }
 ;
 
