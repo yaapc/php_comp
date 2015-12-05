@@ -2,6 +2,8 @@
   #include <unistd.h>
   #include <iostream>
   #include <string>
+  #include <string.h>
+  #include <queue>
   #include "grammar.hpp"
   #include "definitions.hpp"
   #include "Logger.hpp"
@@ -11,7 +13,8 @@
   int col_no = 0;
   string inline_html;
   string str;
-
+  int string_var = 0;
+  queue<int> tokens_queue;
   Logger l("lexer_log.txt");
 
   void doForReturn(string yytext){
@@ -35,6 +38,7 @@ VARIABLE (${NAME})
 %x multi_line_comment
 %x string
 %x s_string d_string
+%x variable_substitution string_grouper
 %x php eof_return
 
 %%
@@ -183,8 +187,11 @@ VARIABLE (${NAME})
     ++col_no;
   }
 
-  "\"" { BEGIN d_string;
-  ++col_no;
+  "\"" {
+    BEGIN d_string;
+    l.log("(");
+    ++col_no;
+    return '(';
   }
 }
 
@@ -216,6 +223,9 @@ VARIABLE (${NAME})
 
   /* double quoted string */
   /* it has more more escape sequences for special characters than single quoted string */
+  /* it can handle variable substitution by spliting the string and variables into multiple concatenated strings and variables
+  i.e: "i hate $smo because he's done $smth" --> ("i hate " . $smo . " because he's done " . $smth . "")
+  note the parentheses, they are handled by <php>"\"" returning '(' and <string_grouper> returning ')' */
 <d_string>{
   \\n {str.push_back('\n'); ++col_no;}
   \\r {str.push_back('\r'); ++col_no;}
@@ -236,7 +246,22 @@ VARIABLE (${NAME})
     yylval.r.str[str.size() + 1] = '\0';
     l.log("double quoted string:"); l.log(str);
     str.clear();
-    BEGIN php;
+    yyless(0);
+    BEGIN string_grouper;
+    return T_CONSTANT_ENCAPSED_STRING;
+  }
+
+  {VARIABLE} {
+    BEGIN variable_substitution;
+    yylval.r.str = new char[str.size() + 1];
+    strcpy(yylval.r.str, str.c_str());
+    l.log("double quoted string: "); l.log(str);
+    str.clear();
+    tokens_queue = queue<int>();
+    tokens_queue.push('.');
+    tokens_queue.push(T_VARIABLE);
+    tokens_queue.push('.');
+    yyless(0);
     return T_CONSTANT_ENCAPSED_STRING;
   }
 
@@ -244,6 +269,29 @@ VARIABLE (${NAME})
 
   <<EOF>> {l.log("unclosed double quoted string"); return 0;}
 }
+
+<variable_substitution>{
+  {VARIABLE} {
+    if (!tokens_queue.empty()) {
+      int token = tokens_queue.front();
+      tokens_queue.pop();
+      if (token == T_VARIABLE) {
+        yylval.r.str = new char[yyleng + 1];
+        strcpy(yylval.r.str, yytext);
+        doForReturn(yytext);
+        l.log("T_VARIABLE", 0); l.log(yytext);
+        yyless(0);
+        return T_VARIABLE;
+      }
+      l.log("tokens queue", 0); l.log(token);
+      yyless(0);
+      return token;
+    }
+    BEGIN d_string;
+  }
+}
+
+<string_grouper>"\"" {BEGIN php; l.log(")"); return ')';}
 
 <php>{
   "\\" |
