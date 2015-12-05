@@ -214,6 +214,37 @@ VARIABLE (${NAME})
   <<EOF>> {l.log("unclosed single quoted string"); return 0;}
 }
 
+  /* double quoted string */
+  /* it has more more escape sequences for special characters than single quoted string */
+<d_string>{
+  \\n {str.push_back('\n'); ++col_no;}
+  \\r {str.push_back('\r'); ++col_no;}
+  \\t {str.push_back('\t'); ++col_no;}
+  \\e {str.push_back('\e'); ++col_no;}
+  \\v {str.push_back('\v'); ++col_no;}
+  \\f {str.push_back('\f'); ++col_no;}
+  \\\\ {str.push_back('\\'); ++col_no;}
+  \\$ {str.push_back('$'); ++col_no;}
+  "\\\"" {str.push_back('"'); ++col_no;}
+
+  \n {str.push_back('\n'); ++line_no; col_no = 0;}
+
+  "\"" {
+    yylval.r.str = new char[str.size() + 1];
+    for (int i = 0; i < str.size(); ++i)
+      yylval.r.str[i] = str[i];
+    yylval.r.str[str.size() + 1] = '\0';
+    l.log("double quoted string:"); l.log(str);
+    str.clear();
+    BEGIN php;
+    return T_CONSTANT_ENCAPSED_STRING;
+  }
+
+  . {str.push_back(yytext[0]); ++col_no;}
+
+  <<EOF>> {l.log("unclosed double quoted string"); return 0;}
+}
+
 <php>{
   "\\" |
   "," |
