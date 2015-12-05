@@ -22,6 +22,17 @@ public:
     else os<<" ";
   }
 
+  void log(int i, bool new_line = true) {
+	  os<<i;
+    if (new_line) os<<endl;
+    else os<<" ";
+  }
+
+  void log(double d, bool new_line = true) {
+	  os<<d;
+    if (new_line) os<<endl;
+    else os<<" ";
+  }
 private:
   ofstream os;
 };

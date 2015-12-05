@@ -12,10 +12,10 @@ phpc: grammar.o lexer.o main.o
 main.o: src/main.cpp src/definitions.hpp
 	${CXX} ${CXXFLAGS} -c $<
 
-grammar.o: src/grammar.y src/definitions.hpp
+grammar.o: src/grammar.y src/definitions.hpp src/Logger.hpp
 	${YACC} ${YFLAGS} $<
 	${CXX} ${CXXFLAGS} -c src/grammar.cpp
 
-lexer.o: src/lexer.l src/definitions.hpp
+lexer.o: src/lexer.l src/definitions.hpp src/Logger.hpp
 	${LEX} ${LFLAGS} $<
 	${CXX} ${CXXFLAGS} -c src/lexer.cpp
