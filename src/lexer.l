@@ -26,6 +26,8 @@
 
 DIGIT [0-9]
 LITERAL [a-zA-Z]
+EXP [eE][+-]?[0-9]+
+
 %option noyywrap
 
 %x multi_line_comment
@@ -148,6 +150,23 @@ LITERAL [a-zA-Z]
   }
 }
 
+<php>{
+  [0-9]+ {
+    doForReturn(yytext);
+    yylval.r.i = atoi(yytext);
+    l.log("T_INTEGER", 0); l.log(yylval.r.i);
+    return T_LNUMBER;
+  }
+
+  [0-9]*\.[0-9]+{EXP}? |
+  [0-9]+\.{EXP}? |
+  [0-9]+{EXP} {
+    doForReturn(yytext);
+    yylval.r.f = atof(yytext);
+    l.log("T_FLOAT", 0); l.log(yylval.r.f);
+    return T_DNUMBER;
+  }
+}
 <php>"abstract"  {
   doForReturn(yytext);
   l.log("T_ABSTRACT");
@@ -852,28 +871,10 @@ LITERAL [a-zA-Z]
   return T_PRIMITIVE;
 }
 
-<php>"boolean"   {
-  doForReturn(yytext);
-  l.log("T_PRIMITIVE: BOOLEAN");
-  yylval.r.token_type = T_PRIMITIVE_BOOLEAN;
-  return T_PRIMITIVE;
-}
-
 <php>$[a-zA-Z_]({DIGIT}|{LITERAL})*  {
   doForReturn(yytext);
   l.log("T_VARIABLE", 0); l.log(yytext);
   return T_VARIABLE;
-}
-
-<php>${DIGIT}+.*   {
-  doForReturn(yytext);
-  l.log("T_DNUMBER");
-}
-
-<php>[+-]?({DIGIT}*\.?{DIGIT}+|{DIGIT}+\.) {
-  doForReturn(yytext);
-  l.log("T_DNUMBER");
-  return T_DNUMBER;
 }
 
 <php>\"  {
