@@ -193,7 +193,7 @@ top_statement:
   | T_USE use_declarations ';'              { }
   | T_USE use_type use_declarations ';'
   | group_use_declaration ';'
-  | T_CONST constant_declaration_list ';'
+  | T_CONST type constant_declaration_list ';'
 ;
 
 use_type:
@@ -269,8 +269,19 @@ inner_statement:
   | T_HALT_COMPILER
 ;
 
+variable_declaration_list:
+    variable_declaration_list ',' variable_declaration
+  | variable_declaration
+;
+
+variable_declaration:
+    T_VARIABLE '=' expr
+  | T_VARIABLE
+;
+
 statement:
     '{' inner_statement_list '}'
+  | type variable_declaration_list ';'
   | T_IF parentheses_expr statement elseif_list else_single
   | T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';'
   | T_WHILE parentheses_expr while_statement
@@ -284,8 +295,8 @@ statement:
   | T_RETURN ';'
   | T_RETURN expr ';'
   | yield_expr ';'
-  | T_GLOBAL global_var_list ';'
-  | T_STATIC static_var_list ';'
+  | T_GLOBAL type global_var_list ';'
+  | T_STATIC type static_var_list ';'
   | T_ECHO expr_list ';'
   | T_INLINE_HTML
   | expr ';'
@@ -330,7 +341,7 @@ optional_ellipsis:
 ;
 
 function_declaration_statement:
-  T_FUNCTION optional_ref T_STRING '(' parameter_list ')' optional_return_type '{' inner_statement_list '}'
+  T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}'
 ;
 
 class_declaration_statement:
@@ -444,7 +455,7 @@ new_else_single:
   | T_ELSE ':' inner_statement_list
 ;
 
-foreach_variable:
+foreach_variable: /* typing? */
     variable
   | '&' variable
   | list_expr
@@ -461,19 +472,15 @@ non_empty_parameter_list:
 ;
 
 parameter:
-    optional_param_type optional_ref optional_ellipsis T_VARIABLE
-  | optional_param_type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
+    type optional_ref optional_ellipsis T_VARIABLE
+  | type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
 ;
 
 type:
-    name
+    T_PRIMITIVE
+  | name
   | T_ARRAY
   | T_CALLABLE
-;
-
-optional_param_type:
-    /* empty */
-  | type
 ;
 
 optional_return_type:
@@ -525,9 +532,9 @@ class_statement_list:
 ;
 
 class_statement:
-    variable_modifiers property_declaration_list ';'
-  | T_CONST class_const_list ';'
-  | method_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body
+    variable_modifiers type property_declaration_list ';'
+  | T_CONST type class_const_list ';'
+  | method_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body /* optional return type in case of constructor */
   | T_USE name_list trait_adaptations
 ;
 
@@ -602,7 +609,7 @@ expr_list:
   | expr
 ;
 
-for_expr:
+for_expr: /* typing? */
     /* empty */
   | expr_list
 ;
@@ -690,8 +697,8 @@ expr:
   | T_PRINT expr
   | T_YIELD
   | T_YIELD_FROM expr
-  | T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars optional_return_type    '{' inner_statement_list '}'
-  | T_STATIC T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars optional_return_type    '{' inner_statement_list '}'
+  | T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars ':' type    '{' inner_statement_list '}'
+  | T_STATIC T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars ':' type    '{' inner_statement_list '}'
 ;
 
 parentheses_expr:
@@ -704,7 +711,7 @@ yield_expr:
   | T_YIELD expr T_DOUBLE_ARROW expr
 ;
 
-array_expr:
+array_expr: /* typing? */
     T_ARRAY '(' array_pair_list ')'
   | '[' array_pair_list ']'
 ;
