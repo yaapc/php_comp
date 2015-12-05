@@ -601,6 +601,12 @@ VARIABLE (${NAME})
   return T_ARRAY_CAST;
 }
 
+<php>\[[ \t]*\] {
+  doForReturn(yytext);
+  l.log("T_SQUARE_BRACKETS");
+  return T_SQUARE_BRACKETS;
+}
+
 <php>"as"  {
   doForReturn(yytext);
   l.log("T_AS");

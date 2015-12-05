@@ -105,6 +105,7 @@
 %token T_DOC_COMMENT
 %token T_OPEN_TAG
 %token T_CLOSE_TAG
+%token T_SQUARE_BRACKETS
 %token T_WHITESPACE
 %token T_START_HEREDOC
 %token T_END_HEREDOC
@@ -476,9 +477,14 @@ parameter:
   | type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
 ;
 
+array_type:
+    type T_SQUARE_BRACKETS
+;
+
 type:
     T_PRIMITIVE
   | name
+  | array_type
   | T_ARRAY
   | T_CALLABLE
 ;
@@ -723,6 +729,7 @@ yield_expr:
 array_expr: /* typing? */
     T_ARRAY '(' array_pair_list ')'
   | '[' array_pair_list ']'
+  | T_SQUARE_BRACKETS  /* because of T_SQUARE_BRACKETS */
 ;
 
 scalar_dereference:
