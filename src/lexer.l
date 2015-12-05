@@ -24,10 +24,11 @@
 
 %}
 
-DIGIT [0-9]
-LITERAL [a-zA-Z]
-EXP [eE][+-]?[0-9]+
-
+DIGIT ([0-9])
+LITERAL ([a-zA-Z])
+EXP ([eE][+-]?[0-9]+)
+NAME ([a-zA-Z_][a-zA-Z0-9_]*)
+VARIABLE (${NAME})
 %option noyywrap
 
 %x multi_line_comment
@@ -871,13 +872,13 @@ EXP [eE][+-]?[0-9]+
   return T_PRIMITIVE;
 }
 
-<php>[a-zA-Z_][a-zA-Z0-9_]* {
+<php>{NAME} {
   doForReturn(yytext);
   l.log("T_STRING", 0); l.log(yytext);
   return T_STRING;
 }
 
-<php>$[a-zA-Z_]({DIGIT}|{LITERAL})*  {
+<php>{VARIABLE}  {
   doForReturn(yytext);
   l.log("T_VARIABLE", 0); l.log(yytext);
   return T_VARIABLE;
