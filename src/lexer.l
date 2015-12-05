@@ -871,6 +871,12 @@ EXP [eE][+-]?[0-9]+
   return T_PRIMITIVE;
 }
 
+<php>[a-zA-Z_][a-zA-Z0-9_]* {
+  doForReturn(yytext);
+  l.log("T_STRING", 0); l.log(yytext);
+  return T_STRING;
+}
+
 <php>$[a-zA-Z_]({DIGIT}|{LITERAL})*  {
   doForReturn(yytext);
   l.log("T_VARIABLE", 0); l.log(yytext);
