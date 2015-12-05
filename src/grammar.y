@@ -303,7 +303,7 @@ statement:
   | expr ';'
   | T_UNSET '(' variables_list ')' ';'
   | T_FOREACH '(' expr T_AS foreach_variable ')' foreach_statement
-  | T_FOREACH '(' expr T_AS variable T_DOUBLE_ARROW foreach_variable ')' foreach_statement
+  | T_FOREACH '(' expr T_AS foreach_key T_DOUBLE_ARROW foreach_variable ')' foreach_statement
   | T_DECLARE '(' declare_list ')' declare_statement
   | ';'
   | T_TRY '{' inner_statement_list '}' catches optional_finally
@@ -456,10 +456,14 @@ new_else_single:
   | T_ELSE ':' inner_statement_list
 ;
 
+foreach_key:
+    type T_VARIABLE
+;
+
 foreach_variable: /* typing? */
-    variable
-  | '&' variable
-  | list_expr
+    type T_VARIABLE
+  | type '&' T_VARIABLE
+  | type list_expr
 ;
 
 parameter_list:
