@@ -224,7 +224,7 @@ VARIABLE (${NAME})
   \\v {str.push_back('\v'); ++col_no;}
   \\f {str.push_back('\f'); ++col_no;}
   \\\\ {str.push_back('\\'); ++col_no;}
-  \\$ {str.push_back('$'); ++col_no;}
+  \\\$ {str.push_back('$'); ++col_no;}
   "\\\"" {str.push_back('"'); ++col_no;}
 
   \n {str.push_back('\n'); ++line_no; col_no = 0;}
