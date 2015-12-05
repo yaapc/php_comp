@@ -10,6 +10,7 @@
   int line_no = 0;
   int col_no = 0;
   string inline_html;
+  string str;
 
   Logger l("lexer_log.txt");
 
@@ -33,6 +34,7 @@ VARIABLE (${NAME})
 
 %x multi_line_comment
 %x string
+%x s_string d_string
 %x php eof_return
 
 %%
@@ -172,6 +174,44 @@ VARIABLE (${NAME})
   doForReturn(yytext);
   l.log("T_ABSTRACT");
   return T_ABSTRACT;
+}
+
+  /* Strings */
+<php>{
+  "'" {
+    BEGIN s_string;
+    ++col_no;
+  }
+
+  "\"" { BEGIN d_string;
+  ++col_no;
+  }
+}
+
+  /* single quoted string */
+  /* it accepts new lines (multiline string) */
+  /* it accepts only \\ and \' as escape characters, \n, \t, \r ... will be outputed literally */
+<s_string>{
+  \\\\ {str.push_back('\\'); ++col_no;}
+
+  "\\'" {str.push_back('\''); ++col_no;}
+
+  \n {str.push_back('\n'); ++line_no; col_no = 0;}
+
+  "'" {
+    yylval.r.str = new char[str.size() + 1];
+    for (int i = 0; i < str.size(); ++i)
+      yylval.r.str[i] = str[i];
+    yylval.r.str[str.size() + 1] = '\0';
+    l.log("single quoted string:"); l.log(str);
+    str.clear();
+    BEGIN php;
+    return T_CONSTANT_ENCAPSED_STRING;
+  }
+
+  . {str.push_back(yytext[0]); ++col_no;}
+
+  <<EOF>> {l.log("unclosed single quoted string"); return 0;}
 }
 
 <php>{
@@ -882,18 +922,6 @@ VARIABLE (${NAME})
   doForReturn(yytext);
   l.log("T_VARIABLE", 0); l.log(yytext);
   return T_VARIABLE;
-}
-
-<php>\"  {
-  BEGIN string;
-  l.log("STRING");
-}
-
-<string>[^\"]  {;}
-
-<string>\"  {
-  BEGIN INITIAL;
-  l.log("END_STRING");
 }
 
 <php>.  {
