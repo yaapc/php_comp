@@ -615,7 +615,7 @@ for_expr_list:
 ;
 
 expr_declaration:
-    type T_STRING '=' expr
+    type T_VARIABLE '=' expr
 ;
 
 for_expr:
