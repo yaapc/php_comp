@@ -609,9 +609,18 @@ expr_list:
   | expr
 ;
 
-for_expr: /* typing? */
+for_expr_list:
+    for_expr_list ',' expr_declaration
+  | expr_declaration
+;
+
+expr_declaration:
+    type T_STRING '=' expr
+;
+
+for_expr:
     /* empty */
-  | expr_list
+  | for_expr_list
 ;
 
 expr:
