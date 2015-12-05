@@ -38,7 +38,7 @@ VARIABLE (${NAME})
 %x multi_line_comment
 %x string
 %x s_string d_string
-%x variable_substitution string_grouper
+%x variable_substitution variable_substitution_name variable_substitution_integer variable_substitution_var string_grouper
 %x php eof_return
 
 %%
@@ -251,6 +251,57 @@ VARIABLE (${NAME})
     return T_CONSTANT_ENCAPSED_STRING;
   }
 
+  {VARIABLE}\[{NAME}\] {
+    BEGIN variable_substitution_name;
+    yylval.r.str = new char[str.size() + 1];
+    strcpy(yylval.r.str, str.c_str());
+    l.log("double quoted string: "); l.log(str);
+    str.clear();
+    tokens_queue = queue<int>();
+    tokens_queue.push('.');
+    tokens_queue.push(T_VARIABLE);
+    tokens_queue.push('[');
+    tokens_queue.push(T_STRING);
+    tokens_queue.push(']');
+    tokens_queue.push('.');
+    yyless(0);
+    return T_CONSTANT_ENCAPSED_STRING;
+  }
+
+  {VARIABLE}\[[0-9]+\] {
+    BEGIN variable_substitution_integer;
+    yylval.r.str = new char[str.size() + 1];
+    strcpy(yylval.r.str, str.c_str());
+    l.log("double quoted string: "); l.log(str);
+    str.clear();
+    tokens_queue = queue<int>();
+    tokens_queue.push('.');
+    tokens_queue.push(T_VARIABLE);
+    tokens_queue.push('[');
+    tokens_queue.push(T_LNUMBER);
+    tokens_queue.push(']');
+    tokens_queue.push('.');
+    yyless(0);
+    return T_CONSTANT_ENCAPSED_STRING;
+  }
+
+  {VARIABLE}\[{VARIABLE}\] {
+    BEGIN variable_substitution_var;
+    yylval.r.str = new char[str.size() + 1];
+    strcpy(yylval.r.str, str.c_str());
+    l.log("double quoted string: "); l.log(str);
+    str.clear();
+    tokens_queue = queue<int>();
+    tokens_queue.push('.');
+    tokens_queue.push(T_VARIABLE);
+    tokens_queue.push('[');
+    tokens_queue.push(T_VARIABLE);
+    tokens_queue.push(']');
+    tokens_queue.push('.');
+    yyless(0);
+    return T_CONSTANT_ENCAPSED_STRING;
+  }
+
   {VARIABLE} {
     BEGIN variable_substitution;
     yylval.r.str = new char[str.size() + 1];
@@ -282,6 +333,152 @@ VARIABLE (${NAME})
         l.log("T_VARIABLE", 0); l.log(yytext);
         yyless(0);
         return T_VARIABLE;
+      }
+      l.log("tokens queue", 0); l.log(token);
+      yyless(0);
+      return token;
+    }
+    BEGIN d_string;
+  }
+}
+
+<variable_substitution_name>{
+  {VARIABLE} {
+    if (!tokens_queue.empty()) {
+      int token = tokens_queue.front();
+      tokens_queue.pop();
+      if (token == T_VARIABLE) {
+        yylval.r.str = new char[yyleng + 1];
+        strcpy(yylval.r.str, yytext);
+        doForReturn(yytext);
+        l.log("T_VARIABLE", 0); l.log(yytext);
+        return T_VARIABLE;
+      }
+      l.log("tokens queue", 0); l.log(token);
+      yyless(0);
+      return token;
+    }
+  }
+
+  \[ {
+   tokens_queue.pop();
+   doForReturn(yytext);
+   l.log("[");
+   return '[';
+  }
+
+  {NAME} {
+    tokens_queue.pop();
+    yylval.r.str = new char[yyleng + 1];
+    strcpy(yylval.r.str, yytext);
+    doForReturn(yytext);
+    l.log("T_STRING", 0); l.log(yytext);
+    return T_STRING;
+  }
+
+  \] {
+    if (!tokens_queue.empty()) {
+      int token = tokens_queue.front();
+      tokens_queue.pop();
+      if (token == ']') {
+        doForReturn(yytext);
+        l.log("]");
+        yyless(0);
+        return ']';
+      }
+      l.log("tokens queue", 0); l.log(token);
+      yyless(0);
+      return token;
+    }
+    BEGIN d_string;
+  }
+}
+
+<variable_substitution_integer>{
+  {VARIABLE} {
+    if (!tokens_queue.empty()) {
+      int token = tokens_queue.front();
+      tokens_queue.pop();
+      if (token == T_VARIABLE) {
+        yylval.r.str = new char[yyleng + 1];
+        strcpy(yylval.r.str, yytext);
+        doForReturn(yytext);
+        l.log("T_VARIABLE", 0); l.log(yytext);
+        return T_VARIABLE;
+      }
+      l.log("tokens queue", 0); l.log(token);
+      yyless(0);
+      return token;
+    }
+  }
+
+  \[ {
+   tokens_queue.pop();
+   doForReturn(yytext);
+   l.log("[");
+   return '[';
+  }
+
+  [0-9]+ {
+    tokens_queue.pop();
+    yylval.r.i = atoi(yytext);
+    doForReturn(yytext);
+    l.log("T_INTEGER", 0); l.log(yylval.r.i);
+    return T_LNUMBER;
+  }
+
+  \] {
+    if (!tokens_queue.empty()) {
+      int token = tokens_queue.front();
+      tokens_queue.pop();
+      if (token == ']') {
+        doForReturn(yytext);
+        l.log("]");
+        yyless(0);
+        return ']';
+      }
+      l.log("tokens queue", 0); l.log(token);
+      yyless(0);
+      return token;
+    }
+    BEGIN d_string;
+  }
+}
+
+<variable_substitution_var>{
+  {VARIABLE} {
+    if (!tokens_queue.empty()) {
+      int token = tokens_queue.front();
+      tokens_queue.pop();
+      if (token == T_VARIABLE) {
+        yylval.r.str = new char[yyleng + 1];
+        strcpy(yylval.r.str, yytext);
+        doForReturn(yytext);
+        l.log("T_VARIABLE", 0); l.log(yytext);
+        return T_VARIABLE;
+      }
+      l.log("tokens queue", 0); l.log(token);
+      yyless(0);
+      return token;
+    }
+  }
+
+  \[ {
+   tokens_queue.pop();
+   doForReturn(yytext);
+   l.log("[");
+   return '[';
+  }
+
+  \] {
+    if (!tokens_queue.empty()) {
+      int token = tokens_queue.front();
+      tokens_queue.pop();
+      if (token == ']') {
+        doForReturn(yytext);
+        l.log("]");
+        yyless(0);
+        return ']';
       }
       l.log("tokens queue", 0); l.log(token);
       yyless(0);
