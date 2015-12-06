@@ -635,6 +635,7 @@ for_expr:
 
 expr:
     variable
+  | '(' T_PRIMITIVE ')' expr
   | list_expr '=' expr
   | variable '=' expr
   | variable '=' '&' variable

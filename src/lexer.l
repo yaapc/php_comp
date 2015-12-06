@@ -595,12 +595,6 @@ VARIABLE (${NAME})
   return T_ARRAY;
 }
 
-<php>"(array)"  {
-  doForReturn(yytext);
-  l.log("T_ARRAY_CAST");
-  return T_ARRAY_CAST;
-}
-
 <php>\[[ \t]*\] {
   doForReturn(yytext);
   l.log("T_SQUARE_BRACKETS");
@@ -623,10 +617,6 @@ VARIABLE (${NAME})
   doForReturn(yytext);
   l.log("T_BOOLEAN_OR");
   return T_BOOLEAN_OR;
-}
-
-<php>"(bool)"|"(boolean)"  {
-  doForReturn(yytext);
 }
 
 <php>"break"  {
@@ -735,11 +725,6 @@ VARIABLE (${NAME})
   doForReturn(yytext);
   l.log("T_DOUBLE_ARROW");
   return T_DOUBLE_ARROW;
-}
-
-<php>("(real)"|"(double)"|"(float)")  {
-  doForReturn(yytext);
-  return T_DOUBLE_CAST;
 }
 
 <php>"::"  {
@@ -922,11 +907,6 @@ VARIABLE (${NAME})
   return T_INSTEADOF;
 }
 
-<php>"(int)"|"(integer)"  {
-  doForReturn(yytext);
-  return T_INT_CAST;
-}
-
 <php>"interface"  {
   doForReturn(yytext);
   l.log("T_INTERFACE");
@@ -1035,11 +1015,6 @@ VARIABLE (${NAME})
   return T_NEW;
 }
 
-<php>"(object)"  {
-  doForReturn(yytext);
-  return T_OBJECT_CAST;
-}
-
 <php>"->"  {
   doForReturn(yytext);
   l.log(yytext);
@@ -1140,11 +1115,6 @@ VARIABLE (${NAME})
   doForReturn(yytext);
   l.log("T_STATIC");
   return T_STATIC;
-}
-
-<php>"(string)"  {
-  doForReturn(yytext);
-  return T_STRING_CAST;
 }
 
 <php>"switch"  {
