@@ -13,7 +13,7 @@
   int col_no = 0;
   string inline_html;
   string str;
-  queue<int> old_queue;
+  queue<int> old_queue, tokens_queue;
   Logger l("lexer_log.txt");
 
   void doForReturn(string yytext){
@@ -38,9 +38,21 @@ VARIABLE (${NAME})
 %x string
 %x s_string d_string
 %x variable_substitution variable_substitution_name variable_substitution_integer variable_substitution_var string_grouper variable_substitution_property
-%x php eof_return
+%x php
 
 %%
+
+%{
+  /* this piece of code gonna be placed in the beginnig of yylex() */
+  /* it handles returnig multiple tokens */
+  while (!tokens_queue.empty()) {
+    int token = tokens_queue.front();
+    tokens_queue.pop();
+    l.log("token", 0);
+    l.log(token);
+    return token;
+  }
+%}
 
 "<?php" |
 "<?" |
@@ -78,9 +90,7 @@ VARIABLE (${NAME})
   l.log("T_INLINE_HTML:");
   l.log(inline_html);
   yylval.r.str = new char[inline_html.size() + 1];
-  for (int i = 0; i < inline_html.size(); ++i)
-    yylval.r.str[i] = inline_html[i];
-  yylval.r.str[inline_html.size() + 1] = '\0';
+  strcpy(yylval.r.str, inline_html.c_str());
   inline_html.clear();
   return T_INLINE_HTML;
 }
@@ -101,19 +111,11 @@ VARIABLE (${NAME})
   l.log("T_INLINE_HTML");
   l.log(inline_html);
   yylval.r.str = new char[inline_html.size() + 1];
-  for (int i = 0; i < inline_html.size(); ++i)
-    yylval.r.str[i] = inline_html[i];
-  yylval.r.str[inline_html.size() + 1] = '\0';
+  strcpy(yylval.r.str, inline_html.c_str());
   inline_html.clear();
-  // put a dummy to input, and then switch to eof_return which is gonna return EOF
-  unput('e');
-  BEGIN eof_return;
+  /* token 0 indicates the end of file */
+  tokens_queue.push(0);
   return T_INLINE_HTML;
-}
-
-<eof_return>e {
-  l.log("EOF");
-  return 0;
 }
 
 <php>{
