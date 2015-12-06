@@ -252,28 +252,8 @@ VARIABLE (${NAME})
     return T_CONSTANT_ENCAPSED_STRING;
   }
 
-  {VARIABLE}\[{NAME}\] {
-    BEGIN variable_substitution_array;
-    yylval.r.str = new char[str.size() + 1];
-    strcpy(yylval.r.str, str.c_str());
-    l.log("double quoted string: "); l.log(str);
-    str.clear();
-    tokens_queue.push('.');
-    yyless(0);
-    return T_CONSTANT_ENCAPSED_STRING;
-  }
-
-  {VARIABLE}\[[0-9]+\] {
-    BEGIN variable_substitution_array;
-    yylval.r.str = new char[str.size() + 1];
-    strcpy(yylval.r.str, str.c_str());
-    l.log("double quoted string: "); l.log(str);
-    str.clear();
-    tokens_queue.push('.');
-    yyless(0);
-    return T_CONSTANT_ENCAPSED_STRING;
-  }
-
+  {VARIABLE}\[{NAME}\] |
+  {VARIABLE}\[[0-9]+\] |
   {VARIABLE}\[{VARIABLE}\] {
     BEGIN variable_substitution_array;
     yylval.r.str = new char[str.size() + 1];
