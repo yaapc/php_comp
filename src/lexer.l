@@ -13,7 +13,7 @@
   int col_no = 0;
   string inline_html;
   string str;
-  queue<int> tokens_queue;
+  queue<int> old_queue;
   Logger l("lexer_log.txt");
 
   void doForReturn(string yytext){
@@ -256,13 +256,13 @@ VARIABLE (${NAME})
     strcpy(yylval.r.str, str.c_str());
     l.log("double quoted string: "); l.log(str);
     str.clear();
-    tokens_queue = queue<int>();
-    tokens_queue.push('.');
-    tokens_queue.push(T_VARIABLE);
-    tokens_queue.push('[');
-    tokens_queue.push(T_STRING);
-    tokens_queue.push(']');
-    tokens_queue.push('.');
+    old_queue = queue<int>();
+    old_queue.push('.');
+    old_queue.push(T_VARIABLE);
+    old_queue.push('[');
+    old_queue.push(T_STRING);
+    old_queue.push(']');
+    old_queue.push('.');
     yyless(0);
     return T_CONSTANT_ENCAPSED_STRING;
   }
@@ -273,13 +273,13 @@ VARIABLE (${NAME})
     strcpy(yylval.r.str, str.c_str());
     l.log("double quoted string: "); l.log(str);
     str.clear();
-    tokens_queue = queue<int>();
-    tokens_queue.push('.');
-    tokens_queue.push(T_VARIABLE);
-    tokens_queue.push('[');
-    tokens_queue.push(T_LNUMBER);
-    tokens_queue.push(']');
-    tokens_queue.push('.');
+    old_queue = queue<int>();
+    old_queue.push('.');
+    old_queue.push(T_VARIABLE);
+    old_queue.push('[');
+    old_queue.push(T_LNUMBER);
+    old_queue.push(']');
+    old_queue.push('.');
     yyless(0);
     return T_CONSTANT_ENCAPSED_STRING;
   }
@@ -290,13 +290,13 @@ VARIABLE (${NAME})
     strcpy(yylval.r.str, str.c_str());
     l.log("double quoted string: "); l.log(str);
     str.clear();
-    tokens_queue = queue<int>();
-    tokens_queue.push('.');
-    tokens_queue.push(T_VARIABLE);
-    tokens_queue.push('[');
-    tokens_queue.push(T_VARIABLE);
-    tokens_queue.push(']');
-    tokens_queue.push('.');
+    old_queue = queue<int>();
+    old_queue.push('.');
+    old_queue.push(T_VARIABLE);
+    old_queue.push('[');
+    old_queue.push(T_VARIABLE);
+    old_queue.push(']');
+    old_queue.push('.');
     yyless(0);
     return T_CONSTANT_ENCAPSED_STRING;
   }
@@ -307,12 +307,12 @@ VARIABLE (${NAME})
     strcpy(yylval.r.str, str.c_str());
     l.log("double quoted string: "); l.log(str);
     str.clear();
-    tokens_queue = queue<int>();
-    tokens_queue.push('.');
-    tokens_queue.push(T_VARIABLE);
-    tokens_queue.push(T_OBJECT_OPERATOR);
-    tokens_queue.push(T_STRING);
-    tokens_queue.push('.');
+    old_queue = queue<int>();
+    old_queue.push('.');
+    old_queue.push(T_VARIABLE);
+    old_queue.push(T_OBJECT_OPERATOR);
+    old_queue.push(T_STRING);
+    old_queue.push('.');
     yyless(0);
     return T_CONSTANT_ENCAPSED_STRING;
   }
@@ -323,10 +323,10 @@ VARIABLE (${NAME})
     strcpy(yylval.r.str, str.c_str());
     l.log("double quoted string: "); l.log(str);
     str.clear();
-    tokens_queue = queue<int>();
-    tokens_queue.push('.');
-    tokens_queue.push(T_VARIABLE);
-    tokens_queue.push('.');
+    old_queue = queue<int>();
+    old_queue.push('.');
+    old_queue.push(T_VARIABLE);
+    old_queue.push('.');
     yyless(0);
     return T_CONSTANT_ENCAPSED_STRING;
   }
@@ -338,9 +338,9 @@ VARIABLE (${NAME})
 
 <variable_substitution>{
   {VARIABLE} {
-    if (!tokens_queue.empty()) {
-      int token = tokens_queue.front();
-      tokens_queue.pop();
+    if (!old_queue.empty()) {
+      int token = old_queue.front();
+      old_queue.pop();
       if (token == T_VARIABLE) {
         yylval.r.str = new char[yyleng + 1];
         strcpy(yylval.r.str, yytext);
@@ -359,9 +359,9 @@ VARIABLE (${NAME})
 
 <variable_substitution_name>{
   {VARIABLE} {
-    if (!tokens_queue.empty()) {
-      int token = tokens_queue.front();
-      tokens_queue.pop();
+    if (!old_queue.empty()) {
+      int token = old_queue.front();
+      old_queue.pop();
       if (token == T_VARIABLE) {
         yylval.r.str = new char[yyleng + 1];
         strcpy(yylval.r.str, yytext);
@@ -376,14 +376,14 @@ VARIABLE (${NAME})
   }
 
   \[ {
-   tokens_queue.pop();
+   old_queue.pop();
    doForReturn(yytext);
    l.log("[");
    return '[';
   }
 
   {NAME} {
-    tokens_queue.pop();
+    old_queue.pop();
     yylval.r.str = new char[yyleng + 1];
     strcpy(yylval.r.str, yytext);
     doForReturn(yytext);
@@ -392,9 +392,9 @@ VARIABLE (${NAME})
   }
 
   \] {
-    if (!tokens_queue.empty()) {
-      int token = tokens_queue.front();
-      tokens_queue.pop();
+    if (!old_queue.empty()) {
+      int token = old_queue.front();
+      old_queue.pop();
       if (token == ']') {
         doForReturn(yytext);
         l.log("]");
@@ -411,9 +411,9 @@ VARIABLE (${NAME})
 
 <variable_substitution_integer>{
   {VARIABLE} {
-    if (!tokens_queue.empty()) {
-      int token = tokens_queue.front();
-      tokens_queue.pop();
+    if (!old_queue.empty()) {
+      int token = old_queue.front();
+      old_queue.pop();
       if (token == T_VARIABLE) {
         yylval.r.str = new char[yyleng + 1];
         strcpy(yylval.r.str, yytext);
@@ -428,14 +428,14 @@ VARIABLE (${NAME})
   }
 
   \[ {
-   tokens_queue.pop();
+   old_queue.pop();
    doForReturn(yytext);
    l.log("[");
    return '[';
   }
 
   [0-9]+ {
-    tokens_queue.pop();
+    old_queue.pop();
     yylval.r.i = atoi(yytext);
     doForReturn(yytext);
     l.log("T_INTEGER", 0); l.log(yylval.r.i);
@@ -443,9 +443,9 @@ VARIABLE (${NAME})
   }
 
   \] {
-    if (!tokens_queue.empty()) {
-      int token = tokens_queue.front();
-      tokens_queue.pop();
+    if (!old_queue.empty()) {
+      int token = old_queue.front();
+      old_queue.pop();
       if (token == ']') {
         doForReturn(yytext);
         l.log("]");
@@ -462,9 +462,9 @@ VARIABLE (${NAME})
 
 <variable_substitution_var>{
   {VARIABLE} {
-    if (!tokens_queue.empty()) {
-      int token = tokens_queue.front();
-      tokens_queue.pop();
+    if (!old_queue.empty()) {
+      int token = old_queue.front();
+      old_queue.pop();
       if (token == T_VARIABLE) {
         yylval.r.str = new char[yyleng + 1];
         strcpy(yylval.r.str, yytext);
@@ -479,16 +479,16 @@ VARIABLE (${NAME})
   }
 
   \[ {
-   tokens_queue.pop();
+   old_queue.pop();
    doForReturn(yytext);
    l.log("[");
    return '[';
   }
 
   \] {
-    if (!tokens_queue.empty()) {
-      int token = tokens_queue.front();
-      tokens_queue.pop();
+    if (!old_queue.empty()) {
+      int token = old_queue.front();
+      old_queue.pop();
       if (token == ']') {
         doForReturn(yytext);
         l.log("]");
@@ -505,9 +505,9 @@ VARIABLE (${NAME})
 
 <variable_substitution_property>{
   {VARIABLE} {
-    if (!tokens_queue.empty()) {
-      int token = tokens_queue.front();
-      tokens_queue.pop();
+    if (!old_queue.empty()) {
+      int token = old_queue.front();
+      old_queue.pop();
       if (token == T_VARIABLE) {
         yylval.r.str = new char[yyleng + 1];
         strcpy(yylval.r.str, yytext);
@@ -522,16 +522,16 @@ VARIABLE (${NAME})
   }
 
   -> {
-   tokens_queue.pop();
+   old_queue.pop();
    doForReturn(yytext);
    l.log("->");
    return T_OBJECT_OPERATOR;
   }
 
   {NAME} {
-    if (!tokens_queue.empty()) {
-      int token = tokens_queue.front();
-      tokens_queue.pop();
+    if (!old_queue.empty()) {
+      int token = old_queue.front();
+      old_queue.pop();
       if (token == T_STRING) {
         yylval.r.str = new char[yyleng + 1];
         strcpy(yylval.r.str, yytext);
