@@ -37,7 +37,7 @@ VARIABLE (${NAME})
 %x multi_line_comment
 %x string
 %x s_string d_string
-%x variable_substitution variable_substitution_name variable_substitution_integer variable_substitution_var variable_substitution_property
+%x variable_substitution variable_substitution_array variable_substitution_property
 %x php
 
 %%
@@ -253,7 +253,7 @@ VARIABLE (${NAME})
   }
 
   {VARIABLE}\[{NAME}\] {
-    BEGIN variable_substitution_name;
+    BEGIN variable_substitution_array;
     yylval.r.str = new char[str.size() + 1];
     strcpy(yylval.r.str, str.c_str());
     l.log("double quoted string: "); l.log(str);
@@ -264,7 +264,7 @@ VARIABLE (${NAME})
   }
 
   {VARIABLE}\[[0-9]+\] {
-    BEGIN variable_substitution_integer;
+    BEGIN variable_substitution_array;
     yylval.r.str = new char[str.size() + 1];
     strcpy(yylval.r.str, str.c_str());
     l.log("double quoted string: "); l.log(str);
@@ -275,7 +275,7 @@ VARIABLE (${NAME})
   }
 
   {VARIABLE}\[{VARIABLE}\] {
-    BEGIN variable_substitution_var;
+    BEGIN variable_substitution_array;
     yylval.r.str = new char[str.size() + 1];
     strcpy(yylval.r.str, str.c_str());
     l.log("double quoted string: "); l.log(str);
@@ -324,7 +324,7 @@ VARIABLE (${NAME})
   }
 }
 
-<variable_substitution_name>{
+<variable_substitution_array>{
   {VARIABLE} {
     yylval.r.str = new char[yyleng + 1];
     strcpy(yylval.r.str, yytext);
@@ -347,59 +347,11 @@ VARIABLE (${NAME})
     return T_STRING;
   }
 
-  \] {
-    doForReturn(yytext);
-    l.log("]");
-    BEGIN d_string;
-    tokens_queue.push('.');
-    return ']';
-  }
-}
-
-<variable_substitution_integer>{
-  {VARIABLE} {
-    yylval.r.str = new char[yyleng + 1];
-    strcpy(yylval.r.str, yytext);
-    doForReturn(yytext);
-    l.log("T_VARIABLE", 0); l.log(yytext);
-    return T_VARIABLE;
-  }
-
-  \[ {
-   doForReturn(yytext);
-   l.log("[");
-   return '[';
-  }
-
   [0-9]+ {
     yylval.r.i = atoi(yytext);
     doForReturn(yytext);
     l.log("T_INTEGER", 0); l.log(yylval.r.i);
     return T_LNUMBER;
-  }
-
-  \] {
-    doForReturn(yytext);
-    l.log("]");
-    tokens_queue.push('.');
-    BEGIN d_string;
-    return ']';
-  }
-}
-
-<variable_substitution_var>{
-  {VARIABLE} {
-    yylval.r.str = new char[yyleng + 1];
-    strcpy(yylval.r.str, yytext);
-    doForReturn(yytext);
-    l.log("T_VARIABLE", 0); l.log(yytext);
-    return T_VARIABLE;
-  }
-
-  \[ {
-   doForReturn(yytext);
-   l.log("[");
-   return '[';
   }
 
   \] {
