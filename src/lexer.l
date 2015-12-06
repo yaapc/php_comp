@@ -13,7 +13,7 @@
   int col_no = 0;
   string inline_html;
   string str;
-  queue<int> old_queue, tokens_queue;
+  queue<int> tokens_queue;
   Logger l("lexer_log.txt");
 
   void doForReturn(string yytext){
