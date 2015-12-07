@@ -188,6 +188,18 @@ BAD_VARIABLE (${BAD_NAME})
     l.log("T_FLOAT", 0); l.log(yylval.r.f);
     return T_DNUMBER;
   }
+
+  true {
+    doForReturn(yytext);
+    l.log("T_TRUE");
+    return T_TRUE;
+  }
+
+  false {
+    doForReturn(yytext);
+    l.log("T_FALSE");
+    return T_FALSE;
+  }
 }
 <php>"abstract"  {
   doForReturn(yytext);
@@ -1107,7 +1119,7 @@ BAD_VARIABLE (${BAD_NAME})
   return T_PRIMITIVE;
 }
 
-<php>"boolean"   {
+<php>("boolean"|"bool")   {
   doForReturn(yytext);
   l.log("T_PRIMITIVE: BOOLEAN");
   yylval.r.token_type = T_PRIMITIVE_BOOLEAN;

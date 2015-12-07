@@ -39,6 +39,7 @@
 %left T_ELSEIF
 %left T_ELSE
 %left T_ENDIF
+%token T_TRUE T_FALSE
 %token T_LNUMBER
 %token T_DNUMBER
 %token T_STRING
@@ -840,6 +841,8 @@ ctor_arguments:
 common_scalar:
     T_LNUMBER
   | T_DNUMBER
+  | T_TRUE
+  | T_FALSE
   | T_CONSTANT_ENCAPSED_STRING
   | T_LINE
   | T_FILE
