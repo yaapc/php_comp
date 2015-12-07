@@ -400,7 +400,7 @@ declare_list:
 ;
 
 declare_list_element:
-    T_STRING '=' static_scalar
+    type T_STRING '=' static_scalar
 ;
 
 switch_case_list:
