@@ -42,7 +42,7 @@ LITERAL ([a-zA-Z])
 EXP ([eE][+-]?[0-9]+)
 NAME ([a-zA-Z_][a-zA-Z0-9_]*)
 VARIABLE (${NAME})
-BAD_NAME ([0-9][a-zA-Z0-9_]*)
+BAD_NAME ([0-9]+[a-zA-Z_][a-zA-Z0-9_]*)
 BAD_VARIABLE (${BAD_NAME})
 %option noyywrap
 
