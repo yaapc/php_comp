@@ -469,7 +469,7 @@ foreach_variable: /* typing? */
 
 parameter_list:
     non_empty_parameter_list
-  | non_empty_parameter_list non_empty_default_parameter_list
+  | non_empty_parameter_list ',' non_empty_default_parameter_list
   | non_empty_default_parameter_list
   | /* empty */
 ;
