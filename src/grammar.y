@@ -660,6 +660,7 @@ expr:
   | variable T_OR_EQUAL expr
   | variable T_XOR_EQUAL expr
   | variable T_SR_EQUAL expr
+  | variable T_SL_EQUAL expr
   | variable T_POW_EQUAL expr
   | variable T_INC
   | T_INC variable
