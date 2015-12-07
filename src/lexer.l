@@ -4,6 +4,7 @@
   #include <string>
   #include <string.h>
   #include <queue>
+  #include <stack>
   #include "grammar.hpp"
   #include "definitions.hpp"
   #include "Logger.hpp"
@@ -16,15 +17,12 @@
   queue<int> tokens_queue;
   Logger l("lexer_log.txt");
 
-  // counters to handle unmatched brackets
-  // incremented at openning brcket
-  // dedcremented at closing
-  // 0: matched
-  // greater than zero: nonclosed pair
-  // less than zero: stray bracket
-  int brackets_round = 0;
-  int brackets_square = 0;
-  int brackets_curly = 0;
+  struct bracket {
+    char br;
+    int line_no;
+    int col_no;
+  };
+  stack<bracket> brackets;
 
   void doForReturn(string yytext){
   //cout << yytext << endl;
@@ -87,18 +85,10 @@ BAD_VARIABLE (${BAD_NAME})
 
 <php>("?>"|"%>") {
   BEGIN INITIAL;
-  if (brackets_round > 0) {
-    l.log("Unexpected end of code: unmatched '('");
+  if (!brackets.empty()) {
+    l.log("Unexpected end of file: unmatched", 0); l.log(brackets.top().br);
+    brackets = stack<bracket>();
   }
-  if (brackets_square > 0) {
-    l.log("Unexpected end of code: unmatched '['");
-  }
-  if (brackets_curly > 0) {
-    l.log("Unexpected end of code: unmatched '{'");
-  }
-  brackets_round = 0;
-  brackets_square = 0;
-  brackets_square = 0;
   l.log("T_CLOSE_TAG");
   return T_CLOSE_TAG;
 }
@@ -418,17 +408,23 @@ BAD_VARIABLE (${BAD_NAME})
   }
 
   "[" {
+    bracket b = {'[', line_no, col_no};
+    brackets.push(b);
     doForReturn(yytext);
-    ++brackets_square;
     l.log(yytext);
     return yytext[0];
   }
 
   "]" {
     doForReturn(yytext);
-    --brackets_square;
-    if (brackets_square < 0) {
-      // TODO
+    if (!brackets.empty()) {
+      bracket b = brackets.top();
+      brackets.pop();
+      if (b.br != '[') {
+        // TODO
+        l.log(b.br, 0); l.log("should be matched before ]");
+      }
+    } else {
       l.log("stray ]");
     }
     l.log(yytext);
@@ -436,35 +432,46 @@ BAD_VARIABLE (${BAD_NAME})
   }
 
   "{" {
+    bracket b = {'{', line_no, col_no};
+    brackets.push(b);
     doForReturn(yytext);
-    ++brackets_curly;
     l.log(yytext);
     return yytext[0];
   }
 
   "}" {
     doForReturn(yytext);
-    --brackets_curly;
-    if (brackets_curly < 0) {
-      // TODO
+    if (!brackets.empty()) {
+      bracket b = brackets.top();
+      brackets.pop();
+      if (b.br != '{') {
+        // TODO
+        l.log(b.br, 0); l.log("should be matched before }");
+      }
+    } else {
       l.log("stray }");
     }
-    l.log(yytext);
     return yytext[0];
   }
 
   "(" {
+    bracket b = {'(', line_no, col_no};
+    brackets.push(b);
     doForReturn(yytext);
-    ++brackets_round;
     l.log(yytext);
     return yytext[0];
   }
 
   ")" {
     doForReturn(yytext);
-    --brackets_round;
-    if (brackets_round < 0) {
-      // TODO
+    if (!brackets.empty()) {
+      bracket b = brackets.top();
+      brackets.pop();
+      if (b.br != '(') {
+        // TODO
+        l.log(b.br, 0); l.log("should be matched before )");
+      }
+    } else {
       l.log("stray )");
     }
     l.log(yytext);
