@@ -212,9 +212,7 @@ BAD_VARIABLE (${BAD_NAME})
 
   "'" {
     yylval.r.str = new char[str.size() + 1];
-    for (int i = 0; i < str.size(); ++i)
-      yylval.r.str[i] = str[i];
-    yylval.r.str[str.size() + 1] = '\0';
+    strcpy(yylval.r.str, str.c_str());
     l.log("single quoted string:"); l.log(str);
     str.clear();
     BEGIN php;
