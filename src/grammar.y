@@ -620,12 +620,13 @@ expr_list:
 ;
 
 for_expr_list:
-    for_expr_list ',' expr_declaration
-  | expr_declaration
+    for_expr_list ',' expr_or_declaration
+  | expr_or_declaration
 ;
 
-expr_declaration:
-    type T_VARIABLE '=' expr
+expr_or_declaration:
+    expr
+  | type T_VARIABLE '=' expr
 ;
 
 for_expr:
