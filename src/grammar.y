@@ -469,6 +469,8 @@ foreach_variable: /* typing? */
 
 parameter_list:
     non_empty_parameter_list
+  | non_empty_parameter_list non_empty_default_parameter_list
+  | non_empty_default_parameter_list
   | /* empty */
 ;
 
@@ -477,9 +479,18 @@ non_empty_parameter_list:
   | non_empty_parameter_list ',' parameter
 ;
 
+non_empty_default_parameter_list:
+    default_parameter
+  | non_empty_default_parameter_list ',' default_parameter
+  | non_empty_default_parameter_list ',' parameter  /* handle this error */
+;
+
 parameter:
     type optional_ref optional_ellipsis T_VARIABLE
-  | type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
+;
+
+default_parameter:
+    type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
 ;
 
 array_type:
