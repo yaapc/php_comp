@@ -543,9 +543,9 @@ class_statement_list:
 ;
 
 class_statement:
-    variable_modifiers type property_declaration_list ';'
+    member_modifiers type property_declaration_list ';'
   | T_CONST type class_const_list ';'
-  | method_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body /* optional return type in case of constructor */
+  | member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body /* optional return type in case of constructor */
   | T_USE name_list trait_adaptations
 ;
 
@@ -581,12 +581,7 @@ method_body:
   | '{' inner_statement_list '}'
 ;
 
-variable_modifiers:
-    non_empty_member_modifiers
-  | T_VAR
-;
-
-method_modifiers:
+member_modifiers:
     /* empty */
   | non_empty_member_modifiers
 ;
