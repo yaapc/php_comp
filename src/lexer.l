@@ -413,7 +413,8 @@ BAD_VARIABLE (${BAD_NAME})
   "%" |
   "!" |
   "~" |
-  "@" {
+  "@" |
+  "$" {
     doForReturn(yytext);
     l.log(yytext);
     return yytext[0];
