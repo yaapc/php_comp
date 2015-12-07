@@ -310,6 +310,7 @@ statement:
   | T_THROW expr ';'
   | T_GOTO T_STRING ';'
   | T_STRING ':'
+  | error
 ;
 
 catches:
