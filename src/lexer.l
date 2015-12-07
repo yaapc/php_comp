@@ -1001,6 +1001,7 @@ VARIABLE (${NAME})
   return T_YIELD;
 }
 
+  /* Types */
 <php>"int"   {
   doForReturn(yytext);
   l.log("T_PRIMITIVE: T_INT");
@@ -1040,6 +1041,13 @@ VARIABLE (${NAME})
   doForReturn(yytext);
   l.log("T_PRIMITIVE: STRING");
   yylval.r.token_type = T_PRIMITIVE_STRING;
+  return T_PRIMITIVE;
+}
+
+<php>"void" {
+  doForReturn(yytext);
+  l.log("T_PRIMITIVE: VOID");
+  yylval.r.token_type = T_PRIMITIVE_VOID;
   return T_PRIMITIVE;
 }
 
