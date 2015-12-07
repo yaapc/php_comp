@@ -32,6 +32,8 @@ LITERAL ([a-zA-Z])
 EXP ([eE][+-]?[0-9]+)
 NAME ([a-zA-Z_][a-zA-Z0-9_]*)
 VARIABLE (${NAME})
+BAD_NAME ([0-9][a-zA-Z0-9_]*)
+BAD_VARIABLE (${BAD_NAME})
 %option noyywrap
 
 %x multi_line_comment
@@ -1063,6 +1065,17 @@ VARIABLE (${NAME})
   return T_VARIABLE;
 }
 
+<php>{BAD_NAME} {
+  doForReturn(yytext);
+  l.log("T_STRING: BAD", 0); l.log(yytext);
+  return T_STRING;
+}
+
+<php>{BAD_VARIABLE}  {
+  doForReturn(yytext);
+  l.log("T_VARIABLE: BAD", 0); l.log(yytext);
+  return T_VARIABLE;
+}
 <php>.  {
   doForReturn(yytext);
   l.log("T_BAD_INPUT", 0); l.log(yytext);
