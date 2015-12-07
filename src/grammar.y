@@ -862,6 +862,7 @@ static_scalar:
   | name
   | T_ARRAY '(' static_array_pair_list ')'
   | '[' static_array_pair_list ']'
+  | T_SQUARE_BRACKETS /* empty array */
   | static_operation
 ;
 
