@@ -10,8 +10,8 @@
   #include "Logger.hpp"
 
   using namespace std;
-  int line_no = 0;
-  int col_no = 0;
+  int line_no = 1;
+  int col_no = 1;
   string inline_html;
   string str;
   queue<int> tokens_queue;
@@ -24,13 +24,10 @@
   };
   stack<bracket> brackets;
 
-  void doForReturn(string yytext){
-  //cout << yytext << endl;
-  /*
-  yylval.r.col_no = col_no;
-  yylval.r.line_no = line_no;
-  col_no += strlen(yytext);
-  */
+  void doForReturn(char *yytext){
+    yylval.r.col_no = col_no;
+    yylval.r.line_no = line_no;
+    col_no += strlen(yytext);
 }
 
 %}
@@ -89,6 +86,7 @@ BAD_VARIABLE (${BAD_NAME})
     l.log("Unexpected end of file: unmatched", 0); l.log(brackets.top().br);
     brackets = stack<bracket>();
   }
+  doForReturn(yytext);
   l.log("T_CLOSE_TAG");
   return T_CLOSE_TAG;
 }
@@ -96,7 +94,7 @@ BAD_VARIABLE (${BAD_NAME})
 (.|\n)/"<?" {
   if (yytext[0] == '\n') {
     ++line_no;
-    col_no = 0;
+    col_no = 1;
   } else {
     ++col_no;
   }
@@ -113,7 +111,7 @@ BAD_VARIABLE (${BAD_NAME})
 \n {
   if (yytext[0] == '\n') {
     ++line_no;
-    col_no = 0;
+    col_no = 1;
   } else {
     ++col_no;
   }
@@ -135,6 +133,7 @@ BAD_VARIABLE (${BAD_NAME})
 <php>{
   ("//"|"#").* {
     l.log("SINGLE_LINE_COMMENT");
+    doForReturn(yytext);
   }
 
   "/*" {
@@ -144,7 +143,7 @@ BAD_VARIABLE (${BAD_NAME})
   }
 
   \n   {
-    col_no =0;
+    col_no = 1;
     line_no++;
   }
 
@@ -168,7 +167,7 @@ BAD_VARIABLE (${BAD_NAME})
 
   \n {
     ++line_no;
-    col_no = 0;
+    col_no = 1;
   }
 }
 
@@ -232,7 +231,7 @@ BAD_VARIABLE (${BAD_NAME})
 
   "\\'" {str.push_back('\''); ++col_no;}
 
-  \n {str.push_back('\n'); ++line_no; col_no = 0;}
+  \n {str.push_back('\n'); ++line_no; col_no = 1;}
 
   "'" {
     yylval.r.str = new char[str.size() + 1];
@@ -264,9 +263,10 @@ BAD_VARIABLE (${BAD_NAME})
   \\\$ {str.push_back('$'); ++col_no;}
   "\\\"" {str.push_back('"'); ++col_no;}
 
-  \n {str.push_back('\n'); ++line_no; col_no = 0;}
+  \n {str.push_back('\n'); ++line_no; col_no = 1;}
 
   "\"" {
+    ++col_no;
     yylval.r.str = new char[str.size() + 1];
     strcpy(yylval.r.str, str.c_str());
     l.log("double quoted string:"); l.log(str);
