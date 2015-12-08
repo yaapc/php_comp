@@ -551,6 +551,21 @@ foreach_variable: /* typing? */
     type T_VARIABLE
   | type '&' T_VARIABLE
   | type list_expr
+  | T_VARIABLE
+		{
+			/* ERROR RULE:	foreach variable without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare foreach variable without type","");
+		}
+  | '&'	T_VARIABLE
+		{
+			/* ERROR RULE:	foreach variable without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare foreach variable without type","");
+		}
+  | list_expr
+		{
+			/* ERROR RULE:	foreach variable without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare foreach variable without type","");
+		}
 ;
 
 parameter_list:
