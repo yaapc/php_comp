@@ -16,7 +16,7 @@
   string str;
   queue<int> tokens_queue;
   Logger l("lexer_log.txt");
-
+  extern ErrorRecovery errorRec;
   struct bracket {
     char br;
     int line_no;
@@ -1176,12 +1176,18 @@ BAD_VARIABLE (${BAD_NAME})
 
 <php>{BAD_NAME} {
   doForReturn(yytext);
+  char msg[128];
+  sprintf(msg, "Bad name '%s': names can't start with a digit", yytext);
+  errorRec.errQ->enqueue(line_no, col_no, msg, "");
   l.log("T_STRING: BAD", 0); l.log(yytext);
   return T_STRING;
 }
 
 <php>{BAD_VARIABLE}  {
   doForReturn(yytext);
+  char msg[128];
+  sprintf(msg, "Bad variable name '%s': variables names can't start with a digit", yytext);
+  errorRec.errQ->enqueue(line_no, col_no, msg, "");
   l.log("T_VARIABLE: BAD", 0); l.log(yytext);
   return T_VARIABLE;
 }

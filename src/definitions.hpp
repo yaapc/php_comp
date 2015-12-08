@@ -13,5 +13,4 @@ enum primitive {
 enum open_tag_type {
   NORMAL, WITH_ECHO
 };
-static ErrorRecovery errorRec;
 #endif

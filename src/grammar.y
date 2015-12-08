@@ -6,6 +6,7 @@
   #include "ErrorRevovery.h"
 
    Logger parserLogger("parser_log.txt");
+   ErrorRecovery errorRec;
 %}
 
 %nonassoc _def_val_ low_prec
