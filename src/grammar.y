@@ -380,6 +380,21 @@ optional_ellipsis:
 
 function_declaration_statement:
   T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}'
+  | T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':'  '{' inner_statement_list '}'
+		{
+			/* ERROR RULE: function without returned type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting return type, functions must have return type","");
+		}
+  | T_STATIC T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}'
+		{
+			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
+		}
+ | member_modifier_without_static T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}'
+		{
+			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
+		}
 ;
 
 class_declaration_statement:
@@ -643,6 +658,14 @@ member_modifier:
   | T_PROTECTED
   | T_PRIVATE
   | T_STATIC
+  | T_ABSTRACT
+  | T_FINAL
+;
+
+member_modifier_without_static:
+    T_PUBLIC
+  | T_PROTECTED
+  | T_PRIVATE
   | T_ABSTRACT
   | T_FINAL
 ;
