@@ -83,8 +83,12 @@ BAD_VARIABLE (${BAD_NAME})
 <php>("?>"|"%>") {
   BEGIN INITIAL;
   if (!brackets.empty()) {
-    l.log("Unexpected end of file: unmatched", 0); l.log(brackets.top().br);
-    brackets = stack<bracket>();
+    char msg[128];
+    bracket b = brackets.top();
+    sprintf(msg, "Unexpected end of code: %c at line %d column %d should be matched", b.br, b.line_no, b.col_no);
+    errorRec.errQ->enqueue(line_no, col_no, msg, "");
+    errorRec.printErrQueue();
+    yyterminate();
   }
   doForReturn(yytext);
   l.log("T_CLOSE_TAG");
@@ -436,11 +440,16 @@ BAD_VARIABLE (${BAD_NAME})
       bracket b = brackets.top();
       brackets.pop();
       if (b.br != '[') {
-        // TODO
-        l.log(b.br, 0); l.log("should be matched before ]");
+        char msg[128];
+        sprintf(msg, "Unexpected ]: bracket %c at line %d column %d should be matched", b.br, b.line_no, b.col_no);
+        errorRec.errQ->enqueue(line_no, col_no, msg, "");
+        errorRec.printErrQueue();
+        yyterminate();
       }
     } else {
-      l.log("stray ]");
+      errorRec.errQ->enqueue(line_no, col_no, "stray ]", "");
+      errorRec.printErrQueue();
+      yyterminate();
     }
     l.log(yytext);
     return yytext[0];
@@ -460,11 +469,16 @@ BAD_VARIABLE (${BAD_NAME})
       bracket b = brackets.top();
       brackets.pop();
       if (b.br != '{') {
-        // TODO
-        l.log(b.br, 0); l.log("should be matched before }");
+        char msg[128];
+        sprintf(msg, "Unexpected }: bracket %c at line %d column %d should be matched", b.br, b.line_no, b.col_no);
+        errorRec.errQ->enqueue(line_no, col_no, msg, "");
+        errorRec.printErrQueue();
+        yyterminate();
       }
     } else {
-      l.log("stray }");
+      errorRec.errQ->enqueue(line_no, col_no, "stray }", "");
+      errorRec.printErrQueue();
+      yyterminate();
     }
     return yytext[0];
   }
@@ -483,11 +497,16 @@ BAD_VARIABLE (${BAD_NAME})
       bracket b = brackets.top();
       brackets.pop();
       if (b.br != '(') {
-        // TODO
-        l.log(b.br, 0); l.log("should be matched before )");
+        char msg[128];
+        sprintf(msg, "Unexpected ): bracket %c at line %d column %d should be matched", b.br, b.line_no, b.col_no);
+        errorRec.errQ->enqueue(line_no, col_no, msg, "");
+        errorRec.printErrQueue();
+        yyterminate();
       }
     } else {
-      l.log("stray )");
+      errorRec.errQ->enqueue(line_no, col_no, "stray )", "");
+      errorRec.printErrQueue();
+      yyterminate();
     }
     l.log(yytext);
     return yytext[0];
