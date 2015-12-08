@@ -476,6 +476,16 @@ declare_list:
 
 declare_list_element:
     type T_STRING '=' static_scalar
+  | type T_STRING '='
+		{
+			/* ERROR RULE: constant without value */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Constant can't be without value","");
+		}
+  | T_STRING '=' static_scalar
+		{
+			/* ERROR RULE: constant without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Constant can't be without type","");
+		}
 ;
 
 switch_case_list:
