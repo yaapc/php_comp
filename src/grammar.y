@@ -12,7 +12,7 @@
 
 %nonassoc _def_val_ low_prec
 %left T_INCLUDE T_INCLUDE_ONCE T_EVAL T_REQUIRE T_REQUIRE_ONCE
-%left ','
+%left ',' ';'
 %left T_LOGICAL_OR
 %left T_LOGICAL_XOR
 %left T_LOGICAL_AND
@@ -322,7 +322,7 @@ statement:
   | T_IF parentheses_expr statement elseif_list else_single
   | T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';'
   | T_WHILE parentheses_expr while_statement
-  | T_DO statement T_WHILE parentheses_expr ';'
+  | do_while_loop
   | for_loop
   | T_SWITCH parentheses_expr switch_case_list
   | T_BREAK ';'
@@ -527,6 +527,20 @@ case:
 case_separator:
     ':'
   | ';'
+;
+
+do_while_loop:
+	T_DO statement T_WHILE parentheses_expr ';'
+  | T_DO statement parentheses_expr ';'
+		{
+			/* ERROR RULE: do while loop without while keyword */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected \'(\', expecting while (T_WHILE)","");
+		}
+  | T_DO statement T_WHILE parentheses_expr %prec low_prec
+		{
+			/* ERROR RULE: do while loop without ;  */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected token after while","");
+		}
 ;
 
 while_statement:
