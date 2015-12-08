@@ -332,7 +332,7 @@ statement:
   | T_RETURN ';'
   | T_RETURN expr ';'
   | yield_expr ';'
-  | T_GLOBAL type global_var_list ';'
+  | global_variable_statement
   | T_STATIC type static_var_list ';'
   | T_ECHO expr_list ';'
   | T_INLINE_HTML
@@ -664,6 +664,15 @@ argument:
     expr
   | '&' variable
   | T_ELLIPSIS expr
+;
+
+global_variable_statement:
+	T_GLOBAL type global_var_list ';'
+  | T_GLOBAL global_var_list ';'
+		{
+			/* ERROR RULE: constant without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare gloabel variable without type","");
+		}
 ;
 
 global_var_list:
