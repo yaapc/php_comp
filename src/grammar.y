@@ -720,6 +720,21 @@ class_statement:
   | T_CONST type class_const_list ';'
   | member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body /* optional return type in case of constructor */
   | T_USE name_list trait_adaptations
+  | member_modifiers  property_declaration_list ';'
+		{
+			/* ERROR RULE: variable without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
+		}
+  | T_CONST class_const_list ';'
+		{
+			/* ERROR RULE: static variable without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, static class member must have type","");
+		}
+  | member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type method_body
+		{
+			/* ERROR RULE: function without name */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
+		}
 ;
 
 trait_adaptations:
