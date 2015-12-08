@@ -1164,18 +1164,24 @@ BAD_VARIABLE (${BAD_NAME})
 
 <php>{NAME} {
   doForReturn(yytext);
+  yylval.r.str = new char[yyleng + 1];
+  strcpy(yylval.r.str, yytext);
   l.log("T_STRING", 0); l.log(yytext);
   return T_STRING;
 }
 
 <php>{VARIABLE}  {
   doForReturn(yytext);
+  yylval.r.str = new char[yyleng + 1];
+  strcpy(yylval.r.str, yytext);
   l.log("T_VARIABLE", 0); l.log(yytext);
   return T_VARIABLE;
 }
 
 <php>{BAD_NAME} {
   doForReturn(yytext);
+  yylval.r.str = new char[yyleng + 1];
+  strcpy(yylval.r.str, yytext);
   char msg[128];
   sprintf(msg, "Bad name '%s': names can't start with a digit", yytext);
   errorRec.errQ->enqueue(line_no, col_no, msg, "");
@@ -1185,6 +1191,8 @@ BAD_VARIABLE (${BAD_NAME})
 
 <php>{BAD_VARIABLE}  {
   doForReturn(yytext);
+  yylval.r.str = new char[yyleng + 1];
+  strcpy(yylval.r.str, yytext);
   char msg[128];
   sprintf(msg, "Bad variable name '%s': variables names can't start with a digit", yytext);
   errorRec.errQ->enqueue(line_no, col_no, msg, "");
