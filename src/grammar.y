@@ -2,7 +2,12 @@
   #include <iostream>
   using namespace std;
   #include "definitions.hpp"
+  #include "Logger.hpp"
+  #include "ErrorRevovery.h"
 
+   Logger parserLogger("parser_log.txt");
+
+   ErrorRecovery errorRec;
 %}
 
 %nonassoc _def_val_ low_prec
@@ -138,7 +143,7 @@
 
 %%
 start:
-    start_part
+    start_part { errorRec.printErrQueue();}
   | start start_part
 ;
 
@@ -196,6 +201,11 @@ top_statement:
   | T_USE use_type use_declarations ';'
   | group_use_declaration ';'
   | T_CONST type constant_declaration_list ';'
+  | T_CONST constant_declaration_list ';'
+		{
+			/* ERROR RULE: constant without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare constant without type","");
+		}
 ;
 
 use_type:
@@ -247,7 +257,17 @@ constant_declaration_list:
 ;
 
 constant_declaration:
-  T_STRING '=' static_scalar
+    T_STRING '=' static_scalar
+  | T_STRING '='
+	{
+		/* ERROR RULE: constant = without value */
+		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token, expecting value","");
+	}
+  | T_STRING
+	{
+		/* ERROR RULE: constant = without value */
+		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token, expecting value","");
+	}
 ;
 
 class_const_list:
@@ -256,7 +276,17 @@ class_const_list:
 ;
 
 class_const:
-  identifier '=' static_scalar
+    identifier '=' static_scalar
+  | identifier '='
+		{
+			/* ERROR RULE: constant = without value */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected \';\', expecting value","");
+		}
+  | identifier
+		{
+			/* ERROR RULE: constant without value */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected \';\', expecting \'=\'","");
+		}
 ;
 
 inner_statement_list:
@@ -279,6 +309,11 @@ variable_declaration_list:
 variable_declaration:
     T_VARIABLE '=' expr
   | T_VARIABLE
+  | T_VARIABLE '='
+		{
+			/* ERROR RULE: variable without value */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected token, expecting value","");
+		}
 ;
 
 statement:
