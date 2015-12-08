@@ -629,6 +629,11 @@ default_parameter:
 
 array_type:
     type T_SQUARE_BRACKETS
+  | T_SQUARE_BRACKETS
+		{
+			/* ERROR RULE: array without tpye */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type, array must have type","");
+    }
 ;
 
 type:
