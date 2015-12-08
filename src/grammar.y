@@ -323,7 +323,7 @@ statement:
   | T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';'
   | T_WHILE parentheses_expr while_statement
   | T_DO statement T_WHILE parentheses_expr ';'
-  | T_FOR '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
+  | for_loop
   | T_SWITCH parentheses_expr switch_case_list
   | T_BREAK ';'
   | T_BREAK expr ';'
@@ -452,6 +452,25 @@ implements_list:
 name_list:
     name
   | name_list ',' name
+;
+
+for_loop:
+	  T_FOR '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
+	| '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
+		{
+			/* ERROR RULE: for loop without for keyword */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Missing For keyword","");
+		}
+	| T_FOR '(' for_expr  ')' for_statement
+		{
+			/* ERROR RULE: for loop with colon instead of semi colon */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error","");
+		}
+	| T_FOR '(' for_expr ';' for_expr  ')' for_statement
+		{
+			/* ERROR RULE: for loop with colon instead of semi colon  */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error","");
+		}
 ;
 
 for_statement:
