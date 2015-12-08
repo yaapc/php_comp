@@ -4,25 +4,30 @@
   #include <string>
   #include <string.h>
   #include <queue>
+  #include <stack>
   #include "grammar.hpp"
   #include "definitions.hpp"
   #include "Logger.hpp"
 
   using namespace std;
-  int line_no = 0;
-  int col_no = 0;
+  int line_no = 1;
+  int col_no = 1;
   string inline_html;
   string str;
   queue<int> tokens_queue;
   Logger l("lexer_log.txt");
 
-  void doForReturn(string yytext){
-  //cout << yytext << endl;
-  /*
-  yylval.r.col_no = col_no;
-  yylval.r.line_no = line_no;
-  col_no += strlen(yytext);
-  */
+  struct bracket {
+    char br;
+    int line_no;
+    int col_no;
+  };
+  stack<bracket> brackets;
+
+  void doForReturn(char *yytext){
+    yylval.r.col_no = col_no;
+    yylval.r.line_no = line_no;
+    col_no += strlen(yytext);
 }
 
 %}
@@ -32,6 +37,8 @@ LITERAL ([a-zA-Z])
 EXP ([eE][+-]?[0-9]+)
 NAME ([a-zA-Z_][a-zA-Z0-9_]*)
 VARIABLE (${NAME})
+BAD_NAME ([0-9]+[a-zA-Z_][a-zA-Z0-9_]*)
+BAD_VARIABLE (${BAD_NAME})
 %option noyywrap
 
 %x multi_line_comment
@@ -75,6 +82,11 @@ VARIABLE (${NAME})
 
 <php>("?>"|"%>") {
   BEGIN INITIAL;
+  if (!brackets.empty()) {
+    l.log("Unexpected end of file: unmatched", 0); l.log(brackets.top().br);
+    brackets = stack<bracket>();
+  }
+  doForReturn(yytext);
   l.log("T_CLOSE_TAG");
   return T_CLOSE_TAG;
 }
@@ -82,7 +94,7 @@ VARIABLE (${NAME})
 (.|\n)/"<?" {
   if (yytext[0] == '\n') {
     ++line_no;
-    col_no = 0;
+    col_no = 1;
   } else {
     ++col_no;
   }
@@ -99,7 +111,7 @@ VARIABLE (${NAME})
 \n {
   if (yytext[0] == '\n') {
     ++line_no;
-    col_no = 0;
+    col_no = 1;
   } else {
     ++col_no;
   }
@@ -121,6 +133,7 @@ VARIABLE (${NAME})
 <php>{
   ("//"|"#").* {
     l.log("SINGLE_LINE_COMMENT");
+    doForReturn(yytext);
   }
 
   "/*" {
@@ -130,7 +143,7 @@ VARIABLE (${NAME})
   }
 
   \n   {
-    col_no =0;
+    col_no = 1;
     line_no++;
   }
 
@@ -154,7 +167,7 @@ VARIABLE (${NAME})
 
   \n {
     ++line_no;
-    col_no = 0;
+    col_no = 1;
   }
 }
 
@@ -173,6 +186,18 @@ VARIABLE (${NAME})
     yylval.r.f = atof(yytext);
     l.log("T_FLOAT", 0); l.log(yylval.r.f);
     return T_DNUMBER;
+  }
+
+  true {
+    doForReturn(yytext);
+    l.log("T_TRUE");
+    return T_TRUE;
+  }
+
+  false {
+    doForReturn(yytext);
+    l.log("T_FALSE");
+    return T_FALSE;
   }
 }
 <php>"abstract"  {
@@ -206,13 +231,11 @@ VARIABLE (${NAME})
 
   "\\'" {str.push_back('\''); ++col_no;}
 
-  \n {str.push_back('\n'); ++line_no; col_no = 0;}
+  \n {str.push_back('\n'); ++line_no; col_no = 1;}
 
   "'" {
     yylval.r.str = new char[str.size() + 1];
-    for (int i = 0; i < str.size(); ++i)
-      yylval.r.str[i] = str[i];
-    yylval.r.str[str.size() + 1] = '\0';
+    strcpy(yylval.r.str, str.c_str());
     l.log("single quoted string:"); l.log(str);
     str.clear();
     BEGIN php;
@@ -240,9 +263,10 @@ VARIABLE (${NAME})
   \\\$ {str.push_back('$'); ++col_no;}
   "\\\"" {str.push_back('"'); ++col_no;}
 
-  \n {str.push_back('\n'); ++line_no; col_no = 0;}
+  \n {str.push_back('\n'); ++line_no; col_no = 1;}
 
   "\"" {
+    ++col_no;
     yylval.r.str = new char[str.size() + 1];
     strcpy(yylval.r.str, str.c_str());
     l.log("double quoted string:"); l.log(str);
@@ -390,13 +414,79 @@ VARIABLE (${NAME})
   "!" |
   "~" |
   "@" |
-  "[" |
-  "]" |
-  "{" |
-  "}" |
-  "(" |
+  "$" {
+    doForReturn(yytext);
+    l.log(yytext);
+    return yytext[0];
+  }
+
+  "[" {
+    bracket b = {'[', line_no, col_no};
+    brackets.push(b);
+    doForReturn(yytext);
+    l.log(yytext);
+    return yytext[0];
+  }
+
+  "]" {
+    doForReturn(yytext);
+    if (!brackets.empty()) {
+      bracket b = brackets.top();
+      brackets.pop();
+      if (b.br != '[') {
+        // TODO
+        l.log(b.br, 0); l.log("should be matched before ]");
+      }
+    } else {
+      l.log("stray ]");
+    }
+    l.log(yytext);
+    return yytext[0];
+  }
+
+  "{" {
+    bracket b = {'{', line_no, col_no};
+    brackets.push(b);
+    doForReturn(yytext);
+    l.log(yytext);
+    return yytext[0];
+  }
+
+  "}" {
+    doForReturn(yytext);
+    if (!brackets.empty()) {
+      bracket b = brackets.top();
+      brackets.pop();
+      if (b.br != '{') {
+        // TODO
+        l.log(b.br, 0); l.log("should be matched before }");
+      }
+    } else {
+      l.log("stray }");
+    }
+    return yytext[0];
+  }
+
+  "(" {
+    bracket b = {'(', line_no, col_no};
+    brackets.push(b);
+    doForReturn(yytext);
+    l.log(yytext);
+    return yytext[0];
+  }
+
   ")" {
     doForReturn(yytext);
+    if (!brackets.empty()) {
+      bracket b = brackets.top();
+      brackets.pop();
+      if (b.br != '(') {
+        // TODO
+        l.log(b.br, 0); l.log("should be matched before )");
+      }
+    } else {
+      l.log("stray )");
+    }
     l.log(yytext);
     return yytext[0];
   }
@@ -1001,6 +1091,7 @@ VARIABLE (${NAME})
   return T_YIELD;
 }
 
+  /* Types */
 <php>"int"   {
   doForReturn(yytext);
   l.log("T_PRIMITIVE: T_INT");
@@ -1029,7 +1120,7 @@ VARIABLE (${NAME})
   return T_PRIMITIVE;
 }
 
-<php>"boolean"   {
+<php>("boolean"|"bool")   {
   doForReturn(yytext);
   l.log("T_PRIMITIVE: BOOLEAN");
   yylval.r.token_type = T_PRIMITIVE_BOOLEAN;
@@ -1040,6 +1131,13 @@ VARIABLE (${NAME})
   doForReturn(yytext);
   l.log("T_PRIMITIVE: STRING");
   yylval.r.token_type = T_PRIMITIVE_STRING;
+  return T_PRIMITIVE;
+}
+
+<php>"void" {
+  doForReturn(yytext);
+  l.log("T_PRIMITIVE: VOID");
+  yylval.r.token_type = T_PRIMITIVE_VOID;
   return T_PRIMITIVE;
 }
 
@@ -1055,6 +1153,17 @@ VARIABLE (${NAME})
   return T_VARIABLE;
 }
 
+<php>{BAD_NAME} {
+  doForReturn(yytext);
+  l.log("T_STRING: BAD", 0); l.log(yytext);
+  return T_STRING;
+}
+
+<php>{BAD_VARIABLE}  {
+  doForReturn(yytext);
+  l.log("T_VARIABLE: BAD", 0); l.log(yytext);
+  return T_VARIABLE;
+}
 <php>.  {
   doForReturn(yytext);
   l.log("T_BAD_INPUT", 0); l.log(yytext);

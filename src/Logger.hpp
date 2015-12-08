@@ -23,7 +23,10 @@ public:
   }
 
   void log(int i, bool new_line = true) {
-	  os<<i;
+    if (i > 0 && i < 256)
+      os<<char(i);
+	  else
+      os<<i;
     if (new_line) os<<endl;
     else os<<" ";
   }

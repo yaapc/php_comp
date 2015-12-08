@@ -2,12 +2,17 @@
   #include <iostream>
   using namespace std;
   #include "definitions.hpp"
+  #include "Logger.hpp"
+  #include "ErrorRevovery.h"
 
+   Logger parserLogger("parser_log.txt");
+
+   ErrorRecovery errorRec;
 %}
 
 %nonassoc _def_val_ low_prec
 %left T_INCLUDE T_INCLUDE_ONCE T_EVAL T_REQUIRE T_REQUIRE_ONCE
-%left ','
+%left ',' ';'
 %left T_LOGICAL_OR
 %left T_LOGICAL_XOR
 %left T_LOGICAL_AND
@@ -39,6 +44,7 @@
 %left T_ELSEIF
 %left T_ELSE
 %left T_ENDIF
+%token T_TRUE T_FALSE
 %token T_LNUMBER
 %token T_DNUMBER
 %token T_STRING
@@ -137,7 +143,7 @@
 
 %%
 start:
-    start_part
+    start_part { errorRec.printErrQueue();}
   | start start_part
 ;
 
@@ -195,6 +201,11 @@ top_statement:
   | T_USE use_type use_declarations ';'
   | group_use_declaration ';'
   | T_CONST type constant_declaration_list ';'
+  | T_CONST constant_declaration_list ';'
+		{
+			/* ERROR RULE: constant without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare constant without type","");
+		}
 ;
 
 use_type:
@@ -246,7 +257,17 @@ constant_declaration_list:
 ;
 
 constant_declaration:
-  T_STRING '=' static_scalar
+    T_STRING '=' static_scalar
+  | T_STRING '='
+	{
+		/* ERROR RULE: constant = without value */
+		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token, expecting value","");
+	}
+  | T_STRING
+	{
+		/* ERROR RULE: constant = without value */
+		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token, expecting value","");
+	}
 ;
 
 class_const_list:
@@ -255,7 +276,17 @@ class_const_list:
 ;
 
 class_const:
-  identifier '=' static_scalar
+    identifier '=' static_scalar
+  | identifier '='
+		{
+			/* ERROR RULE: constant = without value */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected \';\', expecting value","");
+		}
+  | identifier
+		{
+			/* ERROR RULE: constant without value */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected \';\', expecting \'=\'","");
+		}
 ;
 
 inner_statement_list:
@@ -278,6 +309,11 @@ variable_declaration_list:
 variable_declaration:
     T_VARIABLE '=' expr
   | T_VARIABLE
+  | T_VARIABLE '='
+		{
+			/* ERROR RULE: variable without value */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected token, expecting value","");
+		}
 ;
 
 statement:
@@ -286,8 +322,8 @@ statement:
   | T_IF parentheses_expr statement elseif_list else_single
   | T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';'
   | T_WHILE parentheses_expr while_statement
-  | T_DO statement T_WHILE parentheses_expr ';'
-  | T_FOR '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
+  | do_while_loop
+  | for_loop
   | T_SWITCH parentheses_expr switch_case_list
   | T_BREAK ';'
   | T_BREAK expr ';'
@@ -296,8 +332,8 @@ statement:
   | T_RETURN ';'
   | T_RETURN expr ';'
   | yield_expr ';'
-  | T_GLOBAL type global_var_list ';'
-  | T_STATIC type static_var_list ';'
+  | global_variable_statement
+  | static_variable_statement
   | T_ECHO expr_list ';'
   | T_INLINE_HTML
   | expr ';'
@@ -310,6 +346,7 @@ statement:
   | T_THROW expr ';'
   | T_GOTO T_STRING ';'
   | T_STRING ':'
+  | error
 ;
 
 catches:
@@ -343,28 +380,68 @@ optional_ellipsis:
 
 function_declaration_statement:
   T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}'
+  | T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':'  '{' inner_statement_list '}'
+		{
+			/* ERROR RULE: function without returned type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting return type, functions must have return type","");
+		}
+  | T_STATIC T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}'
+		{
+			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
+		}
+ | member_modifier_without_static T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}'
+		{
+			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
+		}
 ;
 
 class_declaration_statement:
     class_entry_type T_STRING extends_from implements_list '{' class_statement_list '}'
   | T_INTERFACE T_STRING interface_extends_list '{' class_statement_list '}'
   | T_TRAIT T_STRING '{' class_statement_list '}'
+  | class_entry_type extends_from implements_list '{' class_statement_list '}'
+		{
+			/* ERROR RULE: class without name */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'{\', expecting identifier (T_STRING)","");
+		}
 ;
 
 class_entry_type:
     T_CLASS
   | T_ABSTRACT T_CLASS
   | T_FINAL T_CLASS
+  | T_ABSTRACT T_FINAL T_CLASS
+		{
+			/* ERROR RULE: abstract final class*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Abstract final class not allowed","");
+		}
+  | T_FINAL T_ABSTRACT  T_CLASS
+		{
+			/* ERROR RULE: final abctract class*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Final abstract class not allowed","");
+		}
 ;
 
 extends_from:
     /* empty */
   | T_EXTENDS name
+  | T_EXTENDS
+		{
+			/* ERROR RULE: Extent empty*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token,expecting class name","");
+		}
 ;
 
 interface_extends_list:
     /* empty */
   | T_EXTENDS name_list
+  | T_EXTENDS
+		{
+			/* ERROR RULE: Extent empty*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token,expecting interface name","");
+		}
 ;
 
 implements_list:
@@ -375,6 +452,25 @@ implements_list:
 name_list:
     name
   | name_list ',' name
+;
+
+for_loop:
+	  T_FOR '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
+	| '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
+		{
+			/* ERROR RULE: for loop without for keyword */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Missing For keyword","");
+		}
+	| T_FOR '(' for_expr  ')' for_statement
+		{
+			/* ERROR RULE: for loop with colon instead of semi colon */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error","");
+		}
+	| T_FOR '(' for_expr ';' for_expr  ')' for_statement
+		{
+			/* ERROR RULE: for loop with colon instead of semi colon  */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error","");
+		}
 ;
 
 for_statement:
@@ -398,7 +494,17 @@ declare_list:
 ;
 
 declare_list_element:
-    T_STRING '=' static_scalar
+    type T_STRING '=' static_scalar
+  | type T_STRING '='
+		{
+			/* ERROR RULE: constant without value */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Constant can't be without value","");
+		}
+  | T_STRING '=' static_scalar
+		{
+			/* ERROR RULE: constant without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Constant can't be without type","");
+		}
 ;
 
 switch_case_list:
@@ -421,6 +527,20 @@ case:
 case_separator:
     ':'
   | ';'
+;
+
+do_while_loop:
+	T_DO statement T_WHILE parentheses_expr ';'
+  | T_DO statement parentheses_expr ';'
+		{
+			/* ERROR RULE: do while loop without while keyword */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected \'(\', expecting while (T_WHILE)","");
+		}
+  | T_DO statement T_WHILE parentheses_expr %prec low_prec
+		{
+			/* ERROR RULE: do while loop without ;  */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected token after while","");
+		}
 ;
 
 while_statement:
@@ -464,10 +584,27 @@ foreach_variable: /* typing? */
     type T_VARIABLE
   | type '&' T_VARIABLE
   | type list_expr
+  | T_VARIABLE
+		{
+			/* ERROR RULE:	foreach variable without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare foreach variable without type","");
+		}
+  | '&'	T_VARIABLE
+		{
+			/* ERROR RULE:	foreach variable without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare foreach variable without type","");
+		}
+  | list_expr
+		{
+			/* ERROR RULE:	foreach variable without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare foreach variable without type","");
+		}
 ;
 
 parameter_list:
     non_empty_parameter_list
+  | non_empty_parameter_list ',' non_empty_default_parameter_list
+  | non_empty_default_parameter_list
   | /* empty */
 ;
 
@@ -476,13 +613,27 @@ non_empty_parameter_list:
   | non_empty_parameter_list ',' parameter
 ;
 
+non_empty_default_parameter_list:
+    default_parameter
+  | non_empty_default_parameter_list ',' default_parameter
+  | non_empty_default_parameter_list ',' parameter  /* handle this error */
+;
+
 parameter:
     type optional_ref optional_ellipsis T_VARIABLE
-  | type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
+;
+
+default_parameter:
+    type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
 ;
 
 array_type:
     type T_SQUARE_BRACKETS
+  | T_SQUARE_BRACKETS
+		{
+			/* ERROR RULE: array without tpye */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type, array must have type","");
+    }
 ;
 
 type:
@@ -515,6 +666,15 @@ argument:
   | T_ELLIPSIS expr
 ;
 
+global_variable_statement:
+	T_GLOBAL type global_var_list ';'
+  | T_GLOBAL global_var_list ';'
+		{
+			/* ERROR RULE: constant without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare gloabel variable without type","");
+		}
+;
+
 global_var_list:
     global_var_list ',' global_var
   | global_var
@@ -526,6 +686,15 @@ global_var:
   | '$' '{' expr '}'
 ;
 
+static_variable_statement:
+	T_STATIC type static_var_list ';'
+	T_STATIC static_var_list ';'
+  {
+	  /* ERROR RULE: static variable  without type*/
+    errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting type","");
+	}
+;
+
 static_var_list:
     static_var_list ',' static_var
   | static_var
@@ -534,6 +703,11 @@ static_var_list:
 static_var:
     T_VARIABLE
   | T_VARIABLE '=' static_scalar
+  | T_VARIABLE '='
+		{
+			/* ERROR RULE: static variable = without value*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
+		}
 ;
 
 class_statement_list:
@@ -542,10 +716,20 @@ class_statement_list:
 ;
 
 class_statement:
-    variable_modifiers type property_declaration_list ';'
+    member_modifiers type property_declaration_list ';'
   | T_CONST type class_const_list ';'
-  | method_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body /* optional return type in case of constructor */
+  | member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body /* optional return type in case of constructor */
   | T_USE name_list trait_adaptations
+  | member_modifiers property_declaration_list ';'
+		{
+			/* ERROR RULE: variable without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
+		}
+  | member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type method_body
+		{
+			/* ERROR RULE: function without name */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
+		}
 ;
 
 trait_adaptations:
@@ -580,12 +764,7 @@ method_body:
   | '{' inner_statement_list '}'
 ;
 
-variable_modifiers:
-    non_empty_member_modifiers
-  | T_VAR
-;
-
-method_modifiers:
+member_modifiers:
     /* empty */
   | non_empty_member_modifiers
 ;
@@ -604,6 +783,14 @@ member_modifier:
   | T_FINAL
 ;
 
+member_modifier_without_static:
+    T_PUBLIC
+  | T_PROTECTED
+  | T_PRIVATE
+  | T_ABSTRACT
+  | T_FINAL
+;
+
 property_declaration_list:
     property_declaration
   | property_declaration_list ',' property_declaration
@@ -612,6 +799,11 @@ property_declaration_list:
 property_declaration:
     T_VARIABLE
   | T_VARIABLE '=' static_scalar
+  | T_VARIABLE '='
+		{
+			/* ERROR RULE: variable = without value*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
+		}
 ;
 
 expr_list:
@@ -627,6 +819,11 @@ for_expr_list:
 expr_or_declaration:
     expr
   | type T_VARIABLE '=' expr
+  | type T_VARIABLE '='
+		{
+			/* ERROR RULE: variable = without value*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
+		}
 ;
 
 for_expr:
@@ -653,6 +850,7 @@ expr:
   | variable T_OR_EQUAL expr
   | variable T_XOR_EQUAL expr
   | variable T_SR_EQUAL expr
+  | variable T_SL_EQUAL expr
   | variable T_POW_EQUAL expr
   | variable T_INC
   | T_INC variable
@@ -832,6 +1030,8 @@ ctor_arguments:
 common_scalar:
     T_LNUMBER
   | T_DNUMBER
+  | T_TRUE
+  | T_FALSE
   | T_CONSTANT_ENCAPSED_STRING
   | T_LINE
   | T_FILE
@@ -851,6 +1051,7 @@ static_scalar:
   | name
   | T_ARRAY '(' static_array_pair_list ')'
   | '[' static_array_pair_list ']'
+  | T_SQUARE_BRACKETS /* empty array */
   | static_operation
 ;
 
