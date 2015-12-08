@@ -1247,6 +1247,8 @@ encaps_var_offset:
 
 void yyerror(char *s)
 {
-  cout<<"-_-: "<<s<<endl;
+  extern int line_no, col_no;
+  errorRec.errQ->enqueue(line_no, col_no, s, "");
 }
+
 
