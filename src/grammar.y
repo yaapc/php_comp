@@ -819,6 +819,11 @@ for_expr_list:
 expr_or_declaration:
     expr
   | type T_VARIABLE '=' expr
+  | type T_VARIABLE '='
+		{
+			/* ERROR RULE: variable = without value*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
+		}
 ;
 
 for_expr:
