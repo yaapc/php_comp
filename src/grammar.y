@@ -401,22 +401,47 @@ class_declaration_statement:
     class_entry_type T_STRING extends_from implements_list '{' class_statement_list '}'
   | T_INTERFACE T_STRING interface_extends_list '{' class_statement_list '}'
   | T_TRAIT T_STRING '{' class_statement_list '}'
+  | class_entry_type extends_from implements_list '{' class_statement_list '}'
+		{
+			/* ERROR RULE: class without name */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'{\', expecting identifier (T_STRING)","");
+		}
 ;
 
 class_entry_type:
     T_CLASS
   | T_ABSTRACT T_CLASS
   | T_FINAL T_CLASS
+  | T_ABSTRACT T_FINAL T_CLASS
+		{
+			/* ERROR RULE: abstract final class*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Abstract final class not allowed","");
+		}
+  | T_FINAL T_ABSTRACT  T_CLASS
+		{
+			/* ERROR RULE: final abctract class*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Final abstract class not allowed","");
+		}
 ;
 
 extends_from:
     /* empty */
   | T_EXTENDS name
+  | T_EXTENDS
+		{
+			/* ERROR RULE: Extent empty*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token,expecting class name","");
+		}
 ;
 
 interface_extends_list:
     /* empty */
   | T_EXTENDS name_list
+  | T_EXTENDS
+		{
+			/* ERROR RULE: Extent empty*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token,expecting interface name","");
+		}
 ;
 
 implements_list:
