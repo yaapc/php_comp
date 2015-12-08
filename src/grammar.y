@@ -333,7 +333,7 @@ statement:
   | T_RETURN expr ';'
   | yield_expr ';'
   | global_variable_statement
-  | T_STATIC type static_var_list ';'
+  | static_variable_statement
   | T_ECHO expr_list ';'
   | T_INLINE_HTML
   | expr ';'
@@ -686,6 +686,15 @@ global_var:
   | '$' '{' expr '}'
 ;
 
+static_variable_statement:
+	T_STATIC type static_var_list ';'
+	T_STATIC static_var_list ';'
+  {
+	  /* ERROR RULE: static variable  without type*/
+    errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting type","");
+	}
+;
+
 static_var_list:
     static_var_list ',' static_var
   | static_var
@@ -694,6 +703,11 @@ static_var_list:
 static_var:
     T_VARIABLE
   | T_VARIABLE '=' static_scalar
+  | T_VARIABLE '='
+		{
+			/* ERROR RULE: static variable = without value*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
+		}
 ;
 
 class_statement_list:
