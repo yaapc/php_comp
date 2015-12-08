@@ -107,6 +107,8 @@ BAD_VARIABLE (${BAD_NAME})
   return T_INLINE_HTML;
 }
 
+<php><<EOF>> {errorRec.errQ->enqueue(line_no, col_no, "unexpected end of file: missing ?>",""); errorRec.printErrQueue(); yyterminate();}
+
 . |
 \n {
   if (yytext[0] == '\n') {
@@ -159,7 +161,7 @@ BAD_VARIABLE (${BAD_NAME})
     l.log("END_MULTI_LINE_COMMENT");
   }
 
-  <<EOF>> {l.log("unclosed comment"); return 0;}
+  <<EOF>> {errorRec.errQ->enqueue(line_no, col_no, "unexpected end of file: unclosed multi-line comment",""); errorRec.printErrQueue(); yyterminate();}
 
   . {
     ++col_no;
@@ -244,7 +246,7 @@ BAD_VARIABLE (${BAD_NAME})
 
   . {str.push_back(yytext[0]); ++col_no;}
 
-  <<EOF>> {l.log("unclosed single quoted string"); return 0;}
+  <<EOF>> {errorRec.errQ->enqueue(line_no, col_no, "unexpected end of file: unclosed string",""); errorRec.printErrQueue(); yyterminate();}
 }
 
   /* double quoted string */
@@ -313,7 +315,7 @@ BAD_VARIABLE (${BAD_NAME})
 
   . {str.push_back(yytext[0]); ++col_no;}
 
-  <<EOF>> {l.log("unclosed double quoted string"); return 0;}
+  <<EOF>> {errorRec.errQ->enqueue(line_no, col_no, "unexpected end of file: unclosed string",""); errorRec.printErrQueue(); yyterminate();}
 }
 
 <variable_substitution>{
