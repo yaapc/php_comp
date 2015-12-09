@@ -615,7 +615,11 @@ non_empty_parameter_list:
 non_empty_default_parameter_list:
     default_parameter
   | non_empty_default_parameter_list ',' default_parameter
-  | non_empty_default_parameter_list ',' parameter  /* handle this error */
+  | non_empty_default_parameter_list ',' parameter
+  {
+    /* ERROR RULE */
+    errorRec.errQ->enqueue($<r.line_no>3,$<r.col_no>3,"default parameters must appear only at the end","");
+  }
 ;
 
 parameter:
