@@ -1201,6 +1201,9 @@ BAD_VARIABLE (${BAD_NAME})
 }
 <php>.  {
   doForReturn(yytext);
+  char msg[128];
+  sprintf(msg, "Unexpected character '%c'", yytext);
+  errorRec.errQ->enqueue(line_no, col_no, msg, "");
   l.log("T_BAD_INPUT", 0); l.log(yytext);
   return T_BAD_INPUT;
 }
