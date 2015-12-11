@@ -16,7 +16,7 @@
   string str;
   queue<int> tokens_queue;
   Logger l("lexer_log.txt");
-
+  extern ErrorRecovery errorRec;
   struct bracket {
     char br;
     int line_no;
@@ -83,8 +83,12 @@ BAD_VARIABLE (${BAD_NAME})
 <php>("?>"|"%>") {
   BEGIN INITIAL;
   if (!brackets.empty()) {
-    l.log("Unexpected end of file: unmatched", 0); l.log(brackets.top().br);
-    brackets = stack<bracket>();
+    char msg[128];
+    bracket b = brackets.top();
+    sprintf(msg, "Unexpected end of code: %c at line %d column %d should be matched", b.br, b.line_no, b.col_no);
+    errorRec.errQ->enqueue(line_no, col_no, msg, "");
+    errorRec.printErrQueue();
+    yyterminate();
   }
   doForReturn(yytext);
   l.log("T_CLOSE_TAG");
@@ -106,6 +110,8 @@ BAD_VARIABLE (${BAD_NAME})
   inline_html.clear();
   return T_INLINE_HTML;
 }
+
+<php><<EOF>> {errorRec.errQ->enqueue(line_no, col_no, "unexpected end of file: missing ?>",""); errorRec.printErrQueue(); yyterminate();}
 
 . |
 \n {
@@ -159,7 +165,7 @@ BAD_VARIABLE (${BAD_NAME})
     l.log("END_MULTI_LINE_COMMENT");
   }
 
-  <<EOF>> {l.log("unclosed comment"); return 0;}
+  <<EOF>> {errorRec.errQ->enqueue(line_no, col_no, "unexpected end of file: unclosed multi-line comment",""); errorRec.printErrQueue(); yyterminate();}
 
   . {
     ++col_no;
@@ -244,7 +250,7 @@ BAD_VARIABLE (${BAD_NAME})
 
   . {str.push_back(yytext[0]); ++col_no;}
 
-  <<EOF>> {l.log("unclosed single quoted string"); return 0;}
+  <<EOF>> {errorRec.errQ->enqueue(line_no, col_no, "unexpected end of file: unclosed string",""); errorRec.printErrQueue(); yyterminate();}
 }
 
   /* double quoted string */
@@ -313,7 +319,7 @@ BAD_VARIABLE (${BAD_NAME})
 
   . {str.push_back(yytext[0]); ++col_no;}
 
-  <<EOF>> {l.log("unclosed double quoted string"); return 0;}
+  <<EOF>> {errorRec.errQ->enqueue(line_no, col_no, "unexpected end of file: unclosed string",""); errorRec.printErrQueue(); yyterminate();}
 }
 
 <variable_substitution>{
@@ -434,11 +440,16 @@ BAD_VARIABLE (${BAD_NAME})
       bracket b = brackets.top();
       brackets.pop();
       if (b.br != '[') {
-        // TODO
-        l.log(b.br, 0); l.log("should be matched before ]");
+        char msg[128];
+        sprintf(msg, "Unexpected ]: bracket %c at line %d column %d should be matched", b.br, b.line_no, b.col_no);
+        errorRec.errQ->enqueue(line_no, col_no, msg, "");
+        errorRec.printErrQueue();
+        yyterminate();
       }
     } else {
-      l.log("stray ]");
+      errorRec.errQ->enqueue(line_no, col_no, "stray ]", "");
+      errorRec.printErrQueue();
+      yyterminate();
     }
     l.log(yytext);
     return yytext[0];
@@ -458,11 +469,16 @@ BAD_VARIABLE (${BAD_NAME})
       bracket b = brackets.top();
       brackets.pop();
       if (b.br != '{') {
-        // TODO
-        l.log(b.br, 0); l.log("should be matched before }");
+        char msg[128];
+        sprintf(msg, "Unexpected }: bracket %c at line %d column %d should be matched", b.br, b.line_no, b.col_no);
+        errorRec.errQ->enqueue(line_no, col_no, msg, "");
+        errorRec.printErrQueue();
+        yyterminate();
       }
     } else {
-      l.log("stray }");
+      errorRec.errQ->enqueue(line_no, col_no, "stray }", "");
+      errorRec.printErrQueue();
+      yyterminate();
     }
     return yytext[0];
   }
@@ -481,11 +497,16 @@ BAD_VARIABLE (${BAD_NAME})
       bracket b = brackets.top();
       brackets.pop();
       if (b.br != '(') {
-        // TODO
-        l.log(b.br, 0); l.log("should be matched before )");
+        char msg[128];
+        sprintf(msg, "Unexpected ): bracket %c at line %d column %d should be matched", b.br, b.line_no, b.col_no);
+        errorRec.errQ->enqueue(line_no, col_no, msg, "");
+        errorRec.printErrQueue();
+        yyterminate();
       }
     } else {
-      l.log("stray )");
+      errorRec.errQ->enqueue(line_no, col_no, "stray )", "");
+      errorRec.printErrQueue();
+      yyterminate();
     }
     l.log(yytext);
     return yytext[0];
@@ -1143,29 +1164,46 @@ BAD_VARIABLE (${BAD_NAME})
 
 <php>{NAME} {
   doForReturn(yytext);
+  yylval.r.str = new char[yyleng + 1];
+  strcpy(yylval.r.str, yytext);
   l.log("T_STRING", 0); l.log(yytext);
   return T_STRING;
 }
 
 <php>{VARIABLE}  {
   doForReturn(yytext);
+  yylval.r.str = new char[yyleng + 1];
+  strcpy(yylval.r.str, yytext);
   l.log("T_VARIABLE", 0); l.log(yytext);
   return T_VARIABLE;
 }
 
 <php>{BAD_NAME} {
   doForReturn(yytext);
+  yylval.r.str = new char[yyleng + 1];
+  strcpy(yylval.r.str, yytext);
+  char msg[128];
+  sprintf(msg, "Bad name '%s': names can't start with a digit", yytext);
+  errorRec.errQ->enqueue(line_no, col_no, msg, "");
   l.log("T_STRING: BAD", 0); l.log(yytext);
   return T_STRING;
 }
 
 <php>{BAD_VARIABLE}  {
   doForReturn(yytext);
+  yylval.r.str = new char[yyleng + 1];
+  strcpy(yylval.r.str, yytext);
+  char msg[128];
+  sprintf(msg, "Bad variable name '%s': variables names can't start with a digit", yytext);
+  errorRec.errQ->enqueue(line_no, col_no, msg, "");
   l.log("T_VARIABLE: BAD", 0); l.log(yytext);
   return T_VARIABLE;
 }
 <php>.  {
   doForReturn(yytext);
+  char msg[128];
+  sprintf(msg, "Unexpected character '%c'", yytext);
+  errorRec.errQ->enqueue(line_no, col_no, msg, "");
   l.log("T_BAD_INPUT", 0); l.log(yytext);
   return T_BAD_INPUT;
 }

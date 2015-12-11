@@ -1,3 +1,6 @@
+#ifndef ERR_H
+#define ERR_H
+
 #include <string.h>
 #include <iostream>
 
@@ -97,3 +100,5 @@ public:
 		cout << "--------------------------------------------" <<endl;
 	}
 };
+
+#endif

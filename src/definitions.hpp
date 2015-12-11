@@ -1,5 +1,6 @@
 #ifndef DEFINITIONS_HPP
 #define DEFINITIONS_HPP
+#include "ErrorRevovery.h"
 
 int yylex(void);
 int yyparse();
@@ -12,5 +13,4 @@ enum primitive {
 enum open_tag_type {
   NORMAL, WITH_ECHO
 };
-
 #endif

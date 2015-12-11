@@ -5,8 +5,7 @@
   #include "Logger.hpp"
   #include "ErrorRevovery.h"
 
-   Logger parserLogger("parser_log.txt");
-
+   Logger pl("parser_log.txt");
    ErrorRecovery errorRec;
 %}
 
@@ -142,22 +141,24 @@
 
 
 %%
+program: start {pl.log("program"); errorRec.printErrQueue();}
+
 start:
-    start_part { errorRec.printErrQueue();}
+    start_part { pl.log("start");}
   | start start_part
 ;
 
 start_part:
-  optional_inline_html T_OPEN_TAG top_statement_list T_CLOSE_TAG optional_inline_html  {  }
+  optional_inline_html T_OPEN_TAG top_statement_list T_CLOSE_TAG optional_inline_html  { pl.log("start part"); }
 ;
 
 optional_inline_html:
-    T_INLINE_HTML
+    T_INLINE_HTML {pl.log("inline_html");}
   | /* empty */ %prec low_prec
 ;
 
 top_statement_list:
-    top_statement_list top_statement            { }
+    top_statement_list top_statement            { pl.log("top_statement");}
   | /* empty */                       { }
 ;
 
@@ -190,9 +191,9 @@ namespace_name:
 ;
 
 top_statement:
-    statement                       { }
-  | function_declaration_statement            { }
-  | class_declaration_statement               { }
+    statement                       { pl.log("statment"); }
+  | function_declaration_statement            { pl.log("function declaration statement");}
+  | class_declaration_statement               { pl.log("class declaration statement");}
   | T_HALT_COMPILER      {}
   | T_NAMESPACE namespace_name ';'            { }
   | T_NAMESPACE namespace_name '{' top_statement_list '}' { }
@@ -200,7 +201,7 @@ top_statement:
   | T_USE use_declarations ';'              { }
   | T_USE use_type use_declarations ';'
   | group_use_declaration ';'
-  | T_CONST type constant_declaration_list ';'
+  | T_CONST type constant_declaration_list ';' {pl.log("constatnt declaration list");}
   | T_CONST constant_declaration_list ';'
 		{
 			/* ERROR RULE: constant without type */
@@ -257,7 +258,7 @@ constant_declaration_list:
 ;
 
 constant_declaration:
-    T_STRING '=' static_scalar
+    T_STRING '=' static_scalar {pl.log("constant declaration", 0); pl.log($<r.str>1);}
   | T_STRING '='
 	{
 		/* ERROR RULE: constant = without value */
@@ -276,7 +277,7 @@ class_const_list:
 ;
 
 class_const:
-    identifier '=' static_scalar
+    identifier '=' static_scalar {pl.log("class constant", 0); pl.log($<r.str>1);}
   | identifier '='
 		{
 			/* ERROR RULE: constant = without value */
@@ -295,9 +296,9 @@ inner_statement_list:
 ;
 
 inner_statement:
-    statement
-  | function_declaration_statement
-  | class_declaration_statement
+    statement {pl.log("statement - inner");}
+  | function_declaration_statement {pl.log("function declaration statemtnt - inner");}
+  | class_declaration_statement {pl.log("class declaration statement - inner");}
   | T_HALT_COMPILER
 ;
 
@@ -307,8 +308,8 @@ variable_declaration_list:
 ;
 
 variable_declaration:
-    T_VARIABLE '=' expr
-  | T_VARIABLE
+    T_VARIABLE '=' expr {pl.log("variable declaration assigned", 0); pl.log($<r.str>1);}
+  | T_VARIABLE {pl.log("variable declaration");}
   | T_VARIABLE '='
 		{
 			/* ERROR RULE: variable without value */
@@ -317,36 +318,36 @@ variable_declaration:
 ;
 
 statement:
-    '{' inner_statement_list '}'
-  | type variable_declaration_list ';'
-  | T_IF parentheses_expr statement elseif_list else_single
-  | T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';'
-  | T_WHILE parentheses_expr while_statement
-  | do_while_loop
-  | for_loop
-  | T_SWITCH parentheses_expr switch_case_list
-  | T_BREAK ';'
-  | T_BREAK expr ';'
-  | T_CONTINUE ';'
-  | T_CONTINUE expr ';'
-  | T_RETURN ';'
-  | T_RETURN expr ';'
-  | yield_expr ';'
-  | global_variable_statement
-  | static_variable_statement
-  | T_ECHO expr_list ';'
-  | T_INLINE_HTML
-  | expr ';'
+    '{' inner_statement_list '}' {pl.log("code block");}
+  | type variable_declaration_list ';' {pl.log("variable declaration list");}
+  | T_IF parentheses_expr statement elseif_list else_single {pl.log("if statement");}
+  | T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';' {pl.log("if stmt new");}
+  | T_WHILE parentheses_expr while_statement {pl.log("while stmt");}
+  | do_while_loop {pl.log("do while stmt");}
+  | for_loop {pl.log("for loop stmt");}
+  | T_SWITCH parentheses_expr switch_case_list {pl.log("switch stmt");}
+  | T_BREAK ';' {pl.log("break stmt");}
+  | T_BREAK expr ';' {pl.log("break exp stmt");}
+  | T_CONTINUE ';'{pl.log("contintue stmt");}
+  | T_CONTINUE expr ';' {pl.log("contintue expr stmt");}
+  | T_RETURN ';' {pl.log("return stmt");}
+  | T_RETURN expr ';' {pl.log("return expr stmt");}
+  | yield_expr ';' {pl.log("yield stmt");}
+  | global_variable_statement {pl.log("global variable stmt");}
+  | static_variable_statement {pl.log("static variable stmt");}
+  | T_ECHO expr_list ';' {pl.log("echo stmt");}
+  | T_INLINE_HTML 
+  | expr ';' {pl.log("expr stmt");}
   | T_UNSET '(' variables_list ')' ';'
-  | T_FOREACH '(' expr T_AS foreach_variable ')' foreach_statement
-  | T_FOREACH '(' expr T_AS foreach_key T_DOUBLE_ARROW foreach_variable ')' foreach_statement
-  | T_DECLARE '(' declare_list ')' declare_statement
-  | ';'
-  | T_TRY '{' inner_statement_list '}' catches optional_finally
-  | T_THROW expr ';'
-  | T_GOTO T_STRING ';'
-  | T_STRING ':'
-  | error
+  | T_FOREACH '(' expr T_AS foreach_variable ')' foreach_statement {pl.log("foreach stmt");}
+  | T_FOREACH '(' expr T_AS foreach_key T_DOUBLE_ARROW foreach_variable ')' foreach_statement {pl.log("foreach stmt associative");}
+  | T_DECLARE '(' declare_list ')' declare_statement {pl.log("declare stmt");}
+  | ';' {pl.log("; stmt");}
+  | T_TRY '{' inner_statement_list '}' catches optional_finally {pl.log("try stmt");}
+  | T_THROW expr ';' {pl.log("throw stmt");}
+  | T_GOTO T_STRING ';' {pl.log("goto stmt");}
+  | T_STRING ':' {pl.log("label stmt");}
+  | error {pl.log("ERROR");}
 ;
 
 catches:
@@ -379,7 +380,7 @@ optional_ellipsis:
 ;
 
 function_declaration_statement:
-  T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}'
+  T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}' {pl.log("function:", 0); pl.log($<r.str>3);}
   | T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':'  '{' inner_statement_list '}'
 		{
 			/* ERROR RULE: function without returned type */
@@ -398,9 +399,9 @@ function_declaration_statement:
 ;
 
 class_declaration_statement:
-    class_entry_type T_STRING extends_from implements_list '{' class_statement_list '}'
-  | T_INTERFACE T_STRING interface_extends_list '{' class_statement_list '}'
-  | T_TRAIT T_STRING '{' class_statement_list '}'
+    class_entry_type T_STRING extends_from implements_list '{' class_statement_list '}' {pl.log("class:", 0); pl.log($<r.str>2);}
+  | T_INTERFACE T_STRING interface_extends_list '{' class_statement_list '}' {pl.log("interface:", 0); pl.log($<r.str>2);}
+  | T_TRAIT T_STRING '{' class_statement_list '}' {pl.log("trait:", 0); pl.log($<r.str>2);}
   | class_entry_type extends_from implements_list '{' class_statement_list '}'
 		{
 			/* ERROR RULE: class without name */
@@ -581,8 +582,8 @@ foreach_key:
 ;
 
 foreach_variable: /* typing? */
-    type T_VARIABLE
-  | type '&' T_VARIABLE
+    type T_VARIABLE {pl.log("foreach var:", 0); pl.log($<r.str>2);}
+  | type '&' T_VARIABLE {pl.log("foreach var:", 0); pl.log($<r.str>3);}
   | type list_expr
   | T_VARIABLE
 		{
@@ -602,33 +603,52 @@ foreach_variable: /* typing? */
 ;
 
 parameter_list:
-    non_empty_parameter_list
-  | non_empty_parameter_list ',' non_empty_default_parameter_list
-  | non_empty_default_parameter_list
-  | /* empty */
+    non_empty_parameter_list {pl.log("non empty parameters list");}
+  | non_empty_parameter_list ',' non_empty_default_parameter_list {pl.log("non empty mixed parameters list");}
+  | non_empty_default_parameter_list {pl.log("non empty default parameters list");}
+  | /* empty */ {pl.log("empty parameters list");}
 ;
 
 non_empty_parameter_list:
-    parameter
+    parameter 
   | non_empty_parameter_list ',' parameter
 ;
 
 non_empty_default_parameter_list:
     default_parameter
   | non_empty_default_parameter_list ',' default_parameter
-  | non_empty_default_parameter_list ',' parameter  /* handle this error */
+  | non_empty_default_parameter_list ',' parameter
+  {
+    /* ERROR RULE */
+    errorRec.errQ->enqueue($<r.line_no>3,$<r.col_no>3,"default parameters must appear only at the end","");
+  }
 ;
 
 parameter:
-    type optional_ref optional_ellipsis T_VARIABLE
+    type optional_ref optional_ellipsis T_VARIABLE {pl.log("parameter:", 0); pl.log($<r.str>4);}
+  | optional_ref optional_ellipsis T_VARIABLE 
+  {
+    /* ERROR RULE */
+	errorRec.errQ->enqueue($<r.line_no>3, $<r.col_no>3, "missing type in parameter", "");
+  }
 ;
 
 default_parameter:
-    type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
+    type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar {pl.log("default parameter", 0); pl.log($<r.str>4);}
+  | optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
+  {
+    /* ERROR RULE */
+	errorRec.errQ->enqueue($<r.line_no>3, $<r.col_no>3, "missing type in parameter", "");
+  }
+  | type optional_ref optional_ellipsis T_VARIABLE '=' 
+  {
+    /* ERROR RULE */
+	errorRec.errQ->enqueue($<r.line_no>5, $<r.col_no>5, "missing value in parameter", "");
+  }
 ;
 
 array_type:
-    type T_SQUARE_BRACKETS
+    type T_SQUARE_BRACKETS {pl.log("array type");}
   | T_SQUARE_BRACKETS
 		{
 			/* ERROR RULE: array without tpye */
@@ -637,8 +657,8 @@ array_type:
 ;
 
 type:
-    T_PRIMITIVE
-  | name
+    T_PRIMITIVE {pl.log("primitive type");}
+  | name 
   | array_type
   | T_ARRAY
   | T_CALLABLE
@@ -661,13 +681,13 @@ non_empty_argument_list:
 ;
 
 argument:
-    expr
-  | '&' variable
+    expr {pl.log("expr argument");}
+  | '&' variable {pl.log("reference variable argument");}
   | T_ELLIPSIS expr
 ;
 
 global_variable_statement:
-	T_GLOBAL type global_var_list ';'
+	T_GLOBAL type global_var_list ';' 
   | T_GLOBAL global_var_list ';'
 		{
 			/* ERROR RULE: constant without type */
@@ -681,7 +701,7 @@ global_var_list:
 ;
 
 global_var:
-    T_VARIABLE
+    T_VARIABLE {pl.log("global variable", 0); pl.log($<r.str>1);}
   | '$' variable
   | '$' '{' expr '}'
 ;
@@ -701,8 +721,8 @@ static_var_list:
 ;
 
 static_var:
-    T_VARIABLE
-  | T_VARIABLE '=' static_scalar
+    T_VARIABLE {pl.log("static variable", 0); pl.log($<r.str>1);}
+  | T_VARIABLE '=' static_scalar {pl.log("static variable - assigned", 0); pl.log($<r.str>1);}
   | T_VARIABLE '='
 		{
 			/* ERROR RULE: static variable = without value*/
@@ -711,14 +731,14 @@ static_var:
 ;
 
 class_statement_list:
-    class_statement_list class_statement
+    class_statement_list class_statement {pl.log("class stmt");}
   | /* empty */
 ;
 
 class_statement:
-    member_modifiers type property_declaration_list ';'
-  | T_CONST type class_const_list ';'
-  | member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body /* optional return type in case of constructor */
+    member_modifiers type property_declaration_list ';' {pl.log("property declaration list");}
+  | T_CONST type class_const_list ';' {pl.log("constant list");}
+  | member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body /* optional return type in case of constructor */ {pl.log("method");}
   | T_USE name_list trait_adaptations
   | member_modifiers property_declaration_list ';'
 		{
@@ -761,7 +781,7 @@ trait_method_reference:
 
 method_body:
     ';' /* abstract method */
-  | '{' inner_statement_list '}'
+  | '{' inner_statement_list '}' {pl.log("method body");}
 ;
 
 member_modifiers:
@@ -797,8 +817,8 @@ property_declaration_list:
 ;
 
 property_declaration:
-    T_VARIABLE
-  | T_VARIABLE '=' static_scalar
+    T_VARIABLE {pl.log("property", 0); pl.log($<r.str>1);}
+  | T_VARIABLE '=' static_scalar {pl.log("property assigned", 0); pl.log($<r.str>1);}
   | T_VARIABLE '='
 		{
 			/* ERROR RULE: variable = without value*/
@@ -968,8 +988,8 @@ lexical_var:
 ;
 
 function_call:
-    name argument_list
-  | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM identifier argument_list
+    name argument_list {pl.log("function call");}
+  | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM identifier argument_list {pl.log(":: function call");}
   | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '{' expr '}' argument_list
   | static_property argument_list
   | variable_without_objects argument_list
@@ -1028,7 +1048,7 @@ ctor_arguments:
 ;
 
 common_scalar:
-    T_LNUMBER
+    T_LNUMBER 
   | T_DNUMBER
   | T_TRUE
   | T_FALSE
@@ -1248,6 +1268,8 @@ encaps_var_offset:
 
 void yyerror(char *s)
 {
-  cout<<"-_-: "<<s<<endl;
+  extern int line_no, col_no;
+  errorRec.errQ->enqueue(line_no, col_no, s, "");
 }
+
 
