@@ -1,12 +1,28 @@
+%output = "yacc.cpp"
 %{
   #include <iostream>
   using namespace std;
-  #include "definitions.hpp"
+  #include "definitions.h"
   #include "Logger.hpp"
-  #include "ErrorRevovery.h"
+  #include "ErrorRecovery/ErrorRecovery.h"
 
    Logger pl("parser_log.txt");
    ErrorRecovery errorRec;
+
+   /**
+    *   SymbolsParser definations:
+	*   --------------------------
+    */
+    SymbolsParser * symbolsParser;
+
+	/** this routine is used to initialize the symbols parser.
+	 *  TODO: add Object class to root symbol table.
+	 *		add primitive types to root symbol table.
+	 */
+	void initSymbolsParser(){
+		symbolsParser = new SymbolsParser();
+	}
+
 %}
 
 %nonassoc _def_val_ low_prec
@@ -135,8 +151,16 @@
   char* str;
   int line_no;
   int col_no;
-  int token_type;
+  int token_type;  
+  struct Modifiers {
+	int storage_mod; // storage modifier
+	int access_mod; // access modifier
+	} m;
+  bool flag; // a boolean flag indicates various states between production rules
   } r;
+  //symbol
+  class Symbol * Symbol;
+  class Scope * Scope;
 }
 
 
@@ -182,7 +206,7 @@ identifier:
 ;
 
 namespace_name_parts:
-    T_STRING                        { }
+    T_STRING                        { $<r.str>$ = $<r.str>1; }
   | namespace_name_parts '\\' T_STRING      { }
 ;
 
@@ -196,8 +220,8 @@ top_statement:
   | class_declaration_statement               { pl.log("class declaration statement");}
   | T_HALT_COMPILER      {}
   | T_NAMESPACE namespace_name ';'            { }
-  | T_NAMESPACE namespace_name '{' top_statement_list '}' { }
-  | T_NAMESPACE '{' top_statement_list '}'        { }
+  | T_NAMESPACE namespace_name open_par top_statement_list close_par { }
+  | T_NAMESPACE open_par top_statement_list close_par        { }
   | T_USE use_declarations ';'              { }
   | T_USE use_type use_declarations ';'
   | group_use_declaration ';'
@@ -216,10 +240,10 @@ use_type:
 
 /* Using namespace_name_parts here to avoid s/r conflict on '\\' */
 group_use_declaration:
-    T_USE use_type namespace_name_parts '\\' '{' unprefixed_use_declarations '}'
-  | T_USE use_type '\\' namespace_name_parts '\\' '{' unprefixed_use_declarations '}'
-  | T_USE namespace_name_parts '\\' '{' inline_use_declarations '}'
-  | T_USE '\\' namespace_name_parts '\\' '{' inline_use_declarations '}'
+    T_USE use_type namespace_name_parts '\\' open_par unprefixed_use_declarations close_par
+  | T_USE use_type '\\' namespace_name_parts '\\' open_par unprefixed_use_declarations close_par
+  | T_USE namespace_name_parts '\\' open_par inline_use_declarations close_par
+  | T_USE '\\' namespace_name_parts '\\' open_par inline_use_declarations close_par
 ;
 
 unprefixed_use_declarations:
@@ -296,36 +320,74 @@ inner_statement_list:
 ;
 
 inner_statement:
-    statement {pl.log("statement - inner");}
-  | function_declaration_statement {pl.log("function declaration statemtnt - inner");}
-  | class_declaration_statement {pl.log("class declaration statement - inner");}
+    statement					   {pl.log("statement - inner");}
+  | function_declaration_statement {
+										pl.log("function declaration statement - inner");
+										//go up the scope 
+								   }
+  | class_declaration_statement    {pl.log("class declaration statement - inner");}
   | T_HALT_COMPILER
 ;
 
 variable_declaration_list:
-    variable_declaration_list ',' variable_declaration
-  | variable_declaration
+    variable_declaration_list ',' variable_declaration {
+			//**chain symbols in the list and pass it:
+			$<Symbol>3->node = $<Symbol>1->node;
+			$<Symbol>1->node = $<Symbol>3;
+			$<Symbol>$ = $<Symbol>1;
+						 }
+  | variable_declaration {
+			$<Symbol>$ = $<Symbol>1; // pass it 
+						 }
 ;
 
 variable_declaration:
-    T_VARIABLE '=' expr {pl.log("variable declaration assigned", 0); pl.log($<r.str>1);}
-  | T_VARIABLE {pl.log("variable declaration");}
+    T_VARIABLE '=' expr {
+			pl.log("initialized variable declaration.", 0); pl.log($<r.str>1);
+			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
+						}
+  | T_VARIABLE          {
+            pl.log("uninitialized variable declaration.");
+			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
+						}
   | T_VARIABLE '='
-		{
+						{
 			/* ERROR RULE: variable without value */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected token, expecting value","");
-		}
+			//continue and assume variable is not initialized:
+			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
+						}
 ;
 
 statement:
-    '{' inner_statement_list '}' {pl.log("code block");}
-  | type variable_declaration_list ';' {pl.log("variable declaration list");}
-  | T_IF parentheses_expr statement elseif_list else_single {pl.log("if statement");}
+    open_par inner_statement_list close_par { 
+			pl.log("code block");	
+	}
+  | type variable_declaration_list ';' {
+						pl.log("variable declaration list.");
+						//TODO:encapsulate
+						Variable* walker = dynamic_cast<Variable*>( $<Symbol>2 );
+						while(walker != nullptr){ // TODO: document this 
+							walker->setVariableType($<r.str>1);
+							Variable* prevNode = walker;//used to clear @node
+							walker = dynamic_cast<Variable*>(walker->node);
+							prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
+						}
+			}
+  | if_start statement elseif_list else_single {
+						pl.log("if statement");
+											
+			}
   | T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';' {pl.log("if stmt new");}
-  | T_WHILE parentheses_expr while_statement {pl.log("while stmt");}
+  | T_WHILE parentheses_expr while_statement {
+						pl.log("while stmt");
+						
+			}
   | do_while_loop {pl.log("do while stmt");}
   | for_loop {pl.log("for loop stmt");}
-  | T_SWITCH parentheses_expr switch_case_list {pl.log("switch stmt");}
+  | switch_start parentheses_expr switch_case_list { 
+						pl.log("switch stmt");
+			}
   | T_BREAK ';' {pl.log("break stmt");}
   | T_BREAK expr ';' {pl.log("break exp stmt");}
   | T_CONTINUE ';'{pl.log("contintue stmt");}
@@ -343,7 +405,7 @@ statement:
   | T_FOREACH '(' expr T_AS foreach_key T_DOUBLE_ARROW foreach_variable ')' foreach_statement {pl.log("foreach stmt associative");}
   | T_DECLARE '(' declare_list ')' declare_statement {pl.log("declare stmt");}
   | ';' {pl.log("; stmt");}
-  | T_TRY '{' inner_statement_list '}' catches optional_finally {pl.log("try stmt");}
+  | T_TRY open_par inner_statement_list close_par catches optional_finally {pl.log("try stmt");}
   | T_THROW expr ';' {pl.log("throw stmt");}
   | T_GOTO T_STRING ';' {pl.log("goto stmt");}
   | T_STRING ':' {pl.log("label stmt");}
@@ -356,12 +418,12 @@ catches:
 ;
 
 catch:
-  T_CATCH '(' name T_VARIABLE ')' '{' inner_statement_list '}'
+  T_CATCH '(' name T_VARIABLE ')' open_par inner_statement_list close_par
 ;
 
 optional_finally:
     /* empty */
-  | T_FINALLY '{' inner_statement_list '}'
+  | T_FINALLY open_par inner_statement_list close_par
 ;
 
 variables_list:
@@ -380,58 +442,83 @@ optional_ellipsis:
 ;
 
 function_declaration_statement:
-  T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}' {pl.log("function:", 0); pl.log($<r.str>3);}
-  | T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':'  '{' inner_statement_list '}'
+   T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par inner_statement_list close_par {
+					pl.log("function:", 0); pl.log($<r.str>3);
+					pl.log("function header:", 0); pl.log($<r.str>3);
+					symbolsParser->insertFunctionSymbol($<r.str>3, $<r.str>8, $<r.col_no>1, $<r.line_no>1, $<Scope>9, $<Symbol>5);
+				}
+  | T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':'  open_par inner_statement_list close_par
 		{
-			/* ERROR RULE: function without returned type */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting return type, functions must have return type","");
+					/* ERROR RULE: function without returned type */
+					errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting return type, functions must have return type","");
+					symbolsParser->insertFunctionSymbol($<r.str>3, "void", $<r.col_no>1, $<r.line_no>1, $<Scope>8, $<Symbol>5);// assume return type is void
 		}
-  | T_STATIC T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}'
+  | T_STATIC T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par inner_statement_list close_par
 		{
-			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
+					/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
+					errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
+
+					symbolsParser->insertFunctionSymbol($<r.str>4, $<r.str>9, $<r.col_no>1, $<r.line_no>1, $<Scope>10, $<Symbol>6);
 		}
- | member_modifier_without_static T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type '{' inner_statement_list '}'
+ | member_modifier_without_static T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par inner_statement_list close_par
 		{
-			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
+					/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
+					errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
+
+					symbolsParser->insertFunctionSymbol($<r.str>4, $<r.str>9, $<r.col_no>1, $<r.line_no>1, $<Scope>10, $<Symbol>6);
 		}
 ;
 
+
 class_declaration_statement:
-    class_entry_type T_STRING extends_from implements_list '{' class_statement_list '}' {pl.log("class:", 0); pl.log($<r.str>2);}
-  | T_INTERFACE T_STRING interface_extends_list '{' class_statement_list '}' {pl.log("interface:", 0); pl.log($<r.str>2);}
-  | T_TRAIT T_STRING '{' class_statement_list '}' {pl.log("trait:", 0); pl.log($<r.str>2);}
-  | class_entry_type extends_from implements_list '{' class_statement_list '}'
+    class_entry_type T_STRING extends_from implements_list open_par class_statement_list close_par {
+					pl.log("class:", 0); pl.log($<r.str>2);
+					symbolsParser->finishClassInsertion($<r.str>2, $<r.str>3, dynamic_cast<Class*>($<Symbol>1), $<Scope>5);
+	    }
+  | T_INTERFACE T_STRING interface_extends_list open_par class_statement_list close_par {pl.log("interface:", 0); pl.log($<r.str>2);}
+  | T_TRAIT T_STRING open_par class_statement_list close_par {pl.log("trait:", 0); pl.log($<r.str>2);}
+  | class_entry_type extends_from implements_list open_par class_statement_list close_par
 		{
-			/* ERROR RULE: class without name */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'{\', expecting identifier (T_STRING)","");
+					/* ERROR RULE: class without name */
+					errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'{\', expecting identifier (T_STRING)","");
+
+					symbolsParser->finishClassInsertion("ERR_C_NO_NAME", $<r.str>2, dynamic_cast<Class*>($<Symbol>1), $<Scope>4);
 		}
 ;
 
 class_entry_type:
-    T_CLASS
-  | T_ABSTRACT T_CLASS
-  | T_FINAL T_CLASS
+    T_CLASS {
+		//starting class declaration
+		$<Symbol>$ = symbolsParser->insertSymbol(new Class($<r.col_no>1, $<r.line_no>1, false,false));
+	}
+  | T_ABSTRACT T_CLASS {
+		$<Symbol>$ = symbolsParser->insertSymbol(new Class($<r.col_no>1, $<r.line_no>1, false,true ));
+    }
+  | T_FINAL T_CLASS    {
+		$<Symbol>$ = symbolsParser->insertSymbol(new Class($<r.col_no>1, $<r.line_no>1, true,false));
+    }
   | T_ABSTRACT T_FINAL T_CLASS
 		{
 			/* ERROR RULE: abstract final class*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Abstract final class not allowed","");
+			$<Symbol>$ = symbolsParser->insertSymbol(new Class($<r.col_no>1, $<r.line_no>1, false,false)); // assuming not final and not abstract
 		}
   | T_FINAL T_ABSTRACT  T_CLASS
 		{
 			/* ERROR RULE: final abctract class*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Final abstract class not allowed","");
+			$<Symbol>$ = symbolsParser->insertSymbol(new Class($<r.col_no>1, $<r.line_no>1, false,false)); // assuming not final and not abstract
 		}
 ;
 
 extends_from:
-    /* empty */
-  | T_EXTENDS name
+    /* empty */ { $<r.str>$ = nullptr;}
+  | T_EXTENDS name { $<r.str>$ = $<r.str>2;}
   | T_EXTENDS
 		{
 			/* ERROR RULE: Extent empty*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token,expecting class name","");
+			$<r.str>$ = nullptr;
 		}
 ;
 
@@ -456,22 +543,27 @@ name_list:
 ;
 
 for_loop:
-	  T_FOR '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
+	  for_loop_start '(' for_expr ';'  for_expr ';' for_expr ')' for_statement {}	  
 	| '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
 		{
 			/* ERROR RULE: for loop without for keyword */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Missing For keyword","");
 		}
-	| T_FOR '(' for_expr  ')' for_statement
+	| for_loop_start '(' for_expr  ')' for_statement
 		{
 			/* ERROR RULE: for loop with colon instead of semi colon */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error","");
 		}
-	| T_FOR '(' for_expr ';' for_expr  ')' for_statement
+	| for_loop_start '(' for_expr ';' for_expr  ')' for_statement
 		{
 			/* ERROR RULE: for loop with colon instead of semi colon  */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error","");
 		}
+;
+
+for_loop_start:
+	T_FOR {
+	}
 ;
 
 for_statement:
@@ -508,9 +600,13 @@ declare_list_element:
 		}
 ;
 
+switch_start :
+	T_SWITCH {}
+;	
+
 switch_case_list:
-    '{' case_list '}'
-  | '{' ';' case_list '}'
+    open_par case_list close_par
+  | open_par ';' case_list close_par
   | ':' case_list T_ENDSWITCH ';'
   | ':' ';' case_list T_ENDSWITCH ';'
 ;
@@ -521,7 +617,7 @@ case_list:
 ;
 
 case:
-    T_CASE expr case_separator inner_statement_list
+    T_CASE expr case_separator inner_statement_list {}
   | T_DEFAULT case_separator inner_statement_list
 ;
 
@@ -531,17 +627,21 @@ case_separator:
 ;
 
 do_while_loop:
-	T_DO statement T_WHILE parentheses_expr ';'
-  | T_DO statement parentheses_expr ';'
-		{
-			/* ERROR RULE: do while loop without while keyword */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected \'(\', expecting while (T_WHILE)","");
-		}
-  | T_DO statement T_WHILE parentheses_expr %prec low_prec
-		{
-			/* ERROR RULE: do while loop without ;  */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected token after while","");
-		}
+	to_do_loop_start statement T_WHILE parentheses_expr ';' {
+	}
+  | to_do_loop_start statement parentheses_expr ';'		{
+		/* ERROR RULE: do while loop without while keyword */
+		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected \'(\', expecting while (T_WHILE)","");
+	}
+  | to_do_loop_start statement T_WHILE parentheses_expr %prec low_prec
+	{
+		/* ERROR RULE: do while loop without ;  */
+		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected token after while","");
+	}
+;
+
+to_do_loop_start : 
+	T_DO {	}
 ;
 
 while_statement:
@@ -549,15 +649,25 @@ while_statement:
   | ':' inner_statement_list T_ENDWHILE ';'
 ;
 
+if_start: 
+    T_IF parentheses_expr {
+
+	}
+;
 elseif_list:
-    /* empty */
-  | elseif_list elseif
+    /* empty */ 
+	| elseif_list elseif 
 ;
 
 elseif:
-    T_ELSEIF parentheses_expr statement
+     elseif_start statement { 
+	 }
 ;
 
+elseif_start :
+	T_ELSEIF parentheses_expr {
+	}
+;
 new_elseif_list:
     /* empty */
   | new_elseif_list new_elseif
@@ -568,20 +678,27 @@ new_elseif:
 ;
 
 else_single:
-    /* empty */ %prec low_prec
-  | T_ELSE statement
+    /* empty */ %prec low_prec {
+	}
+  | else_start statement {
+	}
+;
+
+else_start : 
+	T_ELSE {
+	}
 ;
 
 new_else_single:
     /* empty */
-  | T_ELSE ':' inner_statement_list
+  | else_start ':' inner_statement_list
 ;
 
 foreach_key:
     type T_VARIABLE
 ;
 
-foreach_variable: /* typing? */
+foreach_variable: 
     type T_VARIABLE {pl.log("foreach var:", 0); pl.log($<r.str>2);}
   | type '&' T_VARIABLE {pl.log("foreach var:", 0); pl.log($<r.str>3);}
   | type list_expr
@@ -604,47 +721,87 @@ foreach_variable: /* typing? */
 
 parameter_list:
     non_empty_parameter_list {pl.log("non empty parameters list");}
-  | non_empty_parameter_list ',' non_empty_default_parameter_list {pl.log("non empty mixed parameters list");}
+  | non_empty_parameter_list ',' non_empty_default_parameter_list {
+			pl.log("non empty mixed parameters list");
+			//joining the two lists of params
+			$<Symbol>$ = SymbolsParser::joinSymbolsLists($<Symbol>1,$<Symbol>3);	
+		}
   | non_empty_default_parameter_list {pl.log("non empty default parameters list");}
-  | /* empty */ {pl.log("empty parameters list");}
+  | /* empty */ {
+			pl.log("empty parameters list");
+			$<Symbol>$ = nullptr;
+		}
 ;
 
 non_empty_parameter_list:
     parameter 
-  | non_empty_parameter_list ',' parameter
+  | non_empty_parameter_list ',' parameter {
+	//**chain symbols in the list and pass it:
+	$<Symbol>3->node = $<Symbol>1->node;
+	$<Symbol>1->node = $<Symbol>3;
+	$<Symbol>$ = $<Symbol>1;
+  } 
 ;
 
 non_empty_default_parameter_list:
     default_parameter
-  | non_empty_default_parameter_list ',' default_parameter
+  | non_empty_default_parameter_list ',' default_parameter {
+	//**chain symbols in the list and pass it:
+	$<Symbol>3->node = $<Symbol>1->node;
+	$<Symbol>1->node = $<Symbol>3;
+	$<Symbol>$ = $<Symbol>1;
+  }
   | non_empty_default_parameter_list ',' parameter
   {
     /* ERROR RULE */
     errorRec.errQ->enqueue($<r.line_no>3,$<r.col_no>3,"default parameters must appear only at the end","");
+	//**chain symbols in the list and pass it:
+	$<Symbol>3->node = $<Symbol>1->node;
+	$<Symbol>1->node = $<Symbol>3;
+	$<Symbol>$ = $<Symbol>1;
   }
 ;
 
 parameter:
-    type optional_ref optional_ellipsis T_VARIABLE {pl.log("parameter:", 0); pl.log($<r.str>4);}
-  | optional_ref optional_ellipsis T_VARIABLE 
-  {
-    /* ERROR RULE */
-	errorRec.errQ->enqueue($<r.line_no>3, $<r.col_no>3, "missing type in parameter", "");
-  }
+    type optional_ref optional_ellipsis T_VARIABLE {
+								pl.log("parameter:", 0); pl.log($<r.str>4);
+								Parameter* paramSymbol = new Parameter($<r.str>4, $<r.col_no>1, $<r.line_no>1, false); // we assume variable is initialized	
+								paramSymbol->setVariableType($<r.str>1);// TODO: encapsulate variabelType within the constructor
+								$<Symbol>$ = paramSymbol;							
+							}
+  | optional_ref optional_ellipsis T_VARIABLE     {
+								/* ERROR RULE */
+								errorRec.errQ->enqueue($<r.line_no>3, $<r.col_no>3, "missing type in parameter", "");
+
+								Parameter* paramSymbol = new Parameter($<r.str>3, $<r.col_no>1, $<r.line_no>1, false); // we assume variable is initialized	
+								paramSymbol->setVariableType("Object");// assume type is Object and continue // TODO: encapsulate variabelType within the constructor
+								$<Symbol>$ = paramSymbol;
+						    }
 ;
 
 default_parameter:
-    type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar {pl.log("default parameter", 0); pl.log($<r.str>4);}
-  | optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
-  {
-    /* ERROR RULE */
-	errorRec.errQ->enqueue($<r.line_no>3, $<r.col_no>3, "missing type in parameter", "");
-  }
-  | type optional_ref optional_ellipsis T_VARIABLE '=' 
-  {
-    /* ERROR RULE */
-	errorRec.errQ->enqueue($<r.line_no>5, $<r.col_no>5, "missing value in parameter", "");
-  }
+    type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar {
+								pl.log("default parameter", 0); pl.log($<r.str>4);
+								Parameter* paramSymbol = new Parameter($<r.str>4, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized	
+								paramSymbol->setVariableType($<r.str>1);// TODO: encapsulate variabelType within the constructor
+								$<Symbol>$ = paramSymbol;		
+							}
+  | optional_ref optional_ellipsis T_VARIABLE '=' static_scalar      {
+							    /* ERROR RULE */
+								errorRec.errQ->enqueue($<r.line_no>3, $<r.col_no>3, "missing type in parameter", "");
+
+								Parameter* paramSymbol = new Parameter($<r.str>3, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized	
+								paramSymbol->setVariableType("Object"); // assume type is Object and continue// TODO: encapsulate variabelType within the constructor
+								$<Symbol>$ = paramSymbol;	
+						    }
+  | type optional_ref optional_ellipsis T_VARIABLE '='				 {
+							    /* ERROR RULE */
+								errorRec.errQ->enqueue($<r.line_no>5, $<r.col_no>5, "missing value in parameter", "");
+
+								Parameter* paramSymbol = new Parameter($<r.str>4, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized	
+								paramSymbol->setVariableType($<r.str>1); // assume type is Object and continue// TODO: encapsulate variabelType within the constructor
+								$<Symbol>$ = paramSymbol;	
+							}
 ;
 
 array_type:
@@ -657,15 +814,32 @@ array_type:
 ;
 
 type:
-    T_PRIMITIVE {pl.log("primitive type");}
-  | name 
+    T_PRIMITIVE {
+					pl.log("primitive type");
+					int type = $<r.token_type>1;
+					switch(type){
+						case T_PRIMITIVE_INTEGER : $<r.str>$ = "int"; break;
+						case T_PRIMITIVE_FLOAT : $<r.str>$ = "float"; break;
+						case T_PRIMITIVE_DOUBLE: $<r.str>$ = "double"; break;
+						case T_PRIMITIVE_CHAR  : $<r.str>$ = "char"; break;
+						case T_PRIMITIVE_BOOLEAN : $<r.str>$ = "bool"; break;
+						case T_PRIMITIVE_STRING : $<r.str>$ = "string"; break;
+						case T_PRIMITIVE_VOID   : $<r.str>$ = "void"; break;
+					}
+				}
+  | name        {
+					pl.log("user defined type");
+					$<r.str>$ = $<r.str>1; // pass it
+				}
   | array_type
   | T_ARRAY
   | T_CALLABLE
 ;
 
 optional_return_type:
-    /* empty */
+    /* empty */ {
+		$<r.str>$ = nullptr;
+	}
   | ':' type
 ;
 
@@ -691,7 +865,7 @@ global_variable_statement:
   | T_GLOBAL global_var_list ';'
 		{
 			/* ERROR RULE: constant without type */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare gloabel variable without type","");
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare globel variable without type","");
 		}
 ;
 
@@ -703,7 +877,7 @@ global_var_list:
 global_var:
     T_VARIABLE {pl.log("global variable", 0); pl.log($<r.str>1);}
   | '$' variable
-  | '$' '{' expr '}'
+  | '$' open_par expr close_par
 ;
 
 static_variable_statement:
@@ -711,8 +885,8 @@ static_variable_statement:
 	T_STATIC static_var_list ';'
   {
 	  /* ERROR RULE: static variable  without type*/
-    errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting type","");
-	}
+	  errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting type","");
+  }
 ;
 
 static_var_list:
@@ -736,25 +910,50 @@ class_statement_list:
 ;
 
 class_statement:
-    member_modifiers type property_declaration_list ';' {pl.log("property declaration list");}
+    member_modifiers type property_declaration_list ';' {
+				pl.log("property declaration list");
+				symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), $<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>2);
+		}
   | T_CONST type class_const_list ';' {pl.log("constant list");}
-  | member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type method_body /* optional return type in case of constructor */ {pl.log("method");}
+  | method_header '(' parameter_list ')' optional_return_type method_body /* optional return type in case of constructor */ {
+				pl.log("method");
+
+				symbolsParser->finishMethodDeclaration(dynamic_cast<Method*>($<Symbol>1),$<r.str>5, $<Scope>6, $<Symbol>3);
+		}
   | T_USE name_list trait_adaptations
   | member_modifiers property_declaration_list ';'
 		{
 			/* ERROR RULE: variable without type */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
+			symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), $<r.m>1.access_mod, $<r.m>1.storage_mod, "Object"); // assume type OBJECT 
 		}
-  | member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type method_body
+  |  method_header_without_name '(' parameter_list ')' optional_return_type method_body
 		{
 			/* ERROR RULE: function without name */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
+
+			symbolsParser->finishMethodDeclaration(dynamic_cast<Method*>($<Symbol>1),$<r.str>5, $<Scope>6, $<Symbol>3);
 		}
 ;
 
+
+method_header:
+	member_modifiers T_FUNCTION optional_ref identifier { 
+			//we insert the method symbol
+			$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4, $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod);			
+		}
+
+method_header_without_name :
+	member_modifiers T_FUNCTION optional_ref {
+			//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
+			$<Symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod);			
+	}
+;
+
+
 trait_adaptations:
     ';'
-  | '{' trait_adaptation_list '}'
+  | open_par trait_adaptation_list close_par
 ;
 
 trait_adaptation_list:
@@ -780,20 +979,59 @@ trait_method_reference:
 ;
 
 method_body:
-    ';' /* abstract method */
-  | '{' inner_statement_list '}' {pl.log("method body");}
+    ';' {$<Scope>$ = nullptr;} /* abstract method */
+  | open_par inner_statement_list close_par {
+		pl.log("method body");
+		$<Scope>$ = $<Scope>1;	
+	}
 ;
 
 member_modifiers:
-    /* empty */
-  | non_empty_member_modifiers
+  access_modifier storage_modifier {
+			$<r.m>$.access_mod = $<r.m.access_mod>1;
+			$<r.m>$.storage_mod = $<r.m.storage_mod>2; 
+		}
 ;
 
+access_modifier: /* empty */ { 
+			//default modifier
+			$<r.m.access_mod>$ = DEFAULT_ACCESS;
+		}
+  | T_PUBLIC {
+			$<r.m.access_mod>$ = PUBLIC_ACCESS;
+		}
+  | T_PROTECTED {
+			$<r.m.access_mod>$ = PROTECTED_ACCESS;
+		}
+  | T_PRIVATE {
+			$<r.m.access_mod>$ = PRIVATE_ACCESS;
+		}
+;
+
+storage_modifier: /* empty */ {
+			//default modifier
+			$<r.m.storage_mod>$ = DEFAULT_STORAGE;
+		}
+  | T_STATIC {
+			$<r.m.storage_mod>$ = STATIC_STORAGE;			
+		}
+  | T_FINAL  {
+			$<r.m.storage_mod>$ = FINAL_STORAGE;
+		}
+  | T_STATIC T_FINAL {
+			$<r.m.storage_mod>$ = FINAL_STATIC_STORAGE;
+		} 
+  | T_FINAL T_STATIC {
+			$<r.m.storage_mod>$ = FINAL_STATIC_STORAGE;
+		}
+  
+
+  /*
 non_empty_member_modifiers:
     member_modifier
   | non_empty_member_modifiers member_modifier
 ;
-
+	*/
 member_modifier:
     T_PUBLIC
   | T_PROTECTED
@@ -812,17 +1050,31 @@ member_modifier_without_static:
 ;
 
 property_declaration_list:
-    property_declaration
-  | property_declaration_list ',' property_declaration
+    property_declaration {
+		$<Symbol>$ = $<Symbol>1; //pass it 
+	}
+  | property_declaration_list ',' property_declaration {
+		//**chain symbols in the list and pass it:
+		$<Symbol>3->node = $<Symbol>1->node;
+		$<Symbol>1->node = $<Symbol>3;
+		$<Symbol>$ = $<Symbol>1;
+    }
 ;
 
 property_declaration:
-    T_VARIABLE {pl.log("property", 0); pl.log($<r.str>1);}
-  | T_VARIABLE '=' static_scalar {pl.log("property assigned", 0); pl.log($<r.str>1);}
+    T_VARIABLE {
+			pl.log("property", 0); pl.log($<r.str>1);
+			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, false, $<r.line_no>1, $<r.col_no>1));
+		}
+  | T_VARIABLE '=' static_scalar {
+			pl.log("property assigned", 0); pl.log($<r.str>1);
+			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, true, $<r.line_no>1, $<r.col_no>1));
+		}
   | T_VARIABLE '='
 		{
 			/* ERROR RULE: variable = without value*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
+			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, false,$<r.line_no>1, $<r.col_no>1));//assume not initialized and continue
 		}
 ;
 
@@ -838,16 +1090,19 @@ for_expr_list:
 
 expr_or_declaration:
     expr
-  | type T_VARIABLE '=' expr
-  | type T_VARIABLE '='
-		{
-			/* ERROR RULE: variable = without value*/
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
-		}
+  | type T_VARIABLE '=' expr {
+		symbolsParser->insertSymbol(new Variable($<r.str>2,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
+
+  }
+  | type T_VARIABLE '='      {
+		/* ERROR RULE: variable = without value*/
+		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
+		symbolsParser->insertSymbol(new Variable($<r.str>2,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
+  }
 ;
 
 for_expr:
-    /* empty */
+    /* empty */ {$<Symbol>$ = nullptr;}
   | for_expr_list
 ;
 
@@ -936,8 +1191,8 @@ expr:
   | T_PRINT expr
   | T_YIELD
   | T_YIELD_FROM expr
-  | T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars ':' type    '{' inner_statement_list '}'
-  | T_STATIC T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars ':' type    '{' inner_statement_list '}'
+  | T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars ':' type    open_par inner_statement_list close_par
+  | T_STATIC T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars ':' type    open_par inner_statement_list close_par
 ;
 
 parentheses_expr:
@@ -965,7 +1220,7 @@ scalar_dereference:
 ;
 
 anonymous_class:
-    T_CLASS ctor_arguments extends_from implements_list '{' class_statement_list '}'
+    T_CLASS ctor_arguments extends_from implements_list open_par class_statement_list close_par
 ;
 
 new_expr:
@@ -990,7 +1245,7 @@ lexical_var:
 function_call:
     name argument_list {pl.log("function call");}
   | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM identifier argument_list {pl.log(":: function call");}
-  | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '{' expr '}' argument_list
+  | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM open_par expr close_par argument_list
   | static_property argument_list
   | variable_without_objects argument_list
   | function_call '[' dim_offset ']'
@@ -1003,7 +1258,7 @@ class_name:
 ;
 
 name:
-    namespace_name_parts
+    namespace_name_parts { $<r.str>$ = $<r.str>1; }
   | '\\' namespace_name_parts
   | T_NAMESPACE '\\' namespace_name_parts
 ;
@@ -1027,7 +1282,7 @@ object_access_for_dcnr:
     base_variable T_OBJECT_OPERATOR object_property
   | object_access_for_dcnr T_OBJECT_OPERATOR object_property
   | object_access_for_dcnr '[' dim_offset ']'
-  | object_access_for_dcnr '{' expr '}'
+  | object_access_for_dcnr open_par expr close_par
 ;
 
 exit_expr:
@@ -1161,7 +1416,7 @@ object_access:
   | variable_or_new_expr T_OBJECT_OPERATOR object_property argument_list
   | object_access argument_list
   | object_access '[' dim_offset ']'
-  | object_access '{' expr '}'
+  | object_access open_par expr close_par
 ;
 
 variable_or_new_expr:
@@ -1186,16 +1441,16 @@ static_property:
 
 static_property_with_arrays:
     class_name_or_var T_PAAMAYIM_NEKUDOTAYIM T_VARIABLE
-  | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '$' '{' expr '}'
+  | class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '$' open_par expr close_par
   | static_property_with_arrays '[' dim_offset ']'
-  | static_property_with_arrays '{' expr '}'
+  | static_property_with_arrays open_par expr close_par
 ;
 
 reference_variable:
     reference_variable '[' dim_offset ']'
-  | reference_variable '{' expr '}'
+  | reference_variable open_par expr close_par
   | T_VARIABLE
-  | '$' '{' expr '}'
+  | '$' open_par expr close_par
 ;
 
 dim_offset:
@@ -1205,7 +1460,7 @@ dim_offset:
 
 object_property:
     T_STRING
-  | '{' expr '}'
+  | open_par expr close_par
   | variable_without_objects
 ;
 
@@ -1252,10 +1507,10 @@ encaps_var:
     T_VARIABLE
   | T_VARIABLE '[' encaps_var_offset ']'
   | T_VARIABLE T_OBJECT_OPERATOR T_STRING
-  | T_DOLLAR_OPEN_CURLY_BRACES expr '}'
-  | T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME '}'
-  | T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME '[' expr ']' '}'
-  | T_CURLY_OPEN variable '}'
+  | T_DOLLAR_OPEN_CURLY_BRACES expr close_par
+  | T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME close_par
+  | T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME '[' expr ']' close_par
+  | T_CURLY_OPEN variable close_par
 ;
 
 encaps_var_offset:
@@ -1264,6 +1519,22 @@ encaps_var_offset:
   | T_VARIABLE
 ;
 
+open_par:
+  '{' { 
+		pl.log("open_par",0);
+		//we create a new scope 
+		Scope* scope = new Scope(symbolsParser->getCurrentScope());
+		symbolsParser->getCurrentScope()->addToInnerScopes(scope);
+		symbolsParser->setCurrentScope(scope);
+		$<Scope>$ = scope;
+  }
+;
+
+close_par:
+  '}' { 
+		symbolsParser->goUp();
+  }
+;
 %%
 
 void yyerror(char *s)
