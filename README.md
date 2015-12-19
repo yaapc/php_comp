@@ -25,6 +25,9 @@ a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) an
 
 
 
+### SymbolTable And TypeChecker Class Diagram : 
+ ![Class Diagram](http://s11.postimg.org/y2apfnppv/Main.jpg)
+
 these includes at line 23 :
 ```
 #include <stdlib.h>
