@@ -5,6 +5,7 @@
   #include "definitions.h"
   #include "Logger.hpp"
   #include "ErrorRecovery/ErrorRecovery.h"
+  #include "TypeChecker.h"
 
    Logger pl("parser_log.txt");
    ErrorRecovery errorRec;
@@ -23,6 +24,14 @@
 		symbolsParser = new SymbolsParser();
 	}
 
+	/**
+    *   Type Checker definations:
+	*   --------------------------
+    */
+	TypeChecker* typeChecker;
+	void initTypeChecker(){
+		typeChecker = new TypeChecker(&errorRec, symbolsParser);
+	}
 %}
 
 %nonassoc _def_val_ low_prec
@@ -442,33 +451,37 @@ optional_ellipsis:
 ;
 
 function_declaration_statement:
-   T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par inner_statement_list close_par {
+    function_header inner_statement_list close_par {
 					pl.log("function:", 0); pl.log($<r.str>3);
+				}
+;
+
+function_header: T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par { 
 					pl.log("function header:", 0); pl.log($<r.str>3);
 					symbolsParser->insertFunctionSymbol($<r.str>3, $<r.str>8, $<r.col_no>1, $<r.line_no>1, $<Scope>9, $<Symbol>5);
-				}
-  | T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':'  open_par inner_statement_list close_par
-		{
+		}
+ | T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':'  open_par { 	
+					pl.log("function header:", 0); pl.log($<r.str>3);
 					/* ERROR RULE: function without returned type */
 					errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting return type, functions must have return type","");
+
 					symbolsParser->insertFunctionSymbol($<r.str>3, "void", $<r.col_no>1, $<r.line_no>1, $<Scope>8, $<Symbol>5);// assume return type is void
 		}
-  | T_STATIC T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par inner_statement_list close_par
-		{
+ | T_STATIC T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par  {		
+					pl.log("function header:", 0); pl.log($<r.str>3);			
 					/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
 					errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
 
 					symbolsParser->insertFunctionSymbol($<r.str>4, $<r.str>9, $<r.col_no>1, $<r.line_no>1, $<Scope>10, $<Symbol>6);
 		}
- | member_modifier_without_static T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par inner_statement_list close_par
-		{
+ | member_modifier_without_static T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par {
+					pl.log("function header:", 0); pl.log($<r.str>3);
 					/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
 					errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
 
 					symbolsParser->insertFunctionSymbol($<r.str>4, $<r.str>9, $<r.col_no>1, $<r.line_no>1, $<Scope>10, $<Symbol>6);
 		}
 ;
-
 
 class_declaration_statement:
     class_entry_type T_STRING extends_from implements_list open_par class_statement_list close_par {
@@ -1107,7 +1120,10 @@ for_expr:
 ;
 
 expr:
-    variable
+    variable { 
+		pl.log($<r.str>1,0);
+		typeChecker->checkVariable($<r.str>1,$<r.col_no>1,$<r.line_no>1);
+	}
   | '(' T_PRIMITIVE ')' expr
   | list_expr '=' expr
   | variable '=' expr
