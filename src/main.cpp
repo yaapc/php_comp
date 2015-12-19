@@ -1,11 +1,17 @@
-#include "definitions.hpp"
-#include "grammar.hpp"
+#include "definitions.h"
+#include "yacc.hpp"
 #include <iostream>
 #include <stdio.h>
 
 using namespace std;
+
+extern void initSymbolsParser();
+extern SymbolsParser * symbolsParser;
+extern void initTypeChecker();
+
 int main(int argc, char** argv) {
   initSymbolsParser(); 
+  initTypeChecker();
   cout<<"php-compiler"<<endl<<endl;
 
   extern FILE *yyin;
