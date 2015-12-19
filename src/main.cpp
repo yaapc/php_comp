@@ -5,6 +5,7 @@
 
 using namespace std;
 int main(int argc, char** argv) {
+  initSymbolsParser(); 
   cout<<"php-compiler"<<endl<<endl;
 
   extern FILE *yyin;
@@ -14,7 +15,7 @@ int main(int argc, char** argv) {
   }
 
   yyparse();
-
+  symbolsParser->printSymbolTables();
   cout<<"compilation done"<<endl;
   return 0;
 }
