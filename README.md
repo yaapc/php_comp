@@ -1,5 +1,5 @@
 # php_comp
-a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y)
+a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) and SymbolTable
 
 
 ### MAIN TODOs: 
