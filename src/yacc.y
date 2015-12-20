@@ -15,6 +15,7 @@
 	*   --------------------------
     */
     SymbolsParser * symbolsParser;
+	bool forLoopFlag = false;
 
 	/** this routine is used to initialize the symbols parser.
 	 *  TODO: add Object class to root symbol table.
@@ -557,27 +558,29 @@ name_list:
 
 for_loop:
 	  for_loop_start '(' for_expr ';'  for_expr ';' for_expr ')' for_statement {}	  
-	| '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
-		{
-			/* ERROR RULE: for loop without for keyword */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Missing For keyword","");
-		}
+	
 	| for_loop_start '(' for_expr  ')' for_statement
 		{
 			/* ERROR RULE: for loop with colon instead of semi colon */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error","");
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error, expected a ;","");
 		}
 	| for_loop_start '(' for_expr ';' for_expr  ')' for_statement
 		{
 			/* ERROR RULE: for loop with colon instead of semi colon  */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error","");
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error, expected a ;","");
 		}
 ;
 
 for_loop_start:
-	T_FOR {
-	}
+	T_FOR { forLoopFlag = true; symbolsParser->createNewScope();}
 ;
+/* removed error 
+| '(' for_expr ';'  for_expr ';' for_expr ')' for_statement
+		{
+			/* ERROR RULE: for loop without for keyword * /
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Missing For keyword","");
+		}
+*/
 
 for_statement:
     statement
@@ -928,11 +931,10 @@ class_statement:
 				symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), $<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>2);
 		}
   | T_CONST type class_const_list ';' {pl.log("constant list");}
-  | method_header '(' parameter_list ')' optional_return_type method_body /* optional return type in case of constructor */ {
+  | method_header  method_body  close_par  /* optional return type in case of constructor */ {
 				pl.log("method");
-
-				symbolsParser->finishMethodDeclaration(dynamic_cast<Method*>($<Symbol>1),$<r.str>5, $<Scope>6, $<Symbol>3);
 		}
+  | method_header_abstract ';'
   | T_USE name_list trait_adaptations
   | member_modifiers property_declaration_list ';'
 		{
@@ -940,29 +942,40 @@ class_statement:
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
 			symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), $<r.m>1.access_mod, $<r.m>1.storage_mod, "Object"); // assume type OBJECT 
 		}
-  |  method_header_without_name '(' parameter_list ')' optional_return_type method_body
+  |  method_header_without_name method_body close_par
 		{
 			/* ERROR RULE: function without name */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
-
-			symbolsParser->finishMethodDeclaration(dynamic_cast<Method*>($<Symbol>1),$<r.str>5, $<Scope>6, $<Symbol>3);
+			pl.log("error method-no id");
 		}
 ;
 
 
 method_header:
-	member_modifiers T_FUNCTION optional_ref identifier { 
+	member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type open_par { 
 			//we insert the method symbol
-			$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4, $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod);			
+			$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4, $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>7, $<Scope>9, $<Symbol>6);			
 		}
+;
+
+method_header_abstract:
+	member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type {
+			$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4, $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>7, nullptr, $<Symbol>6);	//abstract 		
+		}
+;
 
 method_header_without_name :
-	member_modifiers T_FUNCTION optional_ref {
+	member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type open_par {
 			//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
-			$<Symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod);			
+			$<Symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>7, $<Scope>8, $<Symbol>5);			
 	}
 ;
 
+method_body:
+    inner_statement_list {
+		pl.log("method body");
+	}
+;
 
 trait_adaptations:
     ';'
@@ -989,14 +1002,6 @@ trait_method_reference_fully_qualified:
 trait_method_reference:
     trait_method_reference_fully_qualified
   | identifier
-;
-
-method_body:
-    ';' {$<Scope>$ = nullptr;} /* abstract method */
-  | open_par inner_statement_list close_par {
-		pl.log("method body");
-		$<Scope>$ = $<Scope>1;	
-	}
 ;
 
 member_modifiers:
@@ -1104,12 +1109,13 @@ for_expr_list:
 expr_or_declaration:
     expr
   | type T_VARIABLE '=' expr {
+		//symbolsStack->push(new Variable($<r.str>2,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
 		symbolsParser->insertSymbol(new Variable($<r.str>2,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
-
   }
   | type T_VARIABLE '='      {
 		/* ERROR RULE: variable = without value*/
 		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
+		//symbolsStack->push(new Variable($<r.str>2,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
 		symbolsParser->insertSymbol(new Variable($<r.str>2,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
   }
 ;
@@ -1539,10 +1545,7 @@ open_par:
   '{' { 
 		pl.log("open_par",0);
 		//we create a new scope 
-		Scope* scope = new Scope(symbolsParser->getCurrentScope());
-		symbolsParser->getCurrentScope()->addToInnerScopes(scope);
-		symbolsParser->setCurrentScope(scope);
-		$<Scope>$ = scope;
+		$<Scope>$ = symbolsParser->createNewScope(forLoopFlag);
   }
 ;
 
