@@ -168,6 +168,15 @@ Symbol* SymbolsParser::joinSymbolsLists(Symbol* firstList, Symbol* secondList){
 }
 
 Symbol* SymbolsParser::finishMethodDeclaration(Method* methodSymbol, char* returnType, Scope* bodyScope, Symbol* paramSymbol){
+		return methodSymbol;
+}
+
+Symbol* SymbolsParser::insertMethodSymbol(char* name, int colNo, int lineNo, int accessModifier, int storageModifier,char* returnType, Scope* bodyScope, Symbol* paramSymbol){
+	
+	// no body scope and no return type
+	Method* methodSymbol = new Method(name, nullptr, colNo, lineNo, nullptr, accessModifier, storageModifier);
+	this->insertSymbol(methodSymbol);
+
 	if (returnType == nullptr) // should be a constructor
 		methodSymbol->isConstructor = true;
 	else
@@ -180,7 +189,6 @@ Symbol* SymbolsParser::finishMethodDeclaration(Method* methodSymbol, char* retur
 	if (bodyScope != nullptr) // if we have a body scope , i.e. we don't have an abstract method
 		bodyScope->setOwnerSymbol(methodSymbol);
 
-
 	Scope* scope = this->insertParams(paramSymbol, bodyScope);
 	if (scope != nullptr)
 		scope->setOwnerSymbol(methodSymbol);
@@ -188,9 +196,18 @@ Symbol* SymbolsParser::finishMethodDeclaration(Method* methodSymbol, char* retur
 	return methodSymbol;
 }
 
-Symbol* SymbolsParser::insertMethodSymbol(char* name, int colNo, int lineNo, int accessModifier, int storageModifier){
-	// no body scope and no return type
-	Method* methodSymbol = new Method(name, nullptr, colNo, lineNo, nullptr, accessModifier, storageModifier);
-	this->insertSymbol(methodSymbol);
-	return methodSymbol;
+Scope* SymbolsParser::createNewScope(bool &flag){
+	if (flag){
+		flag = false;
+		return nullptr;
+	}
+	
+	return this->createNewScope();
+}
+
+Scope* SymbolsParser::createNewScope(){
+	Scope* scope = new Scope(this->getCurrentScope());
+	this->getCurrentScope()->addToInnerScopes(scope);
+	this->setCurrentScope(scope);
+	return scope;
 }
