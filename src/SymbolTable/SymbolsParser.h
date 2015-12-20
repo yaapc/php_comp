@@ -40,11 +40,15 @@ public :
 	/* this method finishes data member declarations */
 	Symbol* finishDataMembersDeclaration(DataMember* dataMem, int accessMod, int storageMod, char* type);
 
-	Symbol* insertMethodSymbol(char* name, int colNo, int lineNo, int accessModifier, int storageModifier);
+	Symbol* insertMethodSymbol(char* name, int colNo, int lineNo, int accessModifier, int storageModifier, char* returnType, Scope* bodyScope, Symbol* paramSymbol);
 	Symbol* finishMethodDeclaration(Method* method, char* returnType,Scope* bodyScope, Symbol* paramSymbol);
 
 	static Symbol* joinSymbolsLists(Symbol* firstList, Symbol* secondList);
 	static Scope* joinScopes(Scope* firstScope, Scope* secondScope);
+
+	Scope* createNewScope(bool &flag);
+	Scope* createNewScope();
+
 private :
 	ErrorRecovery *errRecovery;
 	Scope * currScope;
