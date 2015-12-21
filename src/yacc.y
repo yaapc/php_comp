@@ -488,6 +488,7 @@ class_declaration_statement:
     class_entry_type T_STRING extends_from implements_list open_par class_statement_list close_par {
 					pl.log("class:", 0); pl.log($<r.str>2);
 					symbolsParser->finishClassInsertion($<r.str>2, $<r.str>3, dynamic_cast<Class*>($<Symbol>1), $<Scope>5);
+					symbolsParser->setCurrentClassSym(nullptr);
 	    }
   | T_INTERFACE T_STRING interface_extends_list open_par class_statement_list close_par {pl.log("interface:", 0); pl.log($<r.str>2);}
   | T_TRAIT T_STRING open_par class_statement_list close_par {pl.log("trait:", 0); pl.log($<r.str>2);}
@@ -497,31 +498,44 @@ class_declaration_statement:
 					errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'{\', expecting identifier (T_STRING)","");
 
 					symbolsParser->finishClassInsertion("ERR_C_NO_NAME", $<r.str>2, dynamic_cast<Class*>($<Symbol>1), $<Scope>4);
+					symbolsParser->setCurrentClassSym(nullptr);
 		}
 ;
 
 class_entry_type:
     T_CLASS {
-		//starting class declaration
-		$<Symbol>$ = symbolsParser->insertSymbol(new Class($<r.col_no>1, $<r.line_no>1, false,false));
+		//starting class declaration // TODO: encapsulate
+		Class* classSym = new Class($<r.col_no>1, $<r.line_no>1, false,false);
+		$<Symbol>$ = symbolsParser->insertSymbol(classSym);
+		symbolsParser->setCurrentClassSym(classSym);
 	}
   | T_ABSTRACT T_CLASS {
-		$<Symbol>$ = symbolsParser->insertSymbol(new Class($<r.col_no>1, $<r.line_no>1, false,true ));
+		Class* classSym = new Class($<r.col_no>1, $<r.line_no>1, false,true );
+		$<Symbol>$ = symbolsParser->insertSymbol(classSym);
+		symbolsParser->setCurrentClassSym(classSym);
     }
   | T_FINAL T_CLASS    {
-		$<Symbol>$ = symbolsParser->insertSymbol(new Class($<r.col_no>1, $<r.line_no>1, true,false));
+		Class* classSym = new Class($<r.col_no>1, $<r.line_no>1, true,false);
+		$<Symbol>$ = symbolsParser->insertSymbol(classSym);
+		symbolsParser->setCurrentClassSym(classSym);
     }
   | T_ABSTRACT T_FINAL T_CLASS
 		{
 			/* ERROR RULE: abstract final class*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Abstract final class not allowed","");
-			$<Symbol>$ = symbolsParser->insertSymbol(new Class($<r.col_no>1, $<r.line_no>1, false,false)); // assuming not final and not abstract
+
+			Class* classSym = new Class($<r.col_no>1, $<r.line_no>1, false,false);
+			$<Symbol>$ = symbolsParser->insertSymbol(classSym); // assuming not final and not abstract
+			symbolsParser->setCurrentClassSym(classSym);
 		}
   | T_FINAL T_ABSTRACT  T_CLASS
 		{
 			/* ERROR RULE: final abctract class*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Final abstract class not allowed","");
-			$<Symbol>$ = symbolsParser->insertSymbol(new Class($<r.col_no>1, $<r.line_no>1, false,false)); // assuming not final and not abstract
+
+			Class* classSym = new Class($<r.col_no>1, $<r.line_no>1, false,false);
+			$<Symbol>$ = symbolsParser->insertSymbol(classSym); // assuming not final and not abstract
+			symbolsParser->setCurrentClassSym(classSym);
 		}
 ;
 
@@ -557,17 +571,30 @@ name_list:
 ;
 
 for_loop:
-	  for_loop_start '(' for_expr ';'  for_expr ';' for_expr ')' for_statement {}	  
+	  for_loop_start '(' for_expr ';'  for_expr ';' for_expr ')' for_statement {
+		if(forLoopFlag){ // we are in a single for statement and the scope hasn't been closed by an '}'
+			forLoopFlag = false;
+			symbolsParser->goUp();
+		}
+	  }	  
 	
 	| for_loop_start '(' for_expr  ')' for_statement
 		{
 			/* ERROR RULE: for loop with colon instead of semi colon */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error, expected a ;","");
+			if(forLoopFlag){ // we are in a single for statement and the scope hasn't been closed by an '}'
+				forLoopFlag = false;
+				symbolsParser->goUp();
+			}
 		}
 	| for_loop_start '(' for_expr ';' for_expr  ')' for_statement
 		{
 			/* ERROR RULE: for loop with colon instead of semi colon  */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"For loop syntax error, expected a ;","");
+			if(forLoopFlag){ // we are in a single for statement and the scope hasn't been closed by an '}'
+				forLoopFlag = false;
+				symbolsParser->goUp();
+			}
 		}
 ;
 
@@ -823,7 +850,7 @@ default_parameter:
 array_type:
     type T_SQUARE_BRACKETS {pl.log("array type");}
   | T_SQUARE_BRACKETS
-		{
+	{
 			/* ERROR RULE: array without tpye */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type, array must have type","");
     }
@@ -921,31 +948,43 @@ static_var:
 ;
 
 class_statement_list:
-    class_statement_list class_statement {pl.log("class stmt");}
-  | /* empty */
+    class_statement_list class_statement {
+		pl.log("class stmt");
+	}
+  | class_statement
 ;
 
 class_statement:
     member_modifiers type property_declaration_list ';' {
 				pl.log("property declaration list");
-				symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), $<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>2);
+				$<Symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), $<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>2);
 		}
   | T_CONST type class_const_list ';' {pl.log("constant list");}
   | method_header  method_body  close_par  /* optional return type in case of constructor */ {
 				pl.log("method");
+				$<Symbol>$ = $<Symbol>1;
 		}
-  | method_header_abstract ';'
+  | method_header_abstract ';' { 
+				$<Symbol>$ = $<Symbol>1;
+		}
   | T_USE name_list trait_adaptations
   | member_modifiers property_declaration_list ';'
 		{
 			/* ERROR RULE: variable without type */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
-			symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), $<r.m>1.access_mod, $<r.m>1.storage_mod, "Object"); // assume type OBJECT 
+			$<Symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), $<r.m>1.access_mod, $<r.m>1.storage_mod, "Object"); // assume type OBJECT 
 		}
   |  method_header_without_name method_body close_par
 		{
-			/* ERROR RULE: function without name */
+			/* ERROR RULE: method without name */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
+			pl.log("error method-no id");
+			$<Symbol>$ = $<Symbol>1;
+		}
+  | method_header_without_name_abstract ';' { 
+			/* ERROR RULE: method without name */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
+			$<Symbol>$ = $<Symbol>1;
 			pl.log("error method-no id");
 		}
 ;
@@ -971,6 +1010,12 @@ method_header_without_name :
 	}
 ;
 
+method_header_without_name_abstract :
+	member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type {
+			//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
+			$<Symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>7, nullptr, $<Symbol>6);	//abstract 		
+	}
+;
 method_body:
     inner_statement_list {
 		pl.log("method body");
@@ -1110,13 +1155,19 @@ expr_or_declaration:
     expr
   | type T_VARIABLE '=' expr {
 		//symbolsStack->push(new Variable($<r.str>2,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
-		symbolsParser->insertSymbol(new Variable($<r.str>2,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
+		Variable* var = new Variable($<r.str>2,VARIABLE, true, $<r.line_no>1, $<r.col_no>1);
+		var->setVariableType($<r.str>1);
+		symbolsParser->insertSymbol(var);
+		$<Symbol>$ = var;
   }
   | type T_VARIABLE '='      {
 		/* ERROR RULE: variable = without value*/
 		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
 		//symbolsStack->push(new Variable($<r.str>2,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
-		symbolsParser->insertSymbol(new Variable($<r.str>2,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
+		Variable* var = new Variable($<r.str>2,VARIABLE, false, $<r.line_no>1, $<r.col_no>1);
+		var->setVariableType($<r.str>1);
+		symbolsParser->insertSymbol(var);
+		$<Symbol>$ = var;
   }
 ;
 
@@ -1304,7 +1355,7 @@ object_access_for_dcnr:
     base_variable T_OBJECT_OPERATOR object_property
   | object_access_for_dcnr T_OBJECT_OPERATOR object_property
   | object_access_for_dcnr '[' dim_offset ']'
-  | object_access_for_dcnr open_par expr close_par
+  | object_access_for_dcnr '{' expr '}'
 ;
 
 exit_expr:
@@ -1438,7 +1489,7 @@ object_access:
   | variable_or_new_expr T_OBJECT_OPERATOR object_property argument_list
   | object_access argument_list
   | object_access '[' dim_offset ']'
-  | object_access open_par expr close_par
+  | object_access '{' expr '}'
 ;
 
 variable_or_new_expr:
@@ -1482,7 +1533,7 @@ dim_offset:
 
 object_property:
     T_STRING
-  | open_par expr close_par
+  | '{' expr '}'
   | variable_without_objects
 ;
 
