@@ -16,6 +16,9 @@ public :
 	void setCurrentScope(Scope * scope);
 	Scope* getCurrentScope();
 
+	void setCurrentClassSym(Class* classSym);
+	Class* getCurrentClassSym();
+
 	Scope* getRootScope();
 
 	//insert symbol in @currScope current scope:
@@ -53,6 +56,8 @@ private :
 	ErrorRecovery *errRecovery;
 	Scope * currScope;
 	Scope * rootScope;	
+
+	Class* currClassSym; // a class symbol used to bind data members and methods to thier class 
 
 	string buildTableString(Scope* scope);
 };
