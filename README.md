@@ -4,8 +4,8 @@ a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) an
 
 ### MAIN TODOs: 
   * Minor todo's scattered and labeled in the code.
-  * :red_circle: Link the paramters symbols to thier function symbol.
-  * :red_circle: Link the data members and methods to thier class symbol.
+  * :heavy_check_mark: Link the paramters symbols to thier function symbol.
+  * :heavy_check_mark: Link the data members and methods to thier class symbol.
   
 ### Type Checking TODOs:
   * Grammers doesn't support declarations of "const" variables. 
