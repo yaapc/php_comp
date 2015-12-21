@@ -1,4 +1,5 @@
 #include "SymbolsParser.h"
+#include "../definitions.h"
 
 SymbolsParser::SymbolsParser(){
 	//init root scope 
@@ -150,6 +151,14 @@ Symbol* SymbolsParser::finishClassInsertion(char* name, char* inhertedFrom, Clas
 	if (inhertedFrom != nullptr)
 		classSymbol->setInhertedFrom(inhertedFrom);
 
+	//** DEFAULT CONSTRUCTOR CHECKING:
+	if (scope->getSymbolTable()->lookup(name) == nullptr) { // look up  in the class' scope for a constructor i.e look for any symbol with the same name of the class
+		Method* constructor = new Method(name, nullptr, classSymbol->getColNo(), classSymbol->getLineNo(), nullptr, PUBLIC_ACCESS , DEFAULT_STORAGE);
+		constructor->isConstructor = true;//TODO : encapsualte in a constructor
+		constructor->isDefaultConstr = true;
+		insertSymbol(constructor, scope);
+		classSymbol->addToMethodMembers(constructor);
+	}
 	classSymbol->setBodyScope(scope);
 	scope->setOwnerSymbol(classSymbol);
 
@@ -199,22 +208,35 @@ Symbol* SymbolsParser::insertMethodSymbol(char* name, int colNo, int lineNo, int
 	
 	// no body scope and no return type
 	Method* methodSymbol = new Method(name, nullptr, colNo, lineNo, nullptr, accessModifier, storageModifier);
-	this->insertSymbol(methodSymbol);
+	
+
+	//if we have a bodyScope (i.e not an abstract method) 
+	//insert the method scope in the parent of the bodyScope
+	//else insert in the current scope, which is the appropriate place.
+	if (bodyScope != nullptr)
+		this->insertSymbol(methodSymbol, bodyScope->getParentScope());
+	else
+		this->insertSymbol(methodSymbol);
+
 
 	if (returnType == nullptr) // should be a constructor
 		methodSymbol->isConstructor = true;
 	else
 		methodSymbol->setReturnType(returnType);
 
-	if (bodyScope == nullptr) // no body scope
+	if (bodyScope == nullptr){ // no body scope i.e abstrat
 		methodSymbol->isAbstract = true;
-
+		if (methodSymbol->getAccessModifier() == PRIVATE_ACCESS)
+			this->errRecovery->errQ->enqueue(lineNo, colNo, "private access modifier for an abstract method is not allowed", "");
+	}
 	methodSymbol->setBodyScope(bodyScope);
 	if (bodyScope != nullptr) // if we have a body scope , i.e. we don't have an abstract method
 		bodyScope->setOwnerSymbol(methodSymbol);
 
 	//insert params in scope
-	Scope* scope = this->insertParams(paramSymbol, bodyScope);
+	if (bodyScope != nullptr) // if we're not at an abstract method add the params to the @bodyScope
+		Scope* scope = this->insertParams(paramSymbol, bodyScope);
+	
 	//link params to method symbol
 	//and double checking thier @node in addParam
 	while (paramSymbol != nullptr){
@@ -222,8 +244,8 @@ Symbol* SymbolsParser::insertMethodSymbol(char* name, int colNo, int lineNo, int
 		paramSymbol = paramSymbol->node;
 	}
 
-	if (scope != nullptr)
-		scope->setOwnerSymbol(methodSymbol);
+	if (bodyScope != nullptr)
+		bodyScope->setOwnerSymbol(methodSymbol);
 
 	//add to current class in declaration process:
 	this->getCurrentClassSym()->addToMethodMembers(methodSymbol);
