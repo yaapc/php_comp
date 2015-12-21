@@ -273,6 +273,7 @@ Method::Method(char* name, char* returnType, int colNo, int lineNo, Scope* bodyS
 	this->storageModifier = storageModifier;
 	this->isConstructor = false;
 	this->isAbstract = false;
+	this->isDefaultConstr = false;
 }
 
 int Method::getAccessModifier(){
@@ -299,7 +300,14 @@ string Method::toString(){
 	string name, returnType, isConstructor, isAbstract, accessModifier, storageModifier;
 	this->getName() ? name = this->getName() : name = "NULL";
 	this->getReturnType() ? returnType = this->getReturnType() : returnType = "NULL";
-	this->isConstructor ? isConstructor = "is Constructor" : isConstructor = "NOT Constructor";
+	if (this->isConstructor){
+		if (this->isDefaultConstr)
+			isConstructor = "Is Default Constructor";
+		else
+			isConstructor = "Is Constructor";
+	}
+	else { isConstructor = "Not Constructor"; }
+		
 	this->isAbstract ? isAbstract = "is Abstract" : isAbstract = " NOT abstarct";
 	switch (this->accessModifier){
 	case DEFAULT_ACCESS:    accessModifier = "DEFAULT ACCESS"; break;
