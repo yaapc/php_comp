@@ -16,14 +16,15 @@ a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) an
   * "final" methods are not to be overrided.
   * "final" classes are not to be inhereted from.
   * :heavy_check_mark: "final abstract" are not allowed. 
-  * implement "abstract declaration of method" in the grammer for example: " abstract function iAmAFunction(): void; ".
-  * Abstract method should have no body.
-  * Abstract method should only have two types of access modifiers which are PUPLIC and PROTECTED.
-  * Any class that has an Abstract method IS abstract.
+  * :heavy_check_mark: implement "abstract declaration of method" in the grammer for example: " abstract function iAmAFunction(): void; ".
+  * :heavy_check_mark: Abstract method should have no body.
+  * :heavy_check_mark: Abstract method should only have two types of access modifiers which are PUPLIC and PROTECTED.
+  * :heavy_check_mark: Any class that has an Abstract method IS abstract.
   * Inner classes should not have the same name as for outer classes.
   * various inner classes checks...
 
-
+### Error Recovery TODOs:
+  * report an error for methods with no body and not declared as abstract.
 
 ### SymbolTable And TypeChecker Class Diagram : 
  ![Class Diagram](http://s11.postimg.org/y2apfnppv/Main.jpg)
