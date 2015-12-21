@@ -166,7 +166,6 @@
 	int storage_mod; // storage modifier
 	int access_mod; // access modifier
 	} m;
-  bool flag; // a boolean flag indicates various states between production rules
   } r;
   //symbol
   class Symbol * Symbol;
@@ -219,7 +218,6 @@ namespace_name_parts:
     T_STRING                        { $<r.str>$ = $<r.str>1; }
   | namespace_name_parts '\\' T_STRING      { }
 ;
-
 namespace_name:
     namespace_name_parts                  { }
 ;
@@ -883,7 +881,9 @@ optional_return_type:
     /* empty */ {
 		$<r.str>$ = nullptr;
 	}
-  | ':' type
+  | ':' type {
+		$<r.str>$ = $<r.str>2;
+  }
 ;
 
 argument_list:
@@ -993,13 +993,14 @@ class_statement:
 method_header:
 	member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type open_par { 
 			//we insert the method symbol
-			$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4, $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>7, $<Scope>9, $<Symbol>6);			
+			$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4,$<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>8, $<Scope>9, $<Symbol>6);			
 		}
 ;
 
 method_header_abstract:
-	member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type {
-			$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4, $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>7, nullptr, $<Symbol>6);	//abstract 		
+	T_ABSTRACT member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type {
+			$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>5, $<r.col_no>1,$<r.line_no>1,$<r.m>2.access_mod, $<r.m>2.storage_mod, $<r.str>9, nullptr, $<Symbol>7);	//abstract 		
+			symbolsParser->getCurrentClassSym()->isAbstract = true;
 		}
 ;
 
@@ -1011,9 +1012,10 @@ method_header_without_name :
 ;
 
 method_header_without_name_abstract :
-	member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type {
+	T_ABSTRACT member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type {
 			//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
-			$<Symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>7, nullptr, $<Symbol>6);	//abstract 		
+			$<Symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1,$<r.m>2.access_mod, $<r.m>2.storage_mod, $<r.str>8, nullptr, $<Symbol>6);	//abstract 		
+			symbolsParser->getCurrentClassSym()->isAbstract = true;
 	}
 ;
 method_body:
