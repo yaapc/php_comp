@@ -81,6 +81,7 @@ FUNCTION:
 Function::Function(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope) : Symbol(name, FUNCTION, colNo, lineNo) {
 	this->returnType = returnType;
 	this->bodyScope = bodyScope;
+	this->params = nullptr;
 }
 
 string Function::toString(){
@@ -109,6 +110,20 @@ Scope* Function::getBodyScope(){
 void Function::setBodyScope(Scope* bodyScope){
 	this->bodyScope = bodyScope;
 }
+
+Symbol* Function::addToParams(Symbol* sym){
+	sym->node = nullptr;
+	if (this->params == nullptr){
+		this->params = sym;
+		return sym;
+	}
+	Symbol* walker = this->params;
+	while (walker->node != nullptr){
+		walker = walker->node;
+	}
+	walker->node = sym;
+	return sym;
+}
 /*
 ========================================
 CLASS:
@@ -128,7 +143,8 @@ Class::Class(int colNo, int lineNo, bool isFinal, bool isAbstract) : Symbol("", 
 	this->isFinal = isFinal;
 	this->inhertedFrom = "Object";
 	this->bodyScope = nullptr;
-
+	this->dataMembers = nullptr;
+	this->methodMembers = nullptr;
 }
 
 void Class::setAsAbstract(){
@@ -161,6 +177,37 @@ Scope* Class::getBodyScope(){
 
 void Class::setBodyScope(Scope* scope){
 	this->bodyScope = scope;
+}
+
+Symbol* Class::addToDataMembers(DataMember* dataMem){
+	//double check @dataMem @node
+	dataMem->node = nullptr;	
+	if (this->dataMembers == nullptr){
+		this->dataMembers = dataMem;
+		return dataMem;
+	}
+
+	DataMember* walker = this->dataMembers;
+	while (walker->node != nullptr){
+		walker = dynamic_cast<DataMember*>(walker->node);
+	}
+	walker->node = dataMem;
+	return dataMem;
+}
+
+Symbol* Class::addToMethodMembers(Method* method){
+	//double check @method @node
+	method->node = nullptr;
+	if (this->methodMembers == nullptr){
+		this->methodMembers = method;
+		return method;
+	}
+
+	Method* walker = this->methodMembers;
+	while (walker->node != nullptr){
+		walker = dynamic_cast<Method*>(walker->node);
+	}
+	walker->node = method;
 }
 /*
 ============================================
