@@ -86,9 +86,13 @@ public:
 	void setBodyScope(Scope* scope);
 
 	string toString();
+
+	Symbol* addToParams(Symbol* sym);
 private:
 	char* returnType;
 	Scope* bodyScope;
+
+	Symbol* params;
 };
 
 /*
@@ -96,6 +100,9 @@ private:
 CLASS:
 =========
 */
+class DataMember;
+class Method;
+
 class Class : public Symbol {
 public:
 
@@ -117,10 +124,14 @@ public:
 
 	void setBodyScope(Scope* bodyScope);
 	Scope* getBodyScope();
+
+	Symbol* addToDataMembers(DataMember* dataMem);
+	Symbol* addToMethodMembers(Method* methodMem);
 private:
 	string inhertedFrom; // string to remove char* overhead when setting it.
 	Scope* bodyScope;
-
+	DataMember* dataMembers;
+	Method* methodMembers;
 };
 
 /*
