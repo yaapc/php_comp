@@ -181,6 +181,7 @@ public:
 
 	bool isConstructor;
 	bool isAbstract;
+	bool isDefaultConstr;
 private:
 	int accessModifier;
 	int storageModifier;
