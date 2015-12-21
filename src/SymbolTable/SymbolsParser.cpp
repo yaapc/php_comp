@@ -7,6 +7,8 @@ SymbolsParser::SymbolsParser(){
 	this->currScope = this->rootScope;
 	//init our error recovery object:
 	this->errRecovery = &errorRec;
+
+	this->currClassSym = nullptr;
 }
 
 //TODO : implement destructor.
@@ -25,6 +27,15 @@ Scope* SymbolsParser::getCurrentScope(){
 Scope* SymbolsParser::getRootScope(){
 	return this->rootScope;
 }
+
+Class* SymbolsParser::getCurrentClassSym(){
+	return this->currClassSym;
+}
+
+void SymbolsParser::setCurrentClassSym(Class* sym){
+	this->currClassSym = sym;
+}
+
 
 Symbol* SymbolsParser::insertSymbol(Symbol* symbol){
 	//invoke @currScope's symbolTable insert method
@@ -100,6 +111,13 @@ Symbol* SymbolsParser::insertFunctionSymbol(char* name, char* returnType,int col
 	funcSym->setBodyScope(scope);
 	this->insertParams(params, scope);
 
+	//linking params symbols to the function symbol
+	//and double checking thier @node inside addToParams()
+	while (params != nullptr){
+		funcSym->addToParams(params);
+		params = params->node;
+	}
+
 	return funcSym;
 }
 
@@ -139,16 +157,21 @@ Symbol* SymbolsParser::finishClassInsertion(char* name, char* inhertedFrom, Clas
 }
 
 Symbol* SymbolsParser::finishDataMembersDeclaration(DataMember* dataMem, int accessMod, int storageMod, char* type){
-	DataMember* walker = dynamic_cast<DataMember*>(dataMem);
+	DataMember* walker = dataMem;
 	while (walker != nullptr){ // TODO: document this 
 		walker->setVariableType(type);
 		walker->setAccessModifier(accessMod);
 		walker->setStorageModifier(storageMod);
+
+		//for every data member 
+		//add it to current class in declaration process
+		this->getCurrentClassSym()->addToDataMembers(walker);
+
+
 		DataMember* prevNode = walker; // used to clear @node
 		walker = dynamic_cast<DataMember*>(walker->node);
 		prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
 	}
-
 	return dataMem;
 }
 
@@ -167,6 +190,7 @@ Symbol* SymbolsParser::joinSymbolsLists(Symbol* firstList, Symbol* secondList){
 	return firstList;
 }
 
+//TODO: remove this method
 Symbol* SymbolsParser::finishMethodDeclaration(Method* methodSymbol, char* returnType, Scope* bodyScope, Symbol* paramSymbol){
 		return methodSymbol;
 }
@@ -189,9 +213,20 @@ Symbol* SymbolsParser::insertMethodSymbol(char* name, int colNo, int lineNo, int
 	if (bodyScope != nullptr) // if we have a body scope , i.e. we don't have an abstract method
 		bodyScope->setOwnerSymbol(methodSymbol);
 
+	//insert params in scope
 	Scope* scope = this->insertParams(paramSymbol, bodyScope);
+	//link params to method symbol
+	//and double checking thier @node in addParam
+	while (paramSymbol != nullptr){
+		methodSymbol->addToParams(paramSymbol);
+		paramSymbol = paramSymbol->node;
+	}
+
 	if (scope != nullptr)
 		scope->setOwnerSymbol(methodSymbol);
+
+	//add to current class in declaration process:
+	this->getCurrentClassSym()->addToMethodMembers(methodSymbol);
 
 	return methodSymbol;
 }
