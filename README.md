@@ -10,7 +10,7 @@ a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) an
 ### Type Checking TODOs:
   * Grammers doesn't support declarations of "const" variables. 
   * Forward Declerations is permitted for classes and functions in Inheretance and Invoking.
-  * Implement default constructor for classes that don't have a constructor.
+  * :heavy_check_mark: Implement default constructor for classes that don't have a constructor.
   * Inheretance from an undefined class in NOT permitted.
   * Circular Dependency is NOT permitted.
   * "final" methods are not to be overrided.
