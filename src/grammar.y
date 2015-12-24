@@ -777,9 +777,8 @@ non_empty_parameter_list:
     parameter
   | non_empty_parameter_list ',' parameter {
 	//**chain symbols in the list and pass it:
-	$<Symbol>3->node = $<Symbol>1->node;
-	$<Symbol>1->node = $<Symbol>3;
-	$<Symbol>$ = $<Symbol>1;
+	$<Symbol>3->node = $<Symbol>1;
+	$<Symbol>$ = $<Symbol>3;
   }
 ;
 
@@ -787,18 +786,16 @@ non_empty_default_parameter_list:
     default_parameter
   | non_empty_default_parameter_list ',' default_parameter {
 	//**chain symbols in the list and pass it:
-	$<Symbol>3->node = $<Symbol>1->node;
-	$<Symbol>1->node = $<Symbol>3;
-	$<Symbol>$ = $<Symbol>1;
+	$<Symbol>3->node = $<Symbol>1;
+	$<Symbol>$ = $<Symbol>3;
   }
   | non_empty_default_parameter_list ',' parameter
   {
     /* ERROR RULE */
     errorRec.errQ->enqueue($<r.line_no>3,$<r.col_no>3,"default parameters must appear only at the end","");
 	//**chain symbols in the list and pass it:
-	$<Symbol>3->node = $<Symbol>1->node;
-	$<Symbol>1->node = $<Symbol>3;
-	$<Symbol>$ = $<Symbol>1;
+	$<Symbol>3->node = $<Symbol>1;
+	$<Symbol>$ = $<Symbol>3;
   }
 ;
 
@@ -1119,9 +1116,8 @@ property_declaration_list:
 	}
   | property_declaration_list ',' property_declaration {
 		//**chain symbols in the list and pass it:
-		$<Symbol>3->node = $<Symbol>1->node;
-		$<Symbol>1->node = $<Symbol>3;
-		$<Symbol>$ = $<Symbol>1;
+		$<Symbol>3->node = $<Symbol>1;
+		$<Symbol>$ = $<Symbol>3;
     }
 ;
 
