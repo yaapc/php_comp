@@ -20,7 +20,7 @@ class ErrRecQueue{
 public:
 	ErrRecItem * front;
 	ErrRecItem * tail;
-	void enqueue(int lineNo, int colNo, char* txt, char* varName)
+	void enqueue(int lineNo, int colNo, const char *txt, const char *varName)
 	{
 		ErrRecItem * item = new ErrRecItem();
 		item->colNo = colNo;

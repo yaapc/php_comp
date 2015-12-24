@@ -1604,7 +1604,7 @@ close_par:
 ;
 %%
 
-void yyerror(char *s)
+void yyerror(const char* s)
 {
   extern int line_no, col_no;
   errorRec.errQ->enqueue(line_no, col_no, s, "");
