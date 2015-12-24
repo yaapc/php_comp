@@ -6,4 +6,6 @@ src/grammar.output
 src/lexer.cpp
 lexer_log.txt
 parser_log.txt
+scope.txt
+errors.txt
 *.php

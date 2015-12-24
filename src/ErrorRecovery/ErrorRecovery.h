@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -66,6 +67,7 @@ public:
 };
 class ErrorRecovery
 {
+	ofstream os;
 public:
 	ErrRecQueue * errQ;
 	ErrRecQueue * warnQ;
@@ -73,31 +75,32 @@ public:
 	{
 		this->errQ = new ErrRecQueue();
 		this->warnQ = new ErrRecQueue();
+		os.open("errors.txt", fstream::out);
 	}
 	~ErrorRecovery(void){};
 	void printErrQueue()
 	{
-		cout << "----------------Parser Error----------------" << endl;
+		os << "----------------Parser Error----------------" << endl;
 		if (errQ->isEmpty()){
-			cout << "No Error..." << endl;
+			os << "No Error..." << endl;
 		}else{
 				while(!errQ->isEmpty()){
 					ErrRecItem * e = errQ->dequeue();
-					cout<<"Error: ["<<e->lineNo<<","<<e->colNo<<"]   "<<e->txt<<",  "<<e->var<<"\n";
+					os<<"Error: ["<<e->lineNo<<","<<e->colNo<<"]   "<<e->txt<<",  "<<e->var<<"\n";
 				}
 		}
 
-		cout << "----------------Parser Warning--------------" << endl;
+		os << "----------------Parser Warning--------------" << endl;
 
 		if (warnQ->isEmpty()){
-			cout << "No Waring..." << endl;
+			os << "No Waring..." << endl;
 		}else{
 			while(!warnQ->isEmpty()){
 				ErrRecItem * e = warnQ->dequeue();
-				cout<<"Warning: ["<<e->lineNo<<","<<e->colNo<<"]   "<<e->txt<<",  "<<e->var<<"\n";
+				os<<"Warning: ["<<e->lineNo<<","<<e->colNo<<"]   "<<e->txt<<",  "<<e->var<<"\n";
 			}
 		}
-		cout << "--------------------------------------------" <<endl;
+		os << "--------------------------------------------" <<endl;
 	}
 };
 
