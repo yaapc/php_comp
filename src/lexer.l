@@ -6,7 +6,7 @@
   #include <queue>
   #include <stack>
   #include "grammar.hpp"
-  #include "definitions.hpp"
+  #include "definitions.h"
   #include "Logger.hpp"
 
   using namespace std;

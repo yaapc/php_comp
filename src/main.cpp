@@ -1,5 +1,5 @@
 #include "definitions.h"
-#include "yacc.hpp"
+#include "grammar.hpp"
 #include <iostream>
 #include <stdio.h>
 
@@ -10,7 +10,7 @@ extern SymbolsParser * symbolsParser;
 extern void initTypeChecker();
 
 int main(int argc, char** argv) {
-  initSymbolsParser(); 
+  initSymbolsParser();
   initTypeChecker();
   cout<<"php-compiler"<<endl<<endl;
 
