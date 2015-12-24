@@ -5,6 +5,7 @@ Symbol::Symbol(char* name, int type, int colNo, int lineNo){
 	this->name = name;
 	this->symbolType = type;
 	this->next = nullptr;
+	this->node = nullptr;
 	this->colNo = colNo;
 	this->lineNo = lineNo;
 }
@@ -42,7 +43,7 @@ int Symbol::getLineNo(){
 	return this->lineNo;
 }
 
-Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int lineNo): Symbol(name, symbolType, colNo, lineNo) {	
+Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int lineNo): Symbol(name, symbolType, colNo, lineNo) {
 	this->isInited = isInit;
 }
 
@@ -67,7 +68,7 @@ string Variable::toString(){
 	this->getName()         ? name = this->getName()                 : name = "NULL";
 	this->getVariableType() ? variableType = this->getVariableType() : variableType = "NULL";
 	this->isInit()          ? isInit = "Initialized"                 : isInit = "NOT Initialized";
-	return 
+	return
 		" VARIABLE | " + name + " | " + variableType + " | " + isInit;
 }
 
@@ -133,7 +134,7 @@ CLASS:
 Class::Class(char* name, int colNo, int lineNo, Scope* bodyScope): Symbol(name, CLASS, colNo, lineNo){
 	this->isAbstract = false;
 	this->isFinal = false;
-	this->inhertedFrom = "Object"; 
+	this->inhertedFrom = "Object";
 	this->bodyScope = bodyScope;
 
 }
@@ -181,7 +182,7 @@ void Class::setBodyScope(Scope* scope){
 
 Symbol* Class::addToDataMembers(DataMember* dataMem){
 	//double check @dataMem @node
-	dataMem->node = nullptr;	
+	dataMem->node = nullptr;
 	if (this->dataMembers == nullptr){
 		this->dataMembers = dataMem;
 		return dataMem;
@@ -252,7 +253,7 @@ string DataMember::toString(){
 		case PROTECTED_ACCESS:  accessModifier = "PROTECTED ACCESS"; break;
 	}
 	switch (this->storageModifier){
-		case DEFAULT_STORAGE: storageModifier = "DEFAULT STORAGE"; break;	
+		case DEFAULT_STORAGE: storageModifier = "DEFAULT STORAGE"; break;
 		case STATIC_STORAGE: storageModifier = "STATIC STORAGE"; break;
 		case FINAL_STORAGE: storageModifier = "FINAL STORAGE"; break;
 		case FINAL_STATIC_STORAGE: storageModifier = "FINAL STATIC STORAGE"; break;
@@ -267,7 +268,7 @@ Method:
 ============================================
 */
 
-Method::Method(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope, int accessModifier, int storageModifier) 
+Method::Method(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope, int accessModifier, int storageModifier)
 				: Function(name, returnType, colNo, lineNo, bodyScope){
 	this->accessModifier = accessModifier;
 	this->storageModifier = storageModifier;
@@ -307,7 +308,7 @@ string Method::toString(){
 			isConstructor = "Is Constructor";
 	}
 	else { isConstructor = "Not Constructor"; }
-		
+
 	this->isAbstract ? isAbstract = "is Abstract" : isAbstract = " NOT abstarct";
 	switch (this->accessModifier){
 	case DEFAULT_ACCESS:    accessModifier = "DEFAULT ACCESS"; break;
