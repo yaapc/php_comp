@@ -1,6 +1,6 @@
 CXX = g++
 CXXLFLAGS = -Wl,--enable-auto-import
-CXXFLAGS= -ggdb -std=c++11
+CXXFLAGS= -ggdb -std=c++11 -Wall
 LEX = flex
 LFLAGS=-osrc/lexer.cpp
 YACC= bison
