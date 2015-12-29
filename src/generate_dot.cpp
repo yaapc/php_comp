@@ -13,6 +13,7 @@ namespace {
 	private:
 		void generate_initial_metadata();
 		void generate_scope_data(Scope*, int rank);
+		void process_node(Scope*);
 		void generate_edges();
 		void generate_ranks();
 
@@ -41,10 +42,7 @@ namespace {
 	}
 
 	void DotUtility::generate_scope_data(Scope *scope, int rank) {
-		string node_name = (scope->getOwnerSymbol() ? scope->getOwnerSymbol()->getName() : "None");
-		os<<int(scope)
-			<<"[ label = \"{"<<node_name<<"|}\"]"
-			<<endl;
+		process_node(scope);
 		ranked_nodes.push_back(make_pair(rank, int(scope)));
 		auto it_scope = scope->getInnerScope();
 		while (it_scope != nullptr) {
@@ -52,6 +50,13 @@ namespace {
 			generate_scope_data(it_scope, rank + 1);
 			it_scope = it_scope->getNextScope();
 		}
+	}
+
+	void DotUtility::process_node(Scope* scope) {
+		string node_name = (scope->getOwnerSymbol() ? scope->getOwnerSymbol()->getName() : "None");
+		os<<int(scope)
+			<<"[ label = \"{"<<node_name<<"|}\"]"
+			<<endl;
 	}
 
 	void DotUtility::generate_edges() {
