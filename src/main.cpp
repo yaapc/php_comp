@@ -1,6 +1,8 @@
 #include "definitions.h"
 #include "grammar.hpp"
+#include "generate_dot.hpp"
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 
 using namespace std;
@@ -22,6 +24,9 @@ int main(int argc, char** argv) {
 
   yyparse();
   symbolsParser->printSymbolTables();
+	ofstream dot_file("symbol_table.dot");
+  generate_dot(symbolsParser->getRootScope(), dot_file);
+	dot_file.close();
   cout<<"compilation done"<<endl;
   return 0;
 }

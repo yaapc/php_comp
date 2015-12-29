@@ -9,3 +9,5 @@ parser_log.txt
 scope.txt
 errors.txt
 *.php
+*.dot
+*.svg

@@ -6,8 +6,8 @@ LFLAGS=-osrc/lexer.cpp
 YACC= bison
 YFLAGS= -d -v -o src/grammar.cpp
 
-phpc: grammar.o lexer.o main.o Scope.o Symbol.o SymbolTable.o SymbolsParser.o
-	${CXX} ${CXXLFLAGS} ${CXXFLAGS} Scope.o Symbol.o SymbolTable.o SymbolsParser.o lexer.o grammar.o main.o -o $@
+phpc: grammar.o lexer.o main.o Scope.o Symbol.o SymbolTable.o SymbolsParser.o generate_dot.o
+	${CXX} ${CXXLFLAGS} ${CXXFLAGS} Scope.o Symbol.o SymbolTable.o SymbolsParser.o generate_dot.o lexer.o grammar.o main.o -o $@
 
 main.o: src/main.cpp src/definitions.h
 	${CXX} ${CXXFLAGS} -c $<
@@ -32,5 +32,16 @@ SymbolTable.o: src/SymbolTable/SymbolTable.cpp src/SymbolTable/SymbolTable.h
 SymbolsParser.o: src/SymbolTable/SymbolsParser.cpp src/SymbolTable/SymbolsParser.h
 	${CXX} ${CXXFLAGS} -c $<
 
+generate_dot.o: src/generate_dot.cpp src/generate_dot.hpp
+	${CXX} ${CXXFLAGS} -c $<
+
+symbol_table: symbol_table.dot
+	dot -Tsvg -o symbol_table.svg symbol_table.dot
+
 clean:
 	rm *.o
+
+run:
+	make phpc
+	./phpc
+	make symbol_table
