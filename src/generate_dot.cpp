@@ -69,9 +69,9 @@ namespace {
 	}
 
 	void DotUtility::generate_initial_metadata() {
-		os<<"fontname = \"Arial\"; fontsize = 8;"
+		os<<"fontname = \"Helvetica\"; fontsize = 11;"
 			<<endl
-			<<"node [ shape = \"record\"; ]"
+			<<"node [ shape = \"record\"; fontname = \"Helvetica\"; fontsize = 11; ]"
 			<<endl;
 	}
 
