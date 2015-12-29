@@ -9,6 +9,7 @@
 #include<iostream>
 #include<fstream>
 #include<string>
+#include <vector>
 
 class Scope;
 
@@ -25,6 +26,7 @@ public:
 	void setOwnerScope(Scope* owner);
 	Scope* getOwnerScope();
 
+	vector<Symbol*> symbols();
 private:
 
 	Symbol **map;

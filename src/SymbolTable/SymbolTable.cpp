@@ -15,7 +15,7 @@ SymbolTable::~SymbolTable(){
 }
 
 Symbol* SymbolTable::insert(Symbol* symbol){
-	//look it up first 
+	//look it up first
 	if (this->lookup(symbol->getName())) // if found
 		return nullptr;	//declared, error should be logged at caller
 
@@ -24,7 +24,7 @@ Symbol* SymbolTable::insert(Symbol* symbol){
 	if (next == nullptr){ //empty bucket
 		return this->put(hashIndex, symbol);
 	}
-	//non-empty bucket 
+	//non-empty bucket
 	while (next->getNext()){
 		next = next->getNext();
 	}
@@ -91,4 +91,16 @@ void SymbolTable::setOwnerScope(Scope* owner){
 
 Scope* SymbolTable::getOwnerScope(){
 	return this->ownerScope;
+}
+
+vector<Symbol*> SymbolTable::symbols() {
+	vector<Symbol*> symbols_vector;
+	for (int i = 0; i < MAX_LENGTH; ++i) {
+		auto symbol = map[i];
+		while (symbol) {
+			symbols_vector.push_back(symbol);
+			symbol = symbol->getNext();
+		}
+	}
+	return symbols_vector;
 }
