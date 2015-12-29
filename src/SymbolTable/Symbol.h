@@ -3,20 +3,21 @@
 #define SYMBOL_H
 
 #include <string>
+#include <vector>
 using namespace std;
 
 /*
 =========
- SYMBOL: 
+ SYMBOL:
 =========
 */
 class Symbol {
 public:
 	Symbol(char* name, int symbolType, int colNo, int lineNo);
-	~Symbol();	
+	~Symbol();
 
 	virtual string toString() = 0;
-	virtual int getSymbolType() = 0;	
+	virtual int getSymbolType() = 0;
 	void setSymbolType(int type);
 
 
@@ -27,8 +28,8 @@ public:
 	Symbol* setNext(Symbol* symbol);
 
 	int getColNo();
-	int getLineNo();	
-	
+	int getLineNo();
+
 	Symbol* node;// TODO: document it
 private :
 	char * name;
@@ -38,7 +39,7 @@ private :
 	int colNo;
 	int lineNo;
 
-	//long memoryLocation; // mem location at runtime 
+	//long memoryLocation; // mem location at runtime
 };
 
 /*
@@ -71,10 +72,11 @@ FUNCTION:
 =========
 */
 class Scope; // FORWARD DECLERATION
+class Parameter;
 
 class Function : public Symbol {
 public:
-	
+
 	Function(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope);
 	~Function();
 	int getSymbolType();
@@ -88,6 +90,7 @@ public:
 	string toString();
 
 	Symbol* addToParams(Symbol* sym);
+	vector<Parameter*> parameters();
 private:
 	char* returnType;
 	Scope* bodyScope;
@@ -194,11 +197,11 @@ PARAMETER:
 =========================
 */
 class Parameter : public Variable {
-public : 
+public :
 	Parameter(char * name, int colNo, int lineNo, bool isDefault);
 	~Parameter();
 
 	bool isDefault;
 private:
-	
+
 };

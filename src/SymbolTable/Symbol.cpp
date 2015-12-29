@@ -125,6 +125,16 @@ Symbol* Function::addToParams(Symbol* sym){
 	walker->node = sym;
 	return sym;
 }
+
+vector<Parameter*> Function::parameters() {
+	vector<Parameter*> res;
+	auto par = params;
+	while (par) {
+		res.push_back(dynamic_cast<Parameter*>(par));
+		par = par->node;
+	}
+	return res;
+}
 /*
 ========================================
 CLASS:
