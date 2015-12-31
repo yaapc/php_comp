@@ -122,7 +122,8 @@ namespace {
 		for (auto m: methods) {
 			os<<visibility_representation(m->getAccessModifier())<<" "<<m->getName();
 			print_parameters(m->parameters());
-			os<<" : "<<m->getReturnType()<<"\\l";
+			if (!m->isConstructor)	os<<" : "<<m->getReturnType();
+			os<<"\\l";
 		}
 
 	}
