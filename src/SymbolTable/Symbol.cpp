@@ -112,18 +112,8 @@ void Function::setBodyScope(Scope* bodyScope){
 	this->bodyScope = bodyScope;
 }
 
-Symbol* Function::addToParams(Symbol* sym){
-	sym->node = nullptr;
-	if (this->params == nullptr){
-		this->params = sym;
-		return sym;
-	}
-	Symbol* walker = this->params;
-	while (walker->node != nullptr){
-		walker = walker->node;
-	}
-	walker->node = sym;
-	return sym;
+void Function::setParams(Symbol* params){
+	this->params = params;
 }
 
 vector<Parameter*> Function::parameters() {
