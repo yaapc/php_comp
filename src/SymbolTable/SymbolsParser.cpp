@@ -113,11 +113,7 @@ Symbol* SymbolsParser::insertFunctionSymbol(char* name, char* returnType,int col
 	this->insertParams(params, scope);
 
 	//linking params symbols to the function symbol
-	//and double checking thier @node inside addToParams()
-	while (params != nullptr){
-		funcSym->addToParams(params);
-		params = params->node;
-	}
+	funcSym->setParams(params);
 
 	return funcSym;
 }
@@ -238,11 +234,7 @@ Symbol* SymbolsParser::insertMethodSymbol(char* name, int colNo, int lineNo, int
 		Scope* scope = this->insertParams(paramSymbol, bodyScope);
 	
 	//link params to method symbol
-	//and double checking thier @node in addParam
-	while (paramSymbol != nullptr){
-		methodSymbol->addToParams(paramSymbol);
-		paramSymbol = paramSymbol->node;
-	}
+	methodSymbol->setParams(paramSymbol);
 
 	if (bodyScope != nullptr)
 		bodyScope->setOwnerSymbol(methodSymbol);
