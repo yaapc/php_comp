@@ -89,7 +89,7 @@ public:
 
 	string toString();
 
-	Symbol* addToParams(Symbol* sym);
+	void setParams(Symbol* params);
 	vector<Parameter*> parameters();
 private:
 	char* returnType;
