@@ -6,8 +6,8 @@ LFLAGS=-osrc/lexer.cpp
 YACC= bison
 YFLAGS= -d -v -o src/grammar.cpp
 
-phpc: grammar.o lexer.o main.o Scope.o Symbol.o SymbolTable.o SymbolsParser.o generate_dot.o
-	${CXX} ${CXXLFLAGS} ${CXXFLAGS} Scope.o Symbol.o SymbolTable.o SymbolsParser.o generate_dot.o lexer.o grammar.o main.o -o $@
+phpc: grammar.o lexer.o main.o Scope.o Symbol.o SymbolTable.o SymbolsParser.o generate_dot.o TypeChecker.o DependencyGraph.o
+	${CXX} ${CXXLFLAGS} ${CXXFLAGS} Scope.o Symbol.o SymbolTable.o SymbolsParser.o TypeChecker.o DependencyGraph.o generate_dot.o lexer.o grammar.o main.o -o $@
 
 main.o: src/main.cpp src/definitions.h
 	${CXX} ${CXXFLAGS} -c $<
@@ -33,6 +33,12 @@ SymbolsParser.o: src/SymbolTable/SymbolsParser.cpp src/SymbolTable/SymbolsParser
 	${CXX} ${CXXFLAGS} -c $<
 
 generate_dot.o: src/generate_dot.cpp src/generate_dot.hpp
+	${CXX} ${CXXFLAGS} -c $<
+
+TypeChecker.o: src/TypeChecker.cpp src/TypeChecker.h
+	${CXX} ${CXXFLAGS} -c $<
+
+DependencyGraph.o: src/DependencyGraph/DependencyGraph.cpp src/DependencyGraph/DependencyGraph.h
 	${CXX} ${CXXFLAGS} -c $<
 
 symbol_table: symbol_table.dot
