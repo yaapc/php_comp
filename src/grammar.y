@@ -1,3 +1,4 @@
+%output = "grammer.cpp"
 %{
 	#include <iostream>
 	using namespace std;
@@ -22,6 +23,7 @@
 	 */
 	void initSymbolsParser(){
 		symbolsParser = new SymbolsParser();
+		symbolsParser->insertSymbol(new Class("Object", 1, 1, nullptr));
 	}
 
 	/**
@@ -173,7 +175,7 @@
 
 
 %%
-program: start {pl.log("program"); errorRec.printErrQueue();}
+program: start {pl.log("program");}
 
 start:
 		start_part { pl.log("start");}
@@ -759,7 +761,7 @@ parameter_list:
 ;
 
 non_empty_parameter_list:
-		parameter
+		parameter 
 	| non_empty_parameter_list ',' parameter
 		{
 			//**chain symbols in the list and pass it:
