@@ -27,7 +27,7 @@ a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) an
   * report an error for methods with no body and not declared as abstract.
 
 ### SymbolTable And TypeChecker Class Diagram : 
- ![Class Diagram](http://s11.postimg.org/y2apfnppv/Main.jpg)
+ ![Class Diagram](http://s4.postimg.org/94t0nclfh/Class_Diagram.png)
 
 ### TypeChecker :
 what the type checker can do for now:
@@ -35,12 +35,12 @@ what the type checker can do for now:
  * checkDependency() : creates a dependency (inhertence) graph, looks for circular dependencies ,report circles and logs the graph.
 
 ### Dependency Graph: 
- quoting from Wikipedia:
- a dependency graph is a directed graph representing dependencies of several objects towards each other.
+ quoting from Wikipedia: a dependency graph is a directed graph representing dependencies of several objects towards each other.
  we use the dependency graph to represesnt inheretence dependency between classes.
  we create the directed graph then use Tarjan's strongly connected components algorithm to catch the circles and identify them.
  References : 
-   http://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/
+   http://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/ 
+   
    https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
    P334 of Compiler Design - Compiler's Principles, Techniques and Tools
 TODO: remove these and introduce the Replacer tool:
