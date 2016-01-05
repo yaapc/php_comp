@@ -42,6 +42,7 @@ what the type checker can do for now:
    http://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/ 
    
    https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+   
    P334 of Compiler Design - Compiler's Principles, Techniques and Tools
 TODO: remove these and introduce the Replacer tool:
 these includes at line 23 :
