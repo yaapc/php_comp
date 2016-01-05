@@ -4,7 +4,7 @@
 
 #include"DependencyGraph\DependencyGraph.h"
 #include"SymbolTable\SymbolsParser.h"
-
+#include "definitions.h"
 
 class TypeChecker {
 public:

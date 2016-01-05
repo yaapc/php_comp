@@ -1,5 +1,5 @@
 #include "definitions.h"
-#include "grammer.hpp"
+#include "grammar.hpp"
 #include "generate_dot.hpp"
 #include "TypeChecker.h"
 
@@ -23,9 +23,9 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 	yyparse();
-	
+
 	symbolsParser->printSymbolTables(); // log symbol table
-	typeChecker->checkDependency(); // check circular dependency and create dependency graph 
+	typeChecker->checkDependency(); // check circular dependency and create dependency graph
 	errorRec.printErrQueue();
 
 	//Visualizing

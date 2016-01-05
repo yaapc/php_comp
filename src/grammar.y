@@ -1,4 +1,4 @@
-%output = "grammer.cpp"
+%output = "grammar.cpp"
 %{
 	#include <iostream>
 	using namespace std;
@@ -761,7 +761,7 @@ parameter_list:
 ;
 
 non_empty_parameter_list:
-		parameter 
+		parameter
 	| non_empty_parameter_list ',' parameter
 		{
 			//**chain symbols in the list and pass it:

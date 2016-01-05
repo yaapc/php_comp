@@ -4,10 +4,14 @@ src/grammar.cpp
 src/grammar.hpp
 src/grammar.output
 src/lexer.cpp
+grammar.cpp
+grammar.hpp
+grammar.output
 lexer_log.txt
 parser_log.txt
 scope.txt
 errors.txt
+graph_log.txt
 *.php
 *.dot
 *.svg

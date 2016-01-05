@@ -1,4 +1,4 @@
-#include"DependencyGraph\DependencyGraph.h"
+#include"DependencyGraph.h"
 
 #define NIL -1
 int min(int, int);
@@ -190,11 +190,11 @@ void DependencyGraph::reportCircles(){
 			string dependencyPath = ""; // used to construct a string of named circling classes
 			for (i = this->strCComp[j].begin(); i != this->strCComp[j].end(); ++i){
 				int ind = *i;
-				
+
 				list<GraphNode*>::iterator nodesIter;
 				for (nodesIter = this->nodes.begin(); nodesIter != this->nodes.end(); ++nodesIter){
 					GraphNode* node = *nodesIter;
-					if (node->index == ind){ // the node 
+					if (node->index == ind){ // the node
 						dependencyPath += node->name + " ";
 						this->errRecovery->errQ->enqueue(node->nodeSymbol->getLineNo(), node->nodeSymbol->getColNo(), "creates a circular depenedency", "");
 					}
@@ -204,6 +204,6 @@ void DependencyGraph::reportCircles(){
 			dependencyPath += " creates a dependency circle";
 			this->errRecovery->errQ->enqueue(0, 0,dependencyPath.c_str(), "");
 		}
-		
+
 	}
 }
