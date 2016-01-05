@@ -210,6 +210,10 @@ Symbol* Class::addToMethodMembers(Method* method){
 	}
 	walker->node = method;
 }
+
+string Class::getInhertedFrom() {
+	return inhertedFrom;
+}
 /*
 ============================================
 DATA MEMBER:

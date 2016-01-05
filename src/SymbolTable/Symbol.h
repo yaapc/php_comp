@@ -130,6 +130,8 @@ public:
 
 	Symbol* addToDataMembers(DataMember* dataMem);
 	Symbol* addToMethodMembers(Method* methodMem);
+
+	string getInhertedFrom();
 private:
 	string inhertedFrom; // string to remove char* overhead when setting it.
 	Scope* bodyScope;
