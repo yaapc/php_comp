@@ -1,6 +1,6 @@
 // A class that finds strongly connected components (Circular Dependency) in a given
 // directed graph using Tarjan's algorithm (single DFS)
-// References : 
+// References :
 //   http://www.geeksforgeeks.org/tarjan-algorithm-find-strongly-connected-components/
 //   https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
 
@@ -32,11 +32,12 @@ public:
 	DependencyGraph(ErrorRecovery* errRecovery);
 
 	void insertIntoNodes(char* nodeName, Symbol* nodeSymbol, string dependName);
-	
+
 	void checkDependency();
 	void reportCircles(); // report a circular dependency using errRecovery
 
 	void printGraph();
+	void generate_dot_file(ostream&);
 private:
 	void createGraph();
 	list<int> *adj; // A dynamic array of adjacency lists
@@ -58,6 +59,6 @@ private:
 
 	ErrorRecovery* errRecovery;
 
-	
+
 	ofstream os;
 };

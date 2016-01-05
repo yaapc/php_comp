@@ -207,3 +207,22 @@ void DependencyGraph::reportCircles(){
 
 	}
 }
+
+void DependencyGraph::generate_dot_file(ostream &o) {
+	o<<"digraph \"Dependecy Graph\" {"<<endl;
+	o<<"fontname = \"Helvetica\"; fontsize = 11; rankdir=BT"
+		<<endl
+		<<"node [ fontname = \"Helvetica\"; fontsize = 11; ]"<<endl;
+
+	for (auto node : nodes) {
+		o<<node->index<<"[label = "<<node->name<<"]"<<endl;
+	}
+	for (auto v : nodes) {
+		for (auto u_index : adj[v->index]) {
+			if (u_index == -1) continue;
+			o<<v->index<<"->"<<u_index<<";\n";
+		}
+	}
+
+	o<<"}"<<endl;
+}

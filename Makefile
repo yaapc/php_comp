@@ -44,6 +44,9 @@ DependencyGraph.o: src/DependencyGraph/DependencyGraph.cpp src/DependencyGraph/D
 symbol_table: symbol_table.dot
 	dot -Tsvg -o symbol_table.svg symbol_table.dot
 
+dependency_graph_dot: dependency_graph.dot
+	dot -Tsvg -o dependency_graph.svg $<
+
 clean:
 	rm *.o
 
@@ -51,3 +54,4 @@ run:
 	make phpc
 	./phpc
 	make symbol_table
+	make dependency_graph_dot

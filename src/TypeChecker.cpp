@@ -1,14 +1,17 @@
 #include"TypeChecker.h"
-
+#include <fstream>
 
 //walks the symbol table searching for classes and creating thier dependency graph
 void TypeChecker::checkDependency(){
 	Scope* scope = this->symbolsParser->getRootScope();
 	searchScope(scope);
-	
-	dg->checkDependency(); // creates the graph and checks it for circular dependency 
+
+	dg->checkDependency(); // creates the graph and checks it for circular dependency
 	dg->reportCircles();
 	dg->printGraph();
+	std::ofstream dot_file("dependency_graph.dot");
+	dg->generate_dot_file(dot_file);
+	dot_file.close();
 }
 
 //searches the scope recursivly looking for classes declarations
