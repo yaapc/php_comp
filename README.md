@@ -3,6 +3,7 @@ a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) an
 
 
 ### MAIN TODOs: 
+  * AST.
   * Minor todo's scattered and labeled in the code.
   * SymbolTable doesn't support declarations of "const" and "static" variables. 
   * Forward Declerations is permitted for classes and functions in Inheretance and Invoking.
