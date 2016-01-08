@@ -8,7 +8,7 @@ using namespace std;
 
 /*
 =========
- SYMBOL:
+SYMBOL:
 =========
 */
 class Symbol {
@@ -31,7 +31,7 @@ public:
 	int getLineNo();
 
 	Symbol* node;// TODO: document it
-private :
+private:
 	char * name;
 	int symbolType;
 	Symbol* next; // to chain symbols in buckets.
@@ -51,10 +51,18 @@ class Variable : public Symbol {
 public:
 	//it takes symbolType cuz it's a base class for DataMember and Parameter
 	//TODO : Overload it without symbolType
+	//implicit falsy isConst and isStatic
 	Variable(char * name, int symbolType, bool isInit, int colNo, int lineNo);
+
+	Variable(char* name, int symbolType, bool isInit, int colNo, int lineNo, bool isConst, bool isStatic);
+
+	Variable(char* name, int symbolType, bool isInit, int colNo, int lineNo, bool isStatic);
+
 	int getSymbolType();
 
 	bool isInit();
+	bool isStatic;
+	bool isConst;
 
 	char* getVariableType();
 	void setVariableType(char* type);
@@ -89,8 +97,9 @@ public:
 
 	string toString();
 
-	void setParams(Symbol* params);
 	vector<Parameter*> parameters();
+	void setParams(Symbol* params);
+	
 private:
 	char* returnType;
 	Scope* bodyScope;
@@ -116,10 +125,12 @@ public:
 	bool isFinal;
 	bool isAbstract;
 
+	//TODO: check referencing and remove those methods:
 	void setAsAbstract();
 	void setAsFinal();
 
 	void setInhertedFrom(string inhertedFrom);
+	string getInhertedFrom();
 
 	//overrided virtuals
 	string toString();
@@ -130,8 +141,6 @@ public:
 
 	Symbol* addToDataMembers(DataMember* dataMem);
 	Symbol* addToMethodMembers(Method* methodMem);
-
-	string getInhertedFrom();
 private:
 	string inhertedFrom; // string to remove char* overhead when setting it.
 	Scope* bodyScope;
@@ -172,6 +181,7 @@ METHOD:
 class Method : public Function {
 public:
 	Method(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope, int accessModifier, int storageModifier);
+	Method(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope);
 	~Method();
 
 	int getAccessModifier();
@@ -199,7 +209,7 @@ PARAMETER:
 =========================
 */
 class Parameter : public Variable {
-public :
+public:
 	Parameter(char * name, int colNo, int lineNo, bool isDefault);
 	~Parameter();
 
