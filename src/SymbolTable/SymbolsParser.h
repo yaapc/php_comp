@@ -4,9 +4,10 @@
 
 #include "../ErrorRecovery/ErrorRecovery.h"
 #include "Scope.h"
+#include "../definitions.h"
 
 extern ErrorRecovery errorRec;//using one unified ErrorRecovery defined in yacc
-
+class Class;
 class SymbolsParser {
 public :
 	SymbolsParser();
@@ -41,9 +42,9 @@ public :
 	Symbol* finishClassInsertion(char* name, char* inhertedFrom, Class* classSymbol, Scope* scope);
 
 	/* this method finishes data member declarations */
-	Symbol* finishDataMembersDeclaration(DataMember* dataMem, int accessMod, int storageMod, char* type);
+	Symbol* finishDataMembersDeclaration(DataMember* dataMem, int *modifiers, int modCount, char* type);
 
-	Symbol* insertMethodSymbol(char* name, int colNo, int lineNo, int accessModifier, int storageModifier, char* returnType, Scope* bodyScope, Symbol* paramSymbol);
+	Symbol* insertMethodSymbol(char* name, int colNo, int lineNo, int* modifiers, int modsCount, char* returnType, Scope* bodyScope, Symbol* paramSymbol);
 	Symbol* finishMethodDeclaration(Method* method, char* returnType,Scope* bodyScope, Symbol* paramSymbol);
 
 	static Symbol* joinSymbolsLists(Symbol* firstList, Symbol* secondList);
@@ -51,6 +52,9 @@ public :
 
 	Scope* createNewScope(bool &flag);
 	Scope* createNewScope();
+
+	void checkModifiersAndSet(DataMember *mem, int* mods, int count);
+	void checkModifiersAndSet(Method *method, int* mods, int count);
 
 private :
 	ErrorRecovery *errRecovery;
