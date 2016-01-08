@@ -22,8 +22,8 @@ a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) an
   * add `$this` pointer to class members.
   * check access of `$this` pointer like `$this->member`.
   * enhance error report of redeclarations of functions, it says "identifier not found".
-  * access modifiers should not be assigned together `private public $param`.
-  * an access modifier should only be assigned once `public public $param`.
+  * :heavy_check_mark: access modifiers should not be assigned together `private public $param`.
+  * :heavy_check_mark: an access modifier should only be assigned once `public public $param`.
   * variable names should not start with punctuations.
   * :heavy_check_mark: "final abstract" are not allowed. 
   * :heavy_check_mark: implement "abstract declaration of method" in the grammer for example: " abstract function iAmAFunction(): void; ".
