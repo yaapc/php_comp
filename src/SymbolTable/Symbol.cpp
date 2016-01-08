@@ -43,8 +43,28 @@ int Symbol::getLineNo(){
 	return this->lineNo;
 }
 
-Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int lineNo): Symbol(name, symbolType, colNo, lineNo) {
+/*
+=========================================
+VARIABLE:
+=========================================
+*/
+
+Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int lineNo) : Symbol(name, symbolType, colNo, lineNo) {
 	this->isInited = isInit;
+	this->isConst = false;
+	this->isStatic = false;
+}
+
+Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int lineNo, bool isConst, bool isStatic) : Symbol(name, symbolType, colNo, lineNo) {
+	this->isInited = isInit;
+	this->isStatic = isStatic;
+	this->isConst = isConst;
+}
+
+Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int lineNo, bool isStatic) : Symbol(name, symbolType, colNo, lineNo) {
+	this->isInited = isInit;
+	this->isStatic = isStatic;
+	this->isConst = false;
 }
 
 int Variable::getSymbolType(){
@@ -64,12 +84,13 @@ bool Variable::isInit(){
 }
 
 string Variable::toString(){
-	string name, variableType, isInit;
-	this->getName()         ? name = this->getName()                 : name = "NULL";
+	string name, variableType, isInit, isStatic;
+	this->getName() ? name = this->getName() : name = "NULL";
 	this->getVariableType() ? variableType = this->getVariableType() : variableType = "NULL";
-	this->isInit()          ? isInit = "Initialized"                 : isInit = "NOT Initialized";
+	this->isInit() ? isInit = "Initialized" : isInit = "NOT Initialized";
+	this->isStatic ? isStatic = "Static" : isStatic = "NOT Static";
 	return
-		" VARIABLE | " + name + " | " + variableType + " | " + isInit;
+		" VARIABLE | " + name + " | " + variableType + " | " + isInit + " | " + isStatic;
 }
 
 
@@ -131,7 +152,7 @@ CLASS:
 ========================================
 */
 
-Class::Class(char* name, int colNo, int lineNo, Scope* bodyScope): Symbol(name, CLASS, colNo, lineNo){
+Class::Class(char* name, int colNo, int lineNo, Scope* bodyScope) : Symbol(name, CLASS, colNo, lineNo){
 	this->isAbstract = false;
 	this->isFinal = false;
 	this->inhertedFrom = "Object";
@@ -160,6 +181,10 @@ void Class::setInhertedFrom(string inhertedFrom){
 	this->inhertedFrom = inhertedFrom;
 }
 
+string Class::getInhertedFrom(){
+	return this->inhertedFrom;
+}
+
 int Class::getSymbolType(){
 	return CLASS;
 }
@@ -169,7 +194,7 @@ string Class::toString(){
 	this->getName() ? name = this->getName() : name = "NULL";
 	this->isAbstract ? isAbstract = "Abstract" : isAbstract = "Not Abstract";
 	this->isFinal ? isFinal = "Final" : isFinal = "Not Final";
-	return " CLASS    | " + name + " | " + inhertedFrom  + " | " + isAbstract + " | " + isFinal;
+	return " CLASS    | " + name + " | " + inhertedFrom + " | " + isAbstract + " | " + isFinal;
 }
 
 Scope* Class::getBodyScope(){
@@ -210,18 +235,14 @@ Symbol* Class::addToMethodMembers(Method* method){
 	}
 	walker->node = method;
 }
-
-string Class::getInhertedFrom() {
-	return inhertedFrom;
-}
 /*
 ============================================
 DATA MEMBER:
 ============================================
 */
 
-DataMember::DataMember(char * name, bool isInit, int colNo, int lineNo) : Variable(name, DATA_MEMBER,isInit, colNo, lineNo){
-	this->accessModifier = DEFAULT_ACCESS;
+DataMember::DataMember(char * name, bool isInit, int colNo, int lineNo) : Variable(name, DATA_MEMBER, isInit, colNo, lineNo){
+	this->accessModifier = PRIVATE_ACCESS;
 	this->storageModifier = DEFAULT_STORAGE;
 };
 
@@ -251,16 +272,15 @@ string DataMember::toString(){
 	this->getVariableType() ? dataMemberType = this->getVariableType() : dataMemberType = "NULL";
 	this->isInit() ? isInit = "Initialized" : isInit = "NOT Initialized";
 	switch (this->accessModifier){
-		case DEFAULT_ACCESS:    accessModifier = "DEFAULT ACCESS"; break;
-		case PUBLIC_ACCESS:     accessModifier = "PUBLIC ACCESS"; break;
-		case PRIVATE_ACCESS:    accessModifier = "PRIVATE ACCESS"; break;
-		case PROTECTED_ACCESS:  accessModifier = "PROTECTED ACCESS"; break;
+	case PUBLIC_ACCESS:     accessModifier = "PUBLIC ACCESS"; break;
+	case PRIVATE_ACCESS:    accessModifier = "PRIVATE ACCESS"; break;
+	case PROTECTED_ACCESS:  accessModifier = "PROTECTED ACCESS"; break;
 	}
 	switch (this->storageModifier){
-		case DEFAULT_STORAGE: storageModifier = "DEFAULT STORAGE"; break;
-		case STATIC_STORAGE: storageModifier = "STATIC STORAGE"; break;
-		case FINAL_STORAGE: storageModifier = "FINAL STORAGE"; break;
-		case FINAL_STATIC_STORAGE: storageModifier = "FINAL STATIC STORAGE"; break;
+	case DEFAULT_STORAGE: storageModifier = "DEFAULT STORAGE"; break;
+	case STATIC_STORAGE: storageModifier = "STATIC STORAGE"; break;
+	case FINAL_STORAGE: storageModifier = "FINAL STORAGE"; break;
+	case FINAL_STATIC_STORAGE: storageModifier = "FINAL STATIC STORAGE"; break;
 	}
 	return
 		" DATA MEMBER | " + name + " | " + dataMemberType + " | " + isInit + " | " + accessModifier + " | " + storageModifier;
@@ -273,9 +293,18 @@ Method:
 */
 
 Method::Method(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope, int accessModifier, int storageModifier)
-				: Function(name, returnType, colNo, lineNo, bodyScope){
+: Function(name, returnType, colNo, lineNo, bodyScope){
 	this->accessModifier = accessModifier;
 	this->storageModifier = storageModifier;
+	this->isConstructor = false;
+	this->isAbstract = false;
+	this->isDefaultConstr = false;
+}
+
+Method::Method(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope)
+: Function(name, returnType, colNo, lineNo, bodyScope){
+	this->accessModifier = PRIVATE_ACCESS;
+	this->storageModifier = DEFAULT;
 	this->isConstructor = false;
 	this->isAbstract = false;
 	this->isDefaultConstr = false;
@@ -315,7 +344,6 @@ string Method::toString(){
 
 	this->isAbstract ? isAbstract = "is Abstract" : isAbstract = " NOT abstarct";
 	switch (this->accessModifier){
-	case DEFAULT_ACCESS:    accessModifier = "DEFAULT ACCESS"; break;
 	case PUBLIC_ACCESS:     accessModifier = "PUBLIC ACCESS"; break;
 	case PRIVATE_ACCESS:    accessModifier = "PRIVATE ACCESS"; break;
 	case PROTECTED_ACCESS:  accessModifier = "PROTECTED ACCESS"; break;
