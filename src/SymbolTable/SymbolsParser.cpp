@@ -1,5 +1,4 @@
 #include "SymbolsParser.h"
-#include "../definitions.h"
 
 SymbolsParser::SymbolsParser(){
 	//init root scope 
@@ -161,12 +160,11 @@ Symbol* SymbolsParser::finishClassInsertion(char* name, char* inhertedFrom, Clas
 	return classSymbol;
 }
 
-Symbol* SymbolsParser::finishDataMembersDeclaration(DataMember* dataMem, int accessMod, int storageMod, char* type){
+Symbol* SymbolsParser::finishDataMembersDeclaration(DataMember* dataMem, int *modifiers,int modCount, char* type){
 	DataMember* walker = dataMem;
 	while (walker != nullptr){ // TODO: document this 
 		walker->setVariableType(type);
-		walker->setAccessModifier(accessMod);
-		walker->setStorageModifier(storageMod);
+		checkModifiersAndSet(walker, modifiers, modCount);
 
 		//for every data member 
 		//add it to current class in declaration process
@@ -200,10 +198,11 @@ Symbol* SymbolsParser::finishMethodDeclaration(Method* methodSymbol, char* retur
 		return methodSymbol;
 }
 
-Symbol* SymbolsParser::insertMethodSymbol(char* name, int colNo, int lineNo, int accessModifier, int storageModifier,char* returnType, Scope* bodyScope, Symbol* paramSymbol){
+Symbol* SymbolsParser::insertMethodSymbol(char* name, int colNo, int lineNo, int* modifiers, int modsCount,char* returnType, Scope* bodyScope, Symbol* paramSymbol){
 	
 	// no body scope and no return type
-	Method* methodSymbol = new Method(name, nullptr, colNo, lineNo, nullptr, accessModifier, storageModifier);
+	Method* methodSymbol = new Method(name, nullptr, colNo, lineNo, nullptr);
+	checkModifiersAndSet(methodSymbol, modifiers, modsCount);
 	
 
 	//if we have a bodyScope (i.e not an abstract method) 
@@ -259,4 +258,134 @@ Scope* SymbolsParser::createNewScope(){
 	this->getCurrentScope()->addToInnerScopes(scope);
 	this->setCurrentScope(scope);
 	return scope;
+}
+
+void SymbolsParser::checkModifiersAndSet(DataMember *mem, int* modifiers, int modCount){
+	int mods[] = { 0, 0 }; // the modifiers that will be assigned the first will be the access modifier, the second is the storage.
+	
+	if (modCount == 0){ // no modifiers
+		mem->setAccessModifier(PRIVATE_ACCESS); // the default access
+		mem->setStorageModifier(DEFAULT); // the default storage
+		return;
+	}
+
+	for (int i = 0; i < modCount; i++){
+		switch (modifiers[i]){
+		case PRIVATE_ACCESS :
+			if (mods[0] != 0 && mods[0] == PRIVATE_ACCESS)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " repeated modifier - private", "");
+			else if (mods[0] != 0)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " illegal combination of modifiers", "");
+			else
+				mods[0] = PRIVATE_ACCESS;
+			break;
+		case PUBLIC_ACCESS :
+			if (mods[0] != 0 && mods[0] == PUBLIC_ACCESS)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " repeated modifier - public", "");
+			else if (mods[0] != 0)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " illegal combination of modifiers", "");
+			else
+				mods[0] = PUBLIC_ACCESS;
+			break;
+		case PROTECTED_ACCESS :
+			if (mods[0] != 0 && mods[0] == PROTECTED_ACCESS)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " repeated modifiers - protected", "");
+			else if (mods[0] != 0)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " illegal combination of modifiers", "");
+			else
+				mods[0] = PROTECTED_ACCESS;
+			break;
+
+		case FINAL_STORAGE :
+			if (mods[1] != 0 && (mods[1] == FINAL_STORAGE || mods[1] == FINAL_STATIC_STORAGE))
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " repeated modifier - final", "");
+			else if (mods[1] != 0 && mods[1] == STATIC_STORAGE)
+				mods[1] = FINAL_STATIC_STORAGE;
+			else
+				mods[1] = FINAL_STORAGE;
+			break;
+		case STATIC_STORAGE :
+			if (mods[1] != 0 && (mods[1] == STATIC_STORAGE || mods[1] == FINAL_STATIC_STORAGE))
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " repeated modifier - static", "");
+			else if (mods[1] != 0 && mods[1] == FINAL_STATIC_STORAGE)
+				mods[1] = FINAL_STATIC_STORAGE;
+			else
+				mods[1] = STATIC_STORAGE;
+			break;
+		case DEFAULT :
+			mods[0] = PRIVATE_ACCESS;
+			mods[1] = DEFAULT_STORAGE;
+			break;
+		}
+	}
+	mem->setAccessModifier(mods[0]);
+	if (mods[1] == 0)
+		mem->setStorageModifier(DEFAULT_STORAGE);
+	else
+		mem->setStorageModifier(mods[1]);
+}
+
+void SymbolsParser::checkModifiersAndSet(Method *mem, int* modifiers, int modCount){
+	int mods[] = { 0, 0 }; // the modifiers that will be assigned the first will be the access modifier, the second is the storage.
+
+	if (modCount == 0){ // no modifiers
+		mem->setAccessModifier(PRIVATE_ACCESS); // the default access
+		mem->setStorageModifier(DEFAULT); // the default storage
+		return;
+	}
+
+	for (int i = 0; i < modCount; i++){
+		switch (modifiers[i]){
+		case PRIVATE_ACCESS:
+			if (mods[0] != 0 && mods[0] == PRIVATE_ACCESS)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " repeated modifier", "");
+			else if (mods[0] != 0)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " illegal combination of modifiers", "");
+			else
+				mods[0] = PRIVATE_ACCESS;
+			break;
+		case PUBLIC_ACCESS:
+			if (mods[0] != 0 && mods[0] == PUBLIC_ACCESS)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " repeated modifier", "");
+			else if (mods[0] != 0)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " illegal combination of modifiers", "");
+			else
+				mods[0] = PUBLIC_ACCESS;
+			break;
+		case PROTECTED_ACCESS:
+			if (mods[0] != 0 && mods[0] == PROTECTED_ACCESS)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " repeated modifier", "");
+			else if (mods[0] != 0)
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " illegal combination of modifiers", "");
+			else
+				mods[0] = PROTECTED_ACCESS;
+			break;
+
+		case FINAL_STORAGE:
+			if (mods[1] != 0 && (mods[1] == FINAL_STORAGE || mods[1] == FINAL_STATIC_STORAGE))
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " repeated modifier", "");
+			else if (mods[1] != 0 && mods[1] == STATIC_STORAGE)
+				mods[1] = FINAL_STATIC_STORAGE;
+			else
+				mods[1] = FINAL_STORAGE;
+			break;
+		case STATIC_STORAGE:
+			if (mods[1] != 0 && (mods[1] == STATIC_STORAGE || mods[1] == FINAL_STATIC_STORAGE))
+				this->errRecovery->errQ->enqueue(mem->getLineNo(), mem->getColNo(), " repeated modifier", "");
+			else if (mods[1] != 0 && mods[1] == FINAL_STATIC_STORAGE)
+				mods[1] = FINAL_STATIC_STORAGE;
+			else
+				mods[1] = STATIC_STORAGE;
+			break;
+		case DEFAULT:
+			mods[0] = PRIVATE_ACCESS;
+			mods[1] = DEFAULT_STORAGE;
+			break;
+		}
+	}
+	mem->setAccessModifier(mods[0]);
+	if (mods[1] == 0)
+		mem->setStorageModifier(DEFAULT_STORAGE);
+	else
+		mem->setStorageModifier(mods[1]);
 }
