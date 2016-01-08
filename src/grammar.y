@@ -1,4 +1,4 @@
-%output = "grammar.cpp"
+%output = "grammer.cpp"
 %{
 	#include <iostream>
 	using namespace std;
@@ -16,6 +16,11 @@
 	*/
 	SymbolsParser * symbolsParser;
 	bool forLoopFlag = false;
+	bool modifierListingFlag = false;
+
+	// an array to group modifiers (access, storage)
+	int *modifiersTags = new int[25]; // max of 25 modifier
+	int arrCounter = 0;
 
 	/** this routine is used to initialize the symbols parser.
 	 *	TODO: add Object class to root symbol table.
@@ -163,10 +168,7 @@
 		int line_no;
 		int col_no;
 		int token_type;
-		struct Modifiers {
-			int storage_mod; // storage modifier
-			int access_mod; // access modifier
-		} m;
+		int m; // modifier
 	} r;
 	//symbol
 	class Symbol * Symbol;
@@ -339,15 +341,14 @@ variable_declaration_list:
 		variable_declaration_list ',' variable_declaration
 		{
 			//**chain symbols in the list and pass it:
-			$<Symbol>3->node = $<Symbol>1->node;
-			$<Symbol>1->node = $<Symbol>3;
-			$<Symbol>$ = $<Symbol>1;
+			$<Symbol>3->node = $<Symbol>1;
+			$<Symbol>$ = $<Symbol>3;
 		}
 	| variable_declaration {$<Symbol>$ = $<Symbol>1;}
 ;
 
 variable_declaration:
-		T_VARIABLE '=' expr
+	  T_VARIABLE '=' expr
 		{
 			pl.log("initialized variable declaration.", 0); pl.log($<r.str>1);
 			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
@@ -368,7 +369,7 @@ variable_declaration:
 
 statement:
 		open_par inner_statement_list close_par {pl.log("code block");}
-	| type variable_declaration_list ';'
+	|   type variable_declaration_list ';'
 		{
 			pl.log("variable declaration list.");
 			//TODO:encapsulate
@@ -463,7 +464,7 @@ function_header:
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
 			symbolsParser->insertFunctionSymbol($<r.str>4, $<r.str>9, $<r.col_no>1, $<r.line_no>1, $<Scope>10, $<Symbol>6);
 	}
-	| member_modifier_without_static T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par
+	|  member_modifier_without_static T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par
 		{
 			pl.log("function header:", 0); pl.log($<r.str>3);
 			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
@@ -761,7 +762,7 @@ parameter_list:
 ;
 
 non_empty_parameter_list:
-		parameter
+		parameter 
 	| non_empty_parameter_list ',' parameter
 		{
 			//**chain symbols in the list and pass it:
@@ -836,7 +837,7 @@ array_type:
 		type T_SQUARE_BRACKETS {pl.log("array type");}
 	| T_SQUARE_BRACKETS
 	{
-			/* ERROR RULE: array without tpye */
+			/* ERROR RULE: array without type */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type, array must have type","");
 	}
 ;
@@ -909,26 +910,58 @@ global_var:
 ;
 
 static_variable_statement:
-	T_STATIC type static_var_list ';'
+	T_STATIC type static_var_list ';'{
+			pl.log("static variable declaration list.");
+			//TODO:encapsulate
+			Variable* walker = dynamic_cast<Variable*>( $<Symbol>2 );
+			while(walker != nullptr){ // TODO: document this
+				walker->setVariableType($<r.str>2);
+				walker->isStatic = true;
+				Variable* prevNode = walker;//used to clear @node
+				walker = dynamic_cast<Variable*>(walker->node);
+				prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
+			}
+	}
 	T_STATIC static_var_list ';'
 	{
-		/* ERROR RULE: static variable	without type*/
-		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting type","");
+			/* ERROR RULE: static variable	without type*/
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting type","");
+			pl.log("static variable declaration list.");
+			//TODO:encapsulate
+			Variable* walker = dynamic_cast<Variable*>( $<Symbol>2 );
+			while(walker != nullptr){ // TODO: document this
+				walker->setVariableType("Object");
+				walker->isStatic = true;
+				Variable* prevNode = walker;//used to clear @node
+				walker = dynamic_cast<Variable*>(walker->node);
+				prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
+			}
 	}
 ;
 
 static_var_list:
-		static_var_list ',' static_var
-	| static_var
+		static_var_list ',' static_var {
+			//chaining symbols:
+			$<Symbol>3->node = $<Symbol>1;
+			$<Symbol>$ = $<Symbol>3;		
+		}
+	| static_var {$<Symbol>$ = $<Symbol>1;}
 ;
 
 static_var:
-		T_VARIABLE {pl.log("static variable", 0); pl.log($<r.str>1);}
-	| T_VARIABLE '=' static_scalar {pl.log("static variable - assigned", 0); pl.log($<r.str>1);}
+		T_VARIABLE {
+				pl.log("static variable", 0); pl.log($<r.str>1);
+				$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
+			}
+	| T_VARIABLE '=' static_scalar {
+				pl.log("static variable - assigned", 0); pl.log($<r.str>1);
+				$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
+			}
 	| T_VARIABLE '='
 		{
 			/* ERROR RULE: static variable = without value*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
+			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
 		}
 ;
 
@@ -941,7 +974,8 @@ class_statement:
 		member_modifiers type property_declaration_list ';'
 		{
 			pl.log("property declaration list");
-			$<Symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), $<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>2);
+			$<Symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), modifiersTags, arrCounter, $<r.str>2);
+			arrCounter = 0;
 		}
 	| T_CONST type class_const_list ';' {pl.log("constant list");}
 	| method_header	method_body	close_par	/* optional return type in case of constructor */
@@ -955,7 +989,8 @@ class_statement:
 		{
 			/* ERROR RULE: variable without type */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
-			$<Symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), $<r.m>1.access_mod, $<r.m>1.storage_mod, "Object"); // assume type OBJECT
+			$<Symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), modifiersTags, arrCounter, "Object"); // assume type OBJECT
+			arrCounter = 0;
 		}
 	|	method_header_without_name method_body close_par
 		{
@@ -977,15 +1012,17 @@ method_header:
 	member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type open_par
 	{
 		//we insert the method symbol
-		$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4,$<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>8, $<Scope>9, $<Symbol>6);
+		$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4,$<r.col_no>1,$<r.line_no>1,modifiersTags, arrCounter, $<r.str>8, $<Scope>9, $<Symbol>6);
+		arrCounter = 0;
 	}
 ;
 
 method_header_abstract:
 	T_ABSTRACT member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type
 	{
-		$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>5, $<r.col_no>1,$<r.line_no>1,$<r.m>2.access_mod, $<r.m>2.storage_mod, $<r.str>9, nullptr, $<Symbol>7);	//abstract
+		$<Symbol>$ = symbolsParser->insertMethodSymbol($<r.str>5, $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>9, nullptr, $<Symbol>7);	//abstract
 		symbolsParser->getCurrentClassSym()->isAbstract = true;
+		arrCounter = 0;
 	}
 ;
 
@@ -993,7 +1030,8 @@ method_header_without_name :
 	member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type open_par
 	{
 		//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
-		$<Symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1,$<r.m>1.access_mod, $<r.m>1.storage_mod, $<r.str>7, $<Scope>8, $<Symbol>5);
+		$<Symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>7, $<Scope>8, $<Symbol>5);
+		arrCounter = 0;
 	}
 ;
 
@@ -1001,8 +1039,9 @@ method_header_without_name_abstract :
 	T_ABSTRACT member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type
 	{
 		//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
-		$<Symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1,$<r.m>2.access_mod, $<r.m>2.storage_mod, $<r.str>8, nullptr, $<Symbol>6);	//abstract
+		$<Symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>8, nullptr, $<Symbol>6);	//abstract
 		symbolsParser->getCurrentClassSym()->isAbstract = true;
+		arrCounter = 0;
 	}
 ;
 method_body:
@@ -1036,46 +1075,43 @@ trait_method_reference:
 	| identifier
 ;
 
-member_modifiers:
-	access_modifier storage_modifier
-	{
-		$<r.m>$.access_mod = $<r.m.access_mod>1;
-		$<r.m>$.storage_mod = $<r.m.storage_mod>2;
-	}
+member_modifiers : /* empty */ 
+	|  member_modifier_list
 ;
 
-access_modifier:
-		/* empty */ {$<r.m.access_mod>$ = DEFAULT_ACCESS;}
-	| T_PUBLIC {$<r.m.access_mod>$ = PUBLIC_ACCESS;}
-	| T_PROTECTED {$<r.m.access_mod>$ = PROTECTED_ACCESS;}
-	| T_PRIVATE {$<r.m.access_mod>$ = PRIVATE_ACCESS;}
+member_modifier_list : member_modifier 
+	| member_modifier_list member_modifier
 ;
-
-storage_modifier:
-		/* empty */ {$<r.m.storage_mod>$ = DEFAULT_STORAGE;}
-	| T_STATIC {$<r.m.storage_mod>$ = STATIC_STORAGE;}
-	| T_FINAL	{$<r.m.storage_mod>$ = FINAL_STORAGE;}
-	| T_STATIC T_FINAL {$<r.m.storage_mod>$ = FINAL_STATIC_STORAGE;}
-	| T_FINAL T_STATIC {$<r.m.storage_mod>$ = FINAL_STATIC_STORAGE;}
-
-
-	/*
-non_empty_member_modifiers:
-		member_modifier
-	| non_empty_member_modifiers member_modifier
-;
-	*/
+	
 member_modifier:
-		T_PUBLIC
-	| T_PROTECTED
-	| T_PRIVATE
-	| T_STATIC
-	| T_ABSTRACT
-	| T_FINAL
+	  T_PUBLIC {
+			$<r.m>$ = PUBLIC_ACCESS;
+			if(arrCounter < 25)
+				modifiersTags[arrCounter++] = PUBLIC_ACCESS;
+		}
+	| T_PROTECTED {
+			$<r.m>$ = PROTECTED_ACCESS;
+			if(arrCounter < 25)
+				modifiersTags[arrCounter++] = PROTECTED_ACCESS;	
+		}
+	| T_PRIVATE {
+			$<r.m>$ = PRIVATE_ACCESS;
+			if(arrCounter < 25)
+				modifiersTags[arrCounter++] = PRIVATE_ACCESS;	
+		}
+	| T_STATIC {
+			$<r.m>$ = STATIC_STORAGE;
+			if(arrCounter < 25)
+				modifiersTags[arrCounter++] = STATIC_STORAGE;	
+		}
+	| T_FINAL {
+			$<r.m>$ = FINAL_STORAGE;
+			if(arrCounter < 25)
+				modifiersTags[arrCounter++] = FINAL_STORAGE;
+		}
 ;
 
-member_modifier_without_static:
-		T_PUBLIC
+member_modifier_without_static: T_PUBLIC
 	| T_PROTECTED
 	| T_PRIVATE
 	| T_ABSTRACT
@@ -1096,18 +1132,18 @@ property_declaration:
 		T_VARIABLE
 		{
 			pl.log("property", 0); pl.log($<r.str>1);
-			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, false, $<r.line_no>1, $<r.col_no>1));
+			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, false, $<r.col_no>1, $<r.line_no>1));
 		}
 	| T_VARIABLE '=' static_scalar
 		{
 			pl.log("property assigned", 0); pl.log($<r.str>1);
-			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, true, $<r.line_no>1, $<r.col_no>1));
+			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, true, $<r.col_no>1, $<r.line_no>1));
 		}
 	| T_VARIABLE '='
 		{
 			/* ERROR RULE: variable = without value*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting value","");
-			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, false,$<r.line_no>1, $<r.col_no>1));//assume not initialized and continue
+			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, false, $<r.col_no>1, $<r.line_no>1));//assume not initialized and continue
 		}
 ;
 
