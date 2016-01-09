@@ -16,6 +16,7 @@ public:
 	}
 	~TypeChecker();
 
+	//TODO : move to cpp
 	void checkVariable(char* name, int lineNo, int colNo){
 		Symbol* sym = this->symbolsParser->lookUpSymbol(name, lineNo, colNo);
 	}
@@ -38,6 +39,11 @@ private:
 	//- checks final overriding
 	//- checks access levels
 	void checkOverridingMethods(Class* subClass);
+	
+	
+	//checks for forward declared functions
+	void searchScopeForFunctions(Scope* scope);
+	void parseScopeForFunctions(Scope* scope);
 	
 	DependencyGraph* dg;
 };
