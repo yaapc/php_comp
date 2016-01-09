@@ -218,3 +218,22 @@ public:
 private:
 
 };
+
+
+/*
+=========================
+ERROR SYMBOL:
+=========================
+*/
+
+class ErrorSymbol : public Symbol {
+public:
+	ErrorSymbol(char* name, int colNo, int lineNo);
+	ErrorSymbol(char* name, int colNo, int lineNo, int errId);
+	~ErrorSymbol();
+
+	int getSymbolType();
+	string toString();
+
+	int errorId;
+};
