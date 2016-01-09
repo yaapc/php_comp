@@ -34,7 +34,10 @@ private:
 	void parseScopeForClassDecl(Scope * scope);
 
 	void checkAbstraction(Class* subClass);
-	void checkFinalMethods(Class* subClass);
+	
+	//- checks final overriding
+	//- checks access levels
+	void checkOverridingMethods(Class* subClass);
 	
 	DependencyGraph* dg;
 };
