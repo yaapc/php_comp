@@ -6,6 +6,7 @@
 #include"SymbolTable\SymbolsParser.h"
 #include "definitions.h"
 
+
 class TypeChecker {
 public:
 	TypeChecker(ErrorRecovery* errRecovery, SymbolsParser* symbolsParser){
@@ -21,14 +22,23 @@ public:
 
 	void checkDependency();
 
+	void checkAbstraction(Class* _class);
+
+	void checkForwardDeclarations();
+
 private:
 	ErrorRecovery* errRecovery;
 	SymbolsParser* symbolsParser;
 
 	void searchScope(Scope* scope);
-	void parseScope(Scope* scope);
+	void parseScopeForNodes(Scope* scope);
+	void searchScopesAndLink(Scope * scope);
+	void parseScopeForClassDecl(Scope * scope);
+
 	DependencyGraph* dg;
 };
+
+
 
 
 #endif
