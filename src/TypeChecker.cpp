@@ -148,7 +148,7 @@ void TypeChecker::checkAbstraction(Class* subClass){
 	}
 }
 
-void TypeChecker::checkFinalMethods(Class* subClass){
+void TypeChecker::checkOverridingMethods(Class* subClass){
 	Class* baseClass = subClass->getBaseClassSymbol();
 	Method* walker = baseClass->getMethods();
 
@@ -156,16 +156,32 @@ void TypeChecker::checkFinalMethods(Class* subClass){
 		return;
 
 	while (walker != nullptr){
-		if (walker->isFinal()){ // final base method
+		
 			Method* subsWalker = subClass->getMethods();
 			while (subsWalker != nullptr){
 				if (string(subsWalker->getName()) == string(walker->getName())){ // we found a method overriding the final base method
-					string errString = string(subClass->getName()) + " can't implement final method " + walker->getName();
-					this->errRecovery->errQ->enqueue(subClass->getLineNo(), subClass->getColNo(), errString.c_str(), "");
+					if (walker->isFinal()){ // final base method
+						string errString = string(subClass->getName()) + " can't implement final method " + walker->getName();
+						this->errRecovery->errQ->enqueue(subClass->getLineNo(), subClass->getColNo(), errString.c_str(), "");
+					}
+					else { // the base method is not final, check access level
+						switch(walker->getAccessModifier()){
+							case PROTECTED_ACCESS:
+								if (subsWalker->getAccessModifier() == PRIVATE_ACCESS){
+									string errString = string(subClass->getName()) + " can't assign weaker access privileges for " + walker->getName();
+									this->errRecovery->errQ->enqueue(subClass->getLineNo(), subClass->getColNo(), errString.c_str(), "");
+								}
+							break;
+							case PUBLIC_ACCESS :
+								string errString = string(subClass->getName()) + " can't assign weaker access privileges for " + walker->getName();
+								this->errRecovery->errQ->enqueue(subClass->getLineNo(), subClass->getColNo(), errString.c_str(), "");
+							break;
+						}
+					}
 				}
 				subsWalker = dynamic_cast<Method*>(subsWalker->node);
 			}
-		}
+		
 		walker = dynamic_cast<Method*>(walker->node);
 	}
 }
