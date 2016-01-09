@@ -1,4 +1,3 @@
-%output = "grammer.cpp"
 %{
 	#include <iostream>
 	using namespace std;
@@ -762,7 +761,7 @@ parameter_list:
 ;
 
 non_empty_parameter_list:
-		parameter 
+		parameter
 	| non_empty_parameter_list ',' parameter
 		{
 			//**chain symbols in the list and pass it:
@@ -943,7 +942,7 @@ static_var_list:
 		static_var_list ',' static_var {
 			//chaining symbols:
 			$<Symbol>3->node = $<Symbol>1;
-			$<Symbol>$ = $<Symbol>3;		
+			$<Symbol>$ = $<Symbol>3;
 		}
 	| static_var {$<Symbol>$ = $<Symbol>1;}
 ;
@@ -967,7 +966,8 @@ static_var:
 
 class_statement_list:
 		class_statement_list class_statement {pl.log("class stmt");}
-	| class_statement
+	| error
+	| /* empty */
 ;
 
 class_statement:
@@ -1075,14 +1075,14 @@ trait_method_reference:
 	| identifier
 ;
 
-member_modifiers : /* empty */ 
+member_modifiers : /* empty */
 	|  member_modifier_list
 ;
 
-member_modifier_list : member_modifier 
+member_modifier_list : member_modifier
 	| member_modifier_list member_modifier
 ;
-	
+
 member_modifier:
 	  T_PUBLIC {
 			$<r.m>$ = PUBLIC_ACCESS;
@@ -1092,17 +1092,17 @@ member_modifier:
 	| T_PROTECTED {
 			$<r.m>$ = PROTECTED_ACCESS;
 			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = PROTECTED_ACCESS;	
+				modifiersTags[arrCounter++] = PROTECTED_ACCESS;
 		}
 	| T_PRIVATE {
 			$<r.m>$ = PRIVATE_ACCESS;
 			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = PRIVATE_ACCESS;	
+				modifiersTags[arrCounter++] = PRIVATE_ACCESS;
 		}
 	| T_STATIC {
 			$<r.m>$ = STATIC_STORAGE;
 			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = STATIC_STORAGE;	
+				modifiersTags[arrCounter++] = STATIC_STORAGE;
 		}
 	| T_FINAL {
 			$<r.m>$ = FINAL_STORAGE;
