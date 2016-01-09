@@ -20,7 +20,8 @@ public:
 
 	Symbol* insert(Symbol* symbol);
 	Symbol* lookup(char* name);
-
+	bool remove(char* name);
+	
 	string toString();
 
 	void setOwnerScope(Scope* owner);
