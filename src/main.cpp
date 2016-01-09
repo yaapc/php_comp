@@ -24,8 +24,9 @@ int main(int argc, char** argv) {
 	}
 	yyparse();
 
-	symbolsParser->printSymbolTables(); // log symbol table
+	typeChecker->checkForwardDeclarations();
 	typeChecker->checkDependency(); // check circular dependency and create dependency graph
+	symbolsParser->printSymbolTables(); // log symbol table	
 	errorRec.printErrQueue();
 
 	//Visualizing
