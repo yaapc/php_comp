@@ -372,3 +372,29 @@ PARAMETER:
 Parameter::Parameter(char * name, int colNo, int lineNo, bool isDefault) : Variable(name, PARAMETER, true, colNo, lineNo){ // a parameter is always inited
 	this->isDefault = isDefault;
 }
+
+/*
+=========================
+ERROR SYMBOL:
+=========================
+*/
+
+ErrorSymbol::ErrorSymbol(char* name, int colNo, int lineNo) :Symbol(name, ERROR_SYMBOL, colNo, lineNo){
+	this->errorId = 0;
+}
+
+ErrorSymbol::ErrorSymbol(char* name, int colNo, int lineNo, int errId) : Symbol(name, ERROR_SYMBOL, colNo, lineNo){
+	this->errorId = errId;
+}
+
+int	ErrorSymbol::getSymbolType(){
+	return ERROR_SYMBOL;
+}
+
+string ErrorSymbol::toString(){
+	string name;
+	this->getName() ? name = this->getName() : name = "NULL";
+
+	return
+		" ERROR SYMBOL | " + name;
+}
