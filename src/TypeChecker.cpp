@@ -44,6 +44,7 @@ void TypeChecker::parseScopeForNodes(Scope* scope){
 
 void TypeChecker::checkForwardDeclarations(){
 	this->searchScopesAndLink(this->symbolsParser->getRootScope());
+	this->searchScopeForFunctions(this->symbolsParser->getRootScope());
 }
 
 void TypeChecker::searchScopesAndLink(Scope * scope){
@@ -183,5 +184,34 @@ void TypeChecker::checkOverridingMethods(Class* subClass){
 			}
 		
 		walker = dynamic_cast<Method*>(walker->node);
+	}
+}
+
+//searches the scope recursivly looking for classes declarations
+void TypeChecker::searchScopeForFunctions(Scope* scope){
+	parseScopeForFunctions(scope);
+	Scope* innersWalker = scope->getInnerScope();
+	if (innersWalker == nullptr)
+		return;
+	while (innersWalker != nullptr){
+		//parseScope(innersWalker);
+		searchScopeForFunctions(innersWalker);
+		innersWalker = innersWalker->getNextScope();
+	}
+}
+
+void TypeChecker::parseScopeForFunctions(Scope* scope){
+	vector<Symbol*> symbols = scope->getSymbolTable()->symbols();
+	vector<Symbol*>::iterator i;
+	for (i = symbols.begin(); i != symbols.end(); ++i){
+		Symbol* s = *i;
+		int sType = s->getSymbolType();
+		if (sType == ERROR_SYMBOL){
+			Symbol* lookedUpSym = this->symbolsParser->lookUpSymbol(scope->getParentScope(), s->getName());
+			if (lookedUpSym != nullptr && (lookedUpSym->getSymbolType() == FUNCTION || lookedUpSym->getSymbolType() == METHODS)){
+				scope->getSymbolTable()->remove(s->getName());
+				this->errRecovery->removeFromQueue(dynamic_cast<ErrorSymbol*>(s)->errorId);
+			}
+		}
 	}
 }
