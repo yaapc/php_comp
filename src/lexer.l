@@ -38,7 +38,7 @@ EXP ([eE][+-]?[0-9]+)
 NAME ([a-zA-Z_][a-zA-Z0-9_]*)
 VARIABLE (${NAME})
 BAD_NAME ([0-9]+[a-zA-Z_][a-zA-Z0-9_]*)
-BAD_VARIABLE (${BAD_NAME})
+BAD_VARIABLE ($[0-9+.,'"*/\\-]+[a-zA-Z_][a-zA-Z0-9_]*)
 %option noyywrap
 
 %x multi_line_comment
@@ -1194,7 +1194,7 @@ BAD_VARIABLE (${BAD_NAME})
   yylval.r.str = new char[yyleng + 1];
   strcpy(yylval.r.str, yytext);
   char msg[128];
-  sprintf(msg, "Bad variable name '%s': variables names can't start with a digit", yytext);
+  sprintf(msg, "Bad variable name '%s': variables names can't start with a digit or a punctuation", yytext);
   errorRec.errQ->enqueue(line_no, col_no, msg, "");
   l.log("T_VARIABLE: BAD", 0); l.log(yytext);
   return T_VARIABLE;
