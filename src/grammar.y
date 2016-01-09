@@ -1188,7 +1188,7 @@ expr:
 		variable
 		{
 			pl.log($<r.str>1,0);
-			typeChecker->checkVariable($<r.str>1,$<r.col_no>1,$<r.line_no>1);
+			typeChecker->checkVariable($<r.str>1,$<r.line_no>1,$<r.col_no>1);
 		}
 	| '(' T_PRIMITIVE ')' expr
 	| list_expr '=' expr
