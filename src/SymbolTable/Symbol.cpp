@@ -53,18 +53,21 @@ Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int line
 	this->isInited = isInit;
 	this->isConst = false;
 	this->isStatic = false;
+	this->variableType = "Object";
 }
 
 Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int lineNo, bool isConst, bool isStatic) : Symbol(name, symbolType, colNo, lineNo) {
 	this->isInited = isInit;
 	this->isStatic = isStatic;
 	this->isConst = isConst;
+	this->variableType = "Object";
 }
 
 Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int lineNo, bool isStatic) : Symbol(name, symbolType, colNo, lineNo) {
 	this->isInited = isInit;
 	this->isStatic = isStatic;
 	this->isConst = false;
+	this->variableType = "Object";
 }
 
 int Variable::getSymbolType(){
