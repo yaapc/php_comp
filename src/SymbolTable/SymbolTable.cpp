@@ -104,3 +104,25 @@ vector<Symbol*> SymbolTable::symbols() {
 	}
 	return symbols_vector;
 }
+
+bool SymbolTable::remove(char* name){
+	int hashIndex = this->hash(name);
+	if (this->get(hashIndex) != nullptr && strcmp(this->get(hashIndex)->getName(), name) == 0){
+		this->map[hashIndex] = this->map[hashIndex]->getNext();
+		return true;
+	}
+		
+	if (this->get(hashIndex) == nullptr)
+		return true;
+	Symbol* next = this->get(hashIndex)->getNext();
+	Symbol* prev = next;
+	while (next != nullptr){
+		if (next->getName() == name){
+			prev->setNext(next->getNext());
+			return true;
+		}
+		prev = next;
+		next = next->getNext();
+	}
+	return nullptr;
+}
