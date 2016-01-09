@@ -1,3 +1,4 @@
+%output = "grammar.cpp"
 %{
 	#include <iostream>
 	using namespace std;
@@ -212,7 +213,7 @@ semi_reserved:
 ;
 
 identifier:
-		T_STRING
+		T_STRING 
 	| semi_reserved
 ;
 
@@ -235,11 +236,33 @@ top_statement:
 	| T_USE use_declarations ';'
 	| T_USE use_type use_declarations ';'
 	| group_use_declaration ';'
-	| T_CONST type constant_declaration_list ';' {pl.log("constatnt declaration list");}
+	| T_CONST type constant_declaration_list ';' {
+			pl.log("constant declaration list");
+			//TODO:encapsulate
+			Variable* walker = dynamic_cast<Variable*>( $<Symbol>3 );
+			while(walker != nullptr){ // TODO: document this
+				walker->setVariableType($<r.str>2);
+				walker->isConst = true;
+				Variable* prevNode = walker;//used to clear @node
+				walker = dynamic_cast<Variable*>(walker->node);
+				prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
+			}
+		}
 	| T_CONST constant_declaration_list ';'
 		{
 			/* ERROR RULE: constant without type */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare constant without type","");
+
+			pl.log("wrong constant declaration list");
+			//TODO:encapsulate
+			Variable* walker = dynamic_cast<Variable*>( $<Symbol>2 );
+			while(walker != nullptr){ // TODO: document this
+				walker->setVariableType("Object");
+				walker->isConst = true;
+				Variable* prevNode = walker;//used to clear @node
+				walker = dynamic_cast<Variable*>(walker->node);
+				prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
+			}
 		}
 ;
 
@@ -287,40 +310,56 @@ inline_use_declaration:
 ;
 
 constant_declaration_list:
-		constant_declaration_list ',' constant_declaration
-	| constant_declaration
+		constant_declaration_list ',' constant_declaration {
+			//**chain symbols in the list and pass it:
+			$<Symbol>3->node = $<Symbol>1;
+			$<Symbol>$ = $<Symbol>3;
+		}
+	| constant_declaration {
+			$<Symbol>$ = $<Symbol>1;
+		}
 ;
 
 constant_declaration:
-		T_STRING '=' static_scalar {pl.log("constant declaration", 0); pl.log($<r.str>1);}
-	| T_STRING '='
-	{
-		/* ERROR RULE: constant = without value */
-		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token, expecting value","");
-	}
-	| T_STRING
-	{
-		/* ERROR RULE: constant = without value */
-		errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token, expecting value","");
-	}
+	  T_STRING '=' static_scalar {
+			pl.log("constant declaration", 0); pl.log($<r.str>1);
+			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
+		}
+	| T_STRING '=' {
+			/* ERROR RULE: constant = without value */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token, expecting value","");
+			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
+		}
+	| T_STRING 	{
+			/* ERROR RULE: constant = without value */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpecting token, expecting value","");
+			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
+		}
 ;
 
 class_const_list:
-		class_const_list ',' class_const
-	| class_const
+		class_const_list ',' class_const {
+			//**chain symbols in the list and pass it:
+			$<Symbol>3->node = $<Symbol>1;
+			$<Symbol>$ = $<Symbol>3;
+		}
+	| class_const {$<Symbol>$ = $<Symbol>1;}
 ;
 
 class_const:
-		identifier '=' static_scalar {pl.log("class constant", 0); pl.log($<r.str>1);}
-	| identifier '='
-		{
+	  identifier '=' static_scalar { 
+			pl.log("class constant", 0); pl.log($<r.str>1);
+			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, true, $<r.col_no>1, $<r.line_no>1));
+		}
+	| identifier '=' {
 			/* ERROR RULE: constant = without value */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected \';\', expecting value","");
+			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, false, $<r.col_no>1, $<r.line_no>1));
 		}
-	| identifier
-		{
+	| identifier 	{
 			/* ERROR RULE: constant without value */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected \';\', expecting \'=\'","");
+			$<Symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, false, $<r.col_no>1, $<r.line_no>1));
 		}
 ;
 
@@ -761,7 +800,7 @@ parameter_list:
 ;
 
 non_empty_parameter_list:
-		parameter
+		parameter 
 	| non_empty_parameter_list ',' parameter
 		{
 			//**chain symbols in the list and pass it:
@@ -912,7 +951,7 @@ static_variable_statement:
 	T_STATIC type static_var_list ';'{
 			pl.log("static variable declaration list.");
 			//TODO:encapsulate
-			Variable* walker = dynamic_cast<Variable*>( $<Symbol>2 );
+			Variable* walker = dynamic_cast<Variable*>( $<Symbol>3 );
 			while(walker != nullptr){ // TODO: document this
 				walker->setVariableType($<r.str>2);
 				walker->isStatic = true;
@@ -942,7 +981,7 @@ static_var_list:
 		static_var_list ',' static_var {
 			//chaining symbols:
 			$<Symbol>3->node = $<Symbol>1;
-			$<Symbol>$ = $<Symbol>3;
+			$<Symbol>$ = $<Symbol>3;		
 		}
 	| static_var {$<Symbol>$ = $<Symbol>1;}
 ;
@@ -965,35 +1004,35 @@ static_var:
 ;
 
 class_statement_list:
-		class_statement_list class_statement {pl.log("class stmt");}
+	  class_statement_list class_statement {pl.log("class stmt");}
 	| error
 	| /* empty */
 ;
 
 class_statement:
-		member_modifiers type property_declaration_list ';'
-		{
+	  member_modifiers type property_declaration_list ';' {
 			pl.log("property declaration list");
 			$<Symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), modifiersTags, arrCounter, $<r.str>2);
 			arrCounter = 0;
 		}
-	| T_CONST type class_const_list ';' {pl.log("constant list");}
-	| method_header	method_body	close_par	/* optional return type in case of constructor */
-		{
+	| member_modifiers T_CONST type class_const_list ';' {
+			pl.log("constant list");
+			$<Symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>4), modifiersTags, arrCounter, $<r.str>3);
+			arrCounter = 0;
+		}
+	| method_header	method_body	close_par {	/* optional return type in case of constructor */
 			pl.log("method");
 			$<Symbol>$ = $<Symbol>1;
 		}
 	| method_header_abstract ';' {$<Symbol>$ = $<Symbol>1;}
 	| T_USE name_list trait_adaptations
-	| member_modifiers property_declaration_list ';'
-		{
+	| member_modifiers property_declaration_list ';' {
 			/* ERROR RULE: variable without type */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
-			$<Symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>3), modifiersTags, arrCounter, "Object"); // assume type OBJECT
+			$<Symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<Symbol>2), modifiersTags, arrCounter, "Object"); // assume type OBJECT
 			arrCounter = 0;
 		}
-	|	method_header_without_name method_body close_par
-		{
+	|	method_header_without_name method_body close_par {
 			/* ERROR RULE: method without name */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
 			pl.log("error method-no id");
@@ -1075,14 +1114,14 @@ trait_method_reference:
 	| identifier
 ;
 
-member_modifiers : /* empty */
+member_modifiers : /* empty */ 
 	|  member_modifier_list
 ;
 
-member_modifier_list : member_modifier
+member_modifier_list : member_modifier 
 	| member_modifier_list member_modifier
 ;
-
+	
 member_modifier:
 	  T_PUBLIC {
 			$<r.m>$ = PUBLIC_ACCESS;
@@ -1092,17 +1131,17 @@ member_modifier:
 	| T_PROTECTED {
 			$<r.m>$ = PROTECTED_ACCESS;
 			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = PROTECTED_ACCESS;
+				modifiersTags[arrCounter++] = PROTECTED_ACCESS;	
 		}
 	| T_PRIVATE {
 			$<r.m>$ = PRIVATE_ACCESS;
 			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = PRIVATE_ACCESS;
+				modifiersTags[arrCounter++] = PRIVATE_ACCESS;	
 		}
 	| T_STATIC {
 			$<r.m>$ = STATIC_STORAGE;
 			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = STATIC_STORAGE;
+				modifiersTags[arrCounter++] = STATIC_STORAGE;	
 		}
 	| T_FINAL {
 			$<r.m>$ = FINAL_STORAGE;
