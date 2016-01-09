@@ -358,6 +358,9 @@ string Method::toString(){
 		" CLASS METHOD | " + name + " | " + returnType + " | " + isConstructor + " | " + accessModifier + " | " + storageModifier + " | " + isAbstract;
 }
 
+bool Method::isFinal(){
+	return (this->storageModifier == FINAL_STORAGE || this->storageModifier == FINAL_STATIC_STORAGE) ?  true :  false;
+}
 /*
 ============================================
 PARAMETER:
