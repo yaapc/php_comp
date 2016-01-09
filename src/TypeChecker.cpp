@@ -86,6 +86,7 @@ void TypeChecker::parseScopeForClassDecl(Scope * scope){
 								foundBase = true;
 								found = true;
 								checkAbstraction(c);
+								checkFinalMethods(c);
 							}
 						}
 						++j;
@@ -135,7 +136,7 @@ void TypeChecker::checkAbstraction(Class* subClass){
 			while (subsWalker != nullptr){
 				if (string(subsWalker->getName()) == string(walker->getName()))
 					foundAbsMethod = true;	// we found the method in sub class	
-				subsWalker = dynamic_cast<Method*>(subsWalker->getNext());
+				subsWalker = dynamic_cast<Method*>(subsWalker->node);
 			}
 			if (!foundAbsMethod){
 				string errString = string(subClass->getName()) + " doesn't implement " + walker->getName();
@@ -143,7 +144,28 @@ void TypeChecker::checkAbstraction(Class* subClass){
 			}
 				
 		}
-		walker = dynamic_cast<Method*>(walker->getNext());
+		walker = dynamic_cast<Method*>(walker->node);
 	}
 }
 
+void TypeChecker::checkFinalMethods(Class* subClass){
+	Class* baseClass = subClass->getBaseClassSymbol();
+	Method* walker = baseClass->getMethods();
+
+	if (walker == nullptr) // no methods
+		return;
+
+	while (walker != nullptr){
+		if (walker->isFinal()){ // final base method
+			Method* subsWalker = subClass->getMethods();
+			while (subsWalker != nullptr){
+				if (string(subsWalker->getName()) == string(walker->getName())){ // we found a method overriding the final base method
+					string errString = string(subClass->getName()) + " can't implement final method " + walker->getName();
+					this->errRecovery->errQ->enqueue(subClass->getLineNo(), subClass->getColNo(), errString.c_str(), "");
+				}
+				subsWalker = dynamic_cast<Method*>(subsWalker->node);
+			}
+		}
+		walker = dynamic_cast<Method*>(walker->node);
+	}
+}
