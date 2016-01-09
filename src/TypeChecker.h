@@ -22,8 +22,6 @@ public:
 
 	void checkDependency();
 
-	void checkAbstraction(Class* _class);
-
 	void checkForwardDeclarations();
 
 private:
@@ -35,6 +33,9 @@ private:
 	void searchScopesAndLink(Scope * scope);
 	void parseScopeForClassDecl(Scope * scope);
 
+	void checkAbstraction(Class* subClass);
+	void checkFinalMethods(Class* subClass);
+	
 	DependencyGraph* dg;
 };
 
