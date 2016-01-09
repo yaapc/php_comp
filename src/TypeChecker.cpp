@@ -28,7 +28,7 @@ void TypeChecker::searchScope(Scope* scope){
 }
 
 //parses a given scope looking for class declaration and inserting them into the dependency graph @dg
-void TypeChecker::parseScope(Scope* scope){
+void TypeChecker::parseScopeForNodes(Scope* scope){
 	vector<Symbol*> symbols = scope->getSymbolTable()->symbols();
 	vector<Symbol*>::iterator i;
 	for (i = symbols.begin(); i != symbols.end(); ++i){
@@ -36,7 +36,114 @@ void TypeChecker::parseScope(Scope* scope){
 		int sType = s->getSymbolType();
 		if ( sType == CLASS){
 			Class* c = dynamic_cast<Class*>(s);
-			this->dg->insertIntoNodes(c->getName(), c, c->getInhertedFrom()); // insert the catched class declaration into dependancy graph
+			this->dg->insertIntoNodes(c->getName(), c, c->getInhertedFrom()); // insert the caught class declaration into dependancy graph
 		}
 	}
 }
+
+
+void TypeChecker::checkForwardDeclarations(){
+	this->searchScopesAndLink(this->symbolsParser->getRootScope());
+}
+
+void TypeChecker::searchScopesAndLink(Scope * scope){
+	parseScopeForClassDecl(scope);
+	Scope* innersWalker = scope->getInnerScope();
+	if (innersWalker == nullptr)
+		return;
+	while (innersWalker != nullptr){
+		searchScopesAndLink(innersWalker);
+		innersWalker = innersWalker->getNextScope();
+	}
+}
+
+void TypeChecker::parseScopeForClassDecl(Scope * scope){
+	vector<Symbol*> symbols = scope->getSymbolTable()->symbols();
+	vector<Symbol*>::iterator i;
+	for (i = symbols.begin(); i != symbols.end(); ++i){
+		Symbol* s = *i;
+		int sType = s->getSymbolType();
+		if (sType == CLASS){
+			Class* c = dynamic_cast<Class*>(s);
+			if (c->getInhertedFrom() != "Object"){ // we have inheritance, let's get the base class sym
+				bool found = false; Scope *walker = scope;				
+				while (!found && walker != nullptr){
+					vector<Symbol*> currSymbols = scope->getSymbolTable()->symbols();
+					vector<Symbol*>::iterator j = currSymbols.begin();
+					bool foundBase = false;
+					while (j != currSymbols.end() && !foundBase){
+						Symbol* currSym = *j;
+						if (currSym->getSymbolType() == CLASS && string(currSym->getName()) == c->getInhertedFrom()){
+							if (dynamic_cast<Class*>(currSym)->isFinal){ // check if base class is final
+								string errString = string(currSym->getName()) + " is Final and can't be inherited";
+								this->errRecovery->errQ->enqueue(c->getLineNo(), c->getColNo(), errString.c_str(), "");
+								c->setInhertedFrom("Object");
+								found = true;
+								foundBase = true;
+							}
+							else {
+								c->setBaseClassSymbol(dynamic_cast<Class*>(currSym));
+								foundBase = true;
+								found = true;
+								checkAbstraction(c);
+							}
+						}
+						++j;
+					}
+					walker = scope->getParentScope();
+				}
+				if (!found) {
+					string errString = string(c->getInhertedFrom()) + " is Not Declared";
+					this->errRecovery->errQ->enqueue(c->getLineNo(), c->getColNo(), errString.c_str(), "");
+					c->setInhertedFrom("Object");
+				}
+			}
+		}
+	}
+}
+
+void TypeChecker::checkAbstraction(Class* subClass){
+	if (!subClass->getBaseClassSymbol()->isAbstract){
+		return; // no abstraction check required
+	}
+
+	if (subClass->isAbstract) // base class abstract and sub class also declared abstract
+		return;
+
+	Class* baseClass = subClass->getBaseClassSymbol();
+	Method* walker = baseClass->getMethods();
+	if (walker == nullptr){
+		//the base class has no methods 
+		//and declared as abstract
+		//sub class should be declared too
+		string errString = string(subClass->getName()) + " should be declared abstract";
+		this->errRecovery->errQ->enqueue(subClass->getLineNo(), subClass->getColNo(), errString.c_str(), "");
+		return; // done
+	}
+	//the base class has methods
+	while (walker != nullptr){
+		if (walker->isAbstract){ // abstract base method
+			//search the sub class for overrided method
+			Method* subsWalker = subClass->getMethods();
+			if (subsWalker == nullptr){ // the sub class has no methods
+				string errString = string(subClass->getName()) + " should be declared abstract, or override all abstract methods";
+				this->errRecovery->errQ->enqueue(subClass->getLineNo(), subClass->getColNo(), errString.c_str(), "");
+			}
+
+			//the sub class has methods
+			bool foundAbsMethod = false;
+			while (subsWalker != nullptr){
+				if (string(subsWalker->getName()) == string(walker->getName()))
+					foundAbsMethod = true;	// we found the method in sub class	
+				subsWalker = dynamic_cast<Method*>(subsWalker->getNext());
+			}
+			if (!foundAbsMethod){
+				string errString = string(subClass->getName()) + " doesn't implement " + walker->getName();
+				this->errRecovery->errQ->enqueue(subClass->getLineNo(), subClass->getColNo(), errString.c_str() , "");
+			}
+				
+		}
+		walker = dynamic_cast<Method*>(walker->getNext());
+	}
+}
+
