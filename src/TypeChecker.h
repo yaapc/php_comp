@@ -4,7 +4,6 @@
 
 #include"DependencyGraph\DependencyGraph.h"
 #include"SymbolTable\SymbolsParser.h"
-#include "definitions.h"
 
 
 class TypeChecker {
@@ -16,7 +15,7 @@ public:
 	}
 	~TypeChecker();
 
-	//TODO : move to cpp
+	//TODO: move to cpp
 	void checkVariable(char* name, int lineNo, int colNo){
 		Symbol* sym = this->symbolsParser->lookUpSymbol(name, lineNo, colNo);
 	}
@@ -26,6 +25,7 @@ public:
 	void checkForwardDeclarations();
 
 	void checkInnerClasses();
+
 private:
 	ErrorRecovery* errRecovery;
 	SymbolsParser* symbolsParser;
@@ -36,24 +36,22 @@ private:
 	void parseScopeForClassDecl(Scope * scope);
 
 	void checkAbstraction(Class* subClass);
-	
+
 	//- checks final overriding
 	//- checks access levels
 	void checkOverridingMethods(Class* subClass);
-	
-	
+
 	//checks for forward declared functions
 	void searchScopeForFunctions(Scope* scope);
 	void parseScopeForFunctions(Scope* scope);
-	
+
 	//checks for inner classes
 	void searchScopeForInners(Scope* scope);
-	void checkOuters(Class* innerClass);
-	
+	void checkNamingOfInners(Class* innerClass);
+	void checkInheritanceOfInners(Class* inner);
+
 	DependencyGraph* dg;
 };
-
-
 
 
 #endif
