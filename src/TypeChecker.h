@@ -25,6 +25,7 @@ public:
 
 	void checkForwardDeclarations();
 
+	void checkInnerClasses();
 private:
 	ErrorRecovery* errRecovery;
 	SymbolsParser* symbolsParser;
@@ -44,6 +45,10 @@ private:
 	//checks for forward declared functions
 	void searchScopeForFunctions(Scope* scope);
 	void parseScopeForFunctions(Scope* scope);
+	
+	//checks for inner classes
+	void searchScopeForInners(Scope* scope);
+	void checkOuters(Class* innerClass);
 	
 	DependencyGraph* dg;
 };
