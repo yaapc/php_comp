@@ -18,6 +18,8 @@
 	bool forLoopFlag = false;
 	bool modifierListingFlag = false;
 
+	Class* outerClass; // a Class symbol to keep track of outerclasses when declaring inner classes
+
 	// an array to group modifiers (access, storage)
 	int *modifiersTags = new int[25]; // max of 25 modifier
 	int arrCounter = 0;
@@ -389,19 +391,19 @@ variable_declaration:
 	  T_VARIABLE '=' expr
 		{
 			pl.log("initialized variable declaration.", 0); pl.log($<r.str>1);
-			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
+			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, true, $<r.col_no>1, $<r.line_no>1));
 		}
 	| T_VARIABLE
 		{
 			pl.log("uninitialized variable declaration.");
-			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
+			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.col_no>1, $<r.line_no>1));
 		}
 	| T_VARIABLE '='
 		{
 			/* ERROR RULE: variable without value */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"unexpected token, expecting value","");
 			//continue and assume variable is not initialized:
-			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
+			$<Symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.col_no>1, $<r.line_no>1));
 		}
 ;
 
@@ -516,7 +518,8 @@ class_declaration_statement:
 		{
 			pl.log("class:", 0); pl.log($<r.str>2);
 			symbolsParser->finishClassInsertion($<r.str>2, $<r.str>3, dynamic_cast<Class*>($<Symbol>1), $<Scope>5);
-			symbolsParser->setCurrentClassSym(nullptr);
+			$<Symbol>$ = symbolsParser->getCurrentClassSym();
+			symbolsParser->popFromClassesStack();
 		}
 	| T_INTERFACE T_STRING interface_extends_list open_par class_statement_list close_par {pl.log("interface:", 0); pl.log($<r.str>2);}
 	| T_TRAIT T_STRING open_par class_statement_list close_par {pl.log("trait:", 0); pl.log($<r.str>2);}
@@ -525,45 +528,57 @@ class_declaration_statement:
 			/* ERROR RULE: class without name */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'{\', expecting identifier (T_STRING)","");
 			symbolsParser->finishClassInsertion("ERR_C_NO_NAME", $<r.str>2, dynamic_cast<Class*>($<Symbol>1), $<Scope>4);
-			symbolsParser->setCurrentClassSym(nullptr);
+			$<Symbol>$ = symbolsParser->getCurrentClassSym();
+			symbolsParser->popFromClassesStack();
 		}
 ;
 
 class_entry_type:
 		T_CLASS
 		{
-			//starting class declaration // TODO: encapsulate
+			//starting class declaration
+			pl.log("class_entry_type") ;
+			// TODO: encapsulate
 			Class* classSym = new Class($<r.col_no>1, $<r.line_no>1, false,false);
 			$<Symbol>$ = symbolsParser->insertSymbol(classSym);
-			symbolsParser->setCurrentClassSym(classSym);
+			//symbolsParser->setCurrentClassSym(classSym);
+			symbolsParser->pushToClassesStack(classSym);
 		}
 	| T_ABSTRACT T_CLASS
 		{
+			pl.log("class_entry_type") ;
 			Class* classSym = new Class($<r.col_no>1, $<r.line_no>1, false,true );
 			$<Symbol>$ = symbolsParser->insertSymbol(classSym);
-			symbolsParser->setCurrentClassSym(classSym);
+			//symbolsParser->setCurrentClassSym(classSym);
+			symbolsParser->pushToClassesStack(classSym);
 		}
 	| T_FINAL T_CLASS
 		{
+			pl.log("class_entry_type") ;
 			Class* classSym = new Class($<r.col_no>1, $<r.line_no>1, true,false);
 			$<Symbol>$ = symbolsParser->insertSymbol(classSym);
-			symbolsParser->setCurrentClassSym(classSym);
+			//symbolsParser->setCurrentClassSym(classSym);
+			symbolsParser->pushToClassesStack(classSym);
 		}
 	| T_ABSTRACT T_FINAL T_CLASS
 		{
+			pl.log("class_entry_type") ;
 			/* ERROR RULE: abstract final class*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Abstract final class not allowed","");
 			Class* classSym = new Class($<r.col_no>1, $<r.line_no>1, false,false);
 			$<Symbol>$ = symbolsParser->insertSymbol(classSym); // assuming not final and not abstract
-			symbolsParser->setCurrentClassSym(classSym);
+			//symbolsParser->setCurrentClassSym(classSym);
+			symbolsParser->pushToClassesStack(classSym);
 		}
 	| T_FINAL T_ABSTRACT	T_CLASS
 		{
+			pl.log("class_entry_type") ;
 			/* ERROR RULE: final abctract class*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Final abstract class not allowed","");
 			Class* classSym = new Class($<r.col_no>1, $<r.line_no>1, false,false);
 			$<Symbol>$ = symbolsParser->insertSymbol(classSym); // assuming not final and not abstract
-			symbolsParser->setCurrentClassSym(classSym);
+			//symbolsParser->setCurrentClassSym(classSym);
+			symbolsParser->pushToClassesStack(classSym);
 		}
 ;
 
@@ -1043,6 +1058,10 @@ class_statement:
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
 			$<Symbol>$ = $<Symbol>1;
 			pl.log("error method-no id");
+		}
+	| class_declaration_statement {
+			pl.log("inner class decalaration");
+			dynamic_cast<Class*>($<Symbol>1)->setOuterClass(symbolsParser->getCurrentClassSym());
 		}
 ;
 
