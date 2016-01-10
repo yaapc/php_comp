@@ -26,6 +26,8 @@ int main(int argc, char** argv) {
 
 	typeChecker->checkForwardDeclarations();
 	typeChecker->checkDependency(); // check circular dependency and create dependency graph
+	typeChecker->checkInnerClasses();
+	
 	symbolsParser->printSymbolTables(); // log symbol table	
 	errorRec.printErrQueue();
 
