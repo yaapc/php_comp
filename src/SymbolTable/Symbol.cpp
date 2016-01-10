@@ -87,13 +87,14 @@ bool Variable::isInit(){
 }
 
 string Variable::toString(){
-	string name, variableType, isInit, isStatic;
+	string name, variableType, isInit, isStatic, isConst;
 	this->getName() ? name = this->getName() : name = "NULL";
 	this->getVariableType() ? variableType = this->getVariableType() : variableType = "NULL";
 	this->isInit() ? isInit = "Initialized" : isInit = "NOT Initialized";
 	this->isStatic ? isStatic = "Static" : isStatic = "NOT Static";
+	this->isConst ? isConst = "Constant" : isConst = "NOT Constant";
 	return
-		" VARIABLE | " + name + " | " + variableType + " | " + isInit + " | " + isStatic;
+		" VARIABLE | " + name + " | " + variableType + " | " + isInit + " | " + isStatic + " | " + isConst;
 }
 
 
@@ -160,7 +161,7 @@ Class::Class(char* name, int colNo, int lineNo, Scope* bodyScope) : Symbol(name,
 	this->isFinal = false;
 	this->inhertedFrom = "Object";
 	this->bodyScope = bodyScope;
-
+	this->baseClassSymbol = nullptr;
 }
 
 Class::Class(int colNo, int lineNo, bool isFinal, bool isAbstract) : Symbol("", CLASS, colNo, lineNo){
@@ -170,6 +171,7 @@ Class::Class(int colNo, int lineNo, bool isFinal, bool isAbstract) : Symbol("", 
 	this->bodyScope = nullptr;
 	this->dataMembers = nullptr;
 	this->methodMembers = nullptr;
+	this->baseClassSymbol = nullptr;
 }
 
 void Class::setAsAbstract(){
@@ -262,6 +264,7 @@ Class* Class::getOuterClass(){
 void Class::setOuterClass(Class* outerClass){
 	this->outerClass = outerClass;
 }
+
 
 /*
 ============================================
@@ -389,6 +392,7 @@ string Method::toString(){
 bool Method::isFinal(){
 	return (this->storageModifier == FINAL_STORAGE || this->storageModifier == FINAL_STATIC_STORAGE) ?  true :  false;
 }
+
 /*
 ============================================
 PARAMETER:
@@ -397,6 +401,7 @@ PARAMETER:
 Parameter::Parameter(char * name, int colNo, int lineNo, bool isDefault) : Variable(name, PARAMETER, true, colNo, lineNo){ // a parameter is always inited
 	this->isDefault = isDefault;
 }
+
 
 /*
 =========================
