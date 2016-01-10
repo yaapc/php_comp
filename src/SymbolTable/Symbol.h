@@ -139,6 +139,9 @@ public:
 	void setBodyScope(Scope* bodyScope);
 	Scope* getBodyScope();
 
+	Class* getOuterClass();
+	void setOuterClass(Class *outerClass);
+
 	Symbol* addToDataMembers(DataMember* dataMem);
 	Symbol* addToMethodMembers(Method* methodMem);
 private:
