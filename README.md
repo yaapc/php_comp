@@ -13,7 +13,7 @@ a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) an
   * :heavy_check_mark: access modifiers of overriding methods should be the same or of a higher level than the overrided.
   * :heavy_check_mark: any class that inherit abstract class should override all abstract methods.
   * :heavy_check_mark: Inner classes should not have the same name as for outer classes.
-  * various inner classes checks...
+  * :heavy_check_mark: various inner classes checks...
   * declaring arrays like ` int[] $array ` is not supported only when declaring like ` int [] $array `.
   * report missing `$` before variable identifier when declaring.
   * ? `iAmClass $iAmclass = new static;` ?
