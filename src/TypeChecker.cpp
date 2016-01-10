@@ -1,12 +1,12 @@
 #include"TypeChecker.h"
-#include <fstream>
+
 
 //walks the symbol table searching for classes and creating thier dependency graph
 void TypeChecker::checkDependency(){
 	Scope* scope = this->symbolsParser->getRootScope();
 	searchScope(scope);
-
-	dg->checkDependency(); // creates the graph and checks it for circular dependency
+	
+	dg->checkDependency(); // creates the graph and checks it for circular dependency 
 	dg->reportCircles();
 	dg->printGraph();
 	std::ofstream dot_file("dependency_graph.dot");
@@ -16,12 +16,13 @@ void TypeChecker::checkDependency(){
 
 //searches the scope recursivly looking for classes declarations
 void TypeChecker::searchScope(Scope* scope){
-	parseScope(scope);
+	if (scope == nullptr)
+		return;
+	parseScopeForNodes(scope);
 	Scope* innersWalker = scope->getInnerScope();
 	if (innersWalker == nullptr)
 		return;
 	while (innersWalker != nullptr){
-		parseScope(innersWalker);
 		searchScope(innersWalker);
 		innersWalker = innersWalker->getNextScope();
 	}
@@ -29,6 +30,8 @@ void TypeChecker::searchScope(Scope* scope){
 
 //parses a given scope looking for class declaration and inserting them into the dependency graph @dg
 void TypeChecker::parseScopeForNodes(Scope* scope){
+	if (scope == nullptr)
+		return;
 	vector<Symbol*> symbols = scope->getSymbolTable()->symbols();
 	vector<Symbol*>::iterator i;
 	for (i = symbols.begin(); i != symbols.end(); ++i){
@@ -48,6 +51,8 @@ void TypeChecker::checkForwardDeclarations(){
 }
 
 void TypeChecker::searchScopesAndLink(Scope * scope){
+	if (scope == nullptr)
+		return;
 	parseScopeForClassDecl(scope);
 	Scope* innersWalker = scope->getInnerScope();
 	if (innersWalker == nullptr)
@@ -59,6 +64,8 @@ void TypeChecker::searchScopesAndLink(Scope * scope){
 }
 
 void TypeChecker::parseScopeForClassDecl(Scope * scope){
+	if (scope == nullptr)
+		return;
 	vector<Symbol*> symbols = scope->getSymbolTable()->symbols();
 	vector<Symbol*>::iterator i;
 	for (i = symbols.begin(); i != symbols.end(); ++i){
@@ -69,7 +76,7 @@ void TypeChecker::parseScopeForClassDecl(Scope * scope){
 			if (c->getInhertedFrom() != "Object"){ // we have inheritance, let's get the base class sym
 				bool found = false; Scope *walker = scope;				
 				while (!found && walker != nullptr){
-					vector<Symbol*> currSymbols = scope->getSymbolTable()->symbols();
+					vector<Symbol*> currSymbols = walker->getSymbolTable()->symbols();
 					vector<Symbol*>::iterator j = currSymbols.begin();
 					bool foundBase = false;
 					while (j != currSymbols.end() && !foundBase){
@@ -87,12 +94,12 @@ void TypeChecker::parseScopeForClassDecl(Scope * scope){
 								foundBase = true;
 								found = true;
 								checkAbstraction(c);
-								checkFinalMethods(c);
+								checkOverridingMethods(c);
 							}
 						}
 						++j;
 					}
-					walker = scope->getParentScope();
+					walker = walker->getParentScope();
 				}
 				if (!found) {
 					string errString = string(c->getInhertedFrom()) + " is Not Declared";
@@ -187,8 +194,11 @@ void TypeChecker::checkOverridingMethods(Class* subClass){
 	}
 }
 
+
 //searches the scope recursivly looking for classes declarations
 void TypeChecker::searchScopeForFunctions(Scope* scope){
+	if (scope == nullptr)
+		return;
 	parseScopeForFunctions(scope);
 	Scope* innersWalker = scope->getInnerScope();
 	if (innersWalker == nullptr)
@@ -201,6 +211,8 @@ void TypeChecker::searchScopeForFunctions(Scope* scope){
 }
 
 void TypeChecker::parseScopeForFunctions(Scope* scope){
+	if (scope == nullptr)
+		return;
 	vector<Symbol*> symbols = scope->getSymbolTable()->symbols();
 	vector<Symbol*>::iterator i;
 	for (i = symbols.begin(); i != symbols.end(); ++i){
@@ -214,4 +226,32 @@ void TypeChecker::parseScopeForFunctions(Scope* scope){
 			}
 		}
 	}
+}
+
+void TypeChecker::searchScopeForInners(Scope* scope){
+	if (scope == nullptr)
+		return;
+	vector<Symbol*> symbols = scope->getSymbolTable()->symbols();
+	vector<Symbol*>::iterator i;
+	for (i = symbols.begin(); i != symbols.end(); ++i){
+				
+		int sType = (*i)->getSymbolType();
+		if (sType == CLASS){//inner class
+			Class* s = dynamic_cast<Class*>(*i);
+			Class* outersWalker = s->getOuterClass();
+			searchScopeForInners(s->getBodyScope());
+			while (outersWalker != nullptr){
+				if (string(outersWalker->getName()) == string(s->getName())){
+					string errString = string(s->getName()) + " can't has the same name of outer " + outersWalker->getName();
+					this->errRecovery->errQ->enqueue(s->getLineNo(), s->getColNo(), errString.c_str(), "");
+				}
+				outersWalker = outersWalker->getOuterClass();
+			}
+
+		}
+	}
+}
+
+void TypeChecker::checkInnerClasses(){
+	this->searchScopeForInners(this->symbolsParser->getRootScope());
 }
