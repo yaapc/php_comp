@@ -30,11 +30,11 @@ Scope* SymbolsParser::getRootScope(){
 }
 
 Class* SymbolsParser::getCurrentClassSym(){
-	return this->currClassSym;
+	return this->classesStack->top();
 }
 
 void SymbolsParser::setCurrentClassSym(Class* sym){
-	return this->classesStack->top();
+	this->currClassSym = sym;
 }
 
 
