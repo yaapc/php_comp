@@ -4,7 +4,7 @@
 
 SymbolTable::SymbolTable(){
 	//init hash map
-	this->map = new Symbol* [MAX_LENGTH];
+	this->map = new Symbol*[MAX_LENGTH];
 	for (int i = 0; i < MAX_LENGTH; i++)
 		this->map[i] = nullptr;
 }
@@ -16,9 +16,10 @@ SymbolTable::~SymbolTable(){
 
 Symbol* SymbolTable::insert(Symbol* symbol){
 	//look it up first
-	if (this->lookup(symbol->getName())) // if found
+	Symbol* sym = this->lookup(symbol->getName());
+	if (sym){ // if found
 		return nullptr;	//declared, error should be logged at caller
-
+	}
 	int hashIndex = this->hash(symbol->getName());
 	Symbol* next = this->get(hashIndex);
 	if (next == nullptr){ //empty bucket
@@ -34,7 +35,7 @@ Symbol* SymbolTable::insert(Symbol* symbol){
 }
 
 Symbol* SymbolTable::lookup(char* name){
-	int hashIndex = this -> hash(name);
+	int hashIndex = this->hash(name);
 	if (this->get(hashIndex) != nullptr && strcmp(this->get(hashIndex)->getName(), name) == 0)
 		return this->get(hashIndex);
 	if (this->get(hashIndex) == nullptr)
