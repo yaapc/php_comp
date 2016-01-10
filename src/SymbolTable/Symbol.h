@@ -139,11 +139,17 @@ public:
 	void setBodyScope(Scope* bodyScope);
 	Scope* getBodyScope();
 
+	Symbol* addToDataMembers(DataMember* dataMem);
+	Symbol* addToMethodMembers(Method* methodMem);
+	
+	void setBaseClassSymbol(Class* baseClass);
+	Class* getBaseClassSymbol();
+
 	Class* getOuterClass();
 	void setOuterClass(Class *outerClass);
 
-	Symbol* addToDataMembers(DataMember* dataMem);
-	Symbol* addToMethodMembers(Method* methodMem);
+	Method* getMethods();
+	DataMember* getDataMember();
 private:
 	string inhertedFrom; // string to remove char* overhead when setting it.
 	Scope* bodyScope;
