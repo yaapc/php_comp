@@ -74,7 +74,7 @@ Symbol* SymbolsParser::lookUpSymbol(char* name,int lineNo,int colNo){
 		else
 			scanningScope = scanningScope->getParentScope(); // let's search outer scope 
 	}
-	this->errRecovery->errQ->enqueue(lineNo, colNo, "Undefined", name);
+	int errId = this->errRecovery->errQ->enqueue(lineNo, colNo, "Undefined", name);
 	//if a symbol not found, insert an error symbol for forward declaration
 	this->insertSymbol(new ErrorSymbol(name, colNo, lineNo, errId));
 	return nullptr;
