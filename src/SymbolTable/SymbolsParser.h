@@ -5,7 +5,7 @@
 #include "../ErrorRecovery/ErrorRecovery.h"
 #include "Scope.h"
 #include "../definitions.h"
-
+#include <stack>
 extern ErrorRecovery errorRec;//using one unified ErrorRecovery defined in yacc
 class Class;
 class SymbolsParser {
@@ -30,7 +30,7 @@ public :
 	Symbol* lookUpSymbol(char* name, int lineNo, int colNo);
 	//look up a symbol starting from a given scope
 	Symbol* lookUpSymbol(Scope* scope, char* name);
-	
+
 	void goUp(); // go up the hierarchy of scopes
 
 	void printSymbolTables();
@@ -64,9 +64,9 @@ public :
 private :
 	ErrorRecovery *errRecovery;
 	Scope * currScope;
-	Scope * rootScope;	
+	Scope * rootScope;
 
-	Class* currClassSym; // a class symbol used to bind data members and methods to thier class 
+	Class* currClassSym; // a class symbol used to bind data members and methods to thier class
 	stack<Class*> *classesStack;
 
 	string buildTableString(Scope* scope);
