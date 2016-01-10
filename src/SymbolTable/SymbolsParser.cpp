@@ -9,6 +9,7 @@ SymbolsParser::SymbolsParser(){
 	this->errRecovery = &errorRec;
 
 	this->currClassSym = nullptr;
+	this->classesStack = new stack<Class*>();
 }
 
 //TODO : implement destructor.
@@ -33,7 +34,7 @@ Class* SymbolsParser::getCurrentClassSym(){
 }
 
 void SymbolsParser::setCurrentClassSym(Class* sym){
-	this->currClassSym = sym;
+	return this->classesStack->top();
 }
 
 
@@ -406,4 +407,12 @@ void SymbolsParser::checkModifiersAndSet(Method *mem, int* modifiers, int modCou
 		mem->setStorageModifier(DEFAULT_STORAGE);
 	else
 		mem->setStorageModifier(mods[1]);
+}
+
+void SymbolsParser::pushToClassesStack(Class* classSym){
+	this->classesStack->push(classSym);
+}
+
+void SymbolsParser::popFromClassesStack(){
+	return this->classesStack->pop();
 }
