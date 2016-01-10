@@ -6,13 +6,13 @@ a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) an
   * AST.
   * Minor todo's scattered and labeled in the code.
   * :heavy_check_mark: SymbolTable doesn't support declarations of "const" and "static" variables. 
-  * Forward Declerations is permitted for classes and functions in Inheretance and Invoking.
+  * :heavy_check_mark: Forward Declerations is permitted for classes and functions in Inheretance and Invoking.
   * :heavy_check_mark: Inheretance from an undefined class in NOT permitted.
   * :heavy_check_mark: "final" methods are not to be overrided.
   * :heavy_check_mark: "final" classes are not to be inhereted from.
   * :heavy_check_mark: access modifiers of overriding methods should be the same or of a higher level than the overrided.
   * :heavy_check_mark: any class that inherit abstract class should override all abstract methods.
-  * Inner classes should not have the same name as for outer classes.
+  * :heavy_check_mark: Inner classes should not have the same name as for outer classes.
   * various inner classes checks...
   * declaring arrays like ` int[] $array ` is not supported only when declaring like ` int [] $array `.
   * report missing `$` before variable identifier when declaring.
