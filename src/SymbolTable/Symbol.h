@@ -155,6 +155,7 @@ private:
 	Scope* bodyScope;
 	DataMember* dataMembers;
 	Method* methodMembers;
+	Class* baseClassSymbol;
 	Class* outerClass;
 };
 
