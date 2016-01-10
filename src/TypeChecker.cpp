@@ -102,9 +102,13 @@ void TypeChecker::parseScopeForClassDecl(Scope * scope){
 					walker = walker->getParentScope();
 				}
 				if (!found) {
-					string errString = string(c->getInhertedFrom()) + " is Not Declared";
-					this->errRecovery->errQ->enqueue(c->getLineNo(), c->getColNo(), errString.c_str(), "");
-					c->setInhertedFrom("Object");
+					if (c->getOuterClass() == nullptr){ 
+						//if it's not an inner class report the error
+						//otherwise, it'll be reported while checking inner's inheritance.
+						string errString = string(c->getInhertedFrom()) + " is Not defined";
+						this->errRecovery->errQ->enqueue(c->getLineNo(), c->getColNo(), errString.c_str(), "");
+						//c->setInhertedFrom("Object");
+					}
 				}
 			}
 		}
@@ -238,18 +242,58 @@ void TypeChecker::searchScopeForInners(Scope* scope){
 		int sType = (*i)->getSymbolType();
 		if (sType == CLASS){//inner class
 			Class* s = dynamic_cast<Class*>(*i);
-			Class* outersWalker = s->getOuterClass();
+			
 			searchScopeForInners(s->getBodyScope());
-			while (outersWalker != nullptr){
-				if (string(outersWalker->getName()) == string(s->getName())){
-					string errString = string(s->getName()) + " can't has the same name of outer " + outersWalker->getName();
-					this->errRecovery->errQ->enqueue(s->getLineNo(), s->getColNo(), errString.c_str(), "");
-				}
-				outersWalker = outersWalker->getOuterClass();
-			}
+			checkNamingOfInners(s);
+			checkInheritanceOfInners(s);
 
 		}
 	}
+}
+
+void TypeChecker::checkNamingOfInners(Class* inner){
+	Class* outersWalker = inner->getOuterClass();
+	while (outersWalker != nullptr){
+		if (string(outersWalker->getName()) == string(inner->getName())){
+			string errString = string(inner->getName()) + " can't has the same name of outer " + outersWalker->getName();
+			this->errRecovery->errQ->enqueue(inner->getLineNo(), inner->getColNo(), errString.c_str(), "");
+		}
+		outersWalker = outersWalker->getOuterClass();
+	}
+}
+
+void TypeChecker::checkInheritanceOfInners(Class* inner){
+	if (inner->getBaseClassSymbol() != nullptr || inner->getInhertedFrom() == "Object") // base class found in previous check or not inheriting at all
+		return;
+
+	if (inner->getOuterClass() == nullptr)// not an inner class
+		return;
+
+	Class* bOuter = inner->getOuterClass()->getBaseClassSymbol(); // baseClass of outer
+	if (bOuter == nullptr){ // outer not inhereting
+		string errString = string(inner->getInhertedFrom()) + " is not defined ";
+		this->errRecovery->errQ->enqueue(inner->getLineNo(), inner->getColNo(), errString.c_str(), "");
+		return;
+	}
+
+	vector<Symbol*> symbols = bOuter->getBodyScope()->getSymbolTable()->symbols();
+	vector<Symbol*>::iterator i;
+	bool found = false;
+	for (i = symbols.begin(); i != symbols.end(); ++i){
+		int sType = (*i)->getSymbolType();
+		if (sType == CLASS){//inner class
+			Class* s = dynamic_cast<Class*>(*i);
+			if (string(s->getName()) == inner->getInhertedFrom())
+				found = true;
+
+		}
+	}
+	if (!found){
+		string errString = string(inner->getInhertedFrom()) + " is not defined ";
+		this->errRecovery->errQ->enqueue(inner->getLineNo(), inner->getColNo(), errString.c_str(), "");
+	}
+
+
 }
 
 void TypeChecker::checkInnerClasses(){
