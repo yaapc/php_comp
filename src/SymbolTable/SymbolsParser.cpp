@@ -78,12 +78,14 @@ Symbol* SymbolsParser::lookUpSymbol(char* name,int lineNo,int colNo){
 	int errId = this->errRecovery->errQ->enqueue(lineNo, colNo, "Undefined", name);
 	//if a symbol not found, insert an error symbol for forward declaration
 	this->insertSymbol(new ErrorSymbol(name, colNo, lineNo, errId));
+	
 	return nullptr;
 	
 }
 
+
 /*
- * looks up a symbol from a given scope, doestn't report anything
+ * looks up a symbol from a given scope 
  */
 Symbol* SymbolsParser::lookUpSymbol(Scope* scope, char* name){
 	Scope* scanningScope = scope; // starts searching from the current scope
@@ -97,6 +99,7 @@ Symbol* SymbolsParser::lookUpSymbol(Scope* scope, char* name){
 	}
 	return nullptr;
 }
+
 
 void SymbolsParser::goUp(){
 	this->currScope = this->currScope->getParentScope();
@@ -238,7 +241,7 @@ Symbol* SymbolsParser::insertMethodSymbol(char* name, int colNo, int lineNo, int
 	else
 		methodSymbol->setReturnType(returnType);
 
-	if (bodyScope == nullptr){ // no body scope i.e abstrat
+	if (bodyScope == nullptr){ // no body scope i.e abstract
 		methodSymbol->isAbstract = true;
 		if (methodSymbol->getAccessModifier() == PRIVATE_ACCESS)
 			this->errRecovery->errQ->enqueue(lineNo, colNo, "private access modifier for an abstract method is not allowed", "");
@@ -345,7 +348,7 @@ void SymbolsParser::checkModifiersAndSet(DataMember *mem, int* modifiers, int mo
 }
 
 void SymbolsParser::checkModifiersAndSet(Method *mem, int* modifiers, int modCount){
-	int mods[] = { 0, 0 }; // the modifiers that will be assigned the first will be the access modifier, the second is the storage.
+	int mods[] = { 0, 0 }; // the modifiers that will be assigned, first one will be the access modifier, the second is the storage.
 
 	if (modCount == 0){ // no modifiers
 		mem->setAccessModifier(PRIVATE_ACCESS); // the default access
