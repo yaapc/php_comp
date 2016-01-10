@@ -55,6 +55,9 @@ public :
 	Scope* createNewScope(bool &flag);
 	Scope* createNewScope();
 
+	void pushToClassesStack(Class* classSym);
+	void popFromClassesStack();
+
 	void checkModifiersAndSet(DataMember *mem, int* mods, int count);
 	void checkModifiersAndSet(Method *method, int* mods, int count);
 
@@ -64,6 +67,7 @@ private :
 	Scope * rootScope;	
 
 	Class* currClassSym; // a class symbol used to bind data members and methods to thier class 
+	stack<Class*> *classesStack;
 
 	string buildTableString(Scope* scope);
 };
