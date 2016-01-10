@@ -238,6 +238,31 @@ Symbol* Class::addToMethodMembers(Method* method){
 	}
 	walker->node = method;
 }
+
+void Class::setBaseClassSymbol(Class* baseClass){
+	this->baseClassSymbol = baseClass;
+}
+
+Class* Class::getBaseClassSymbol(){
+	return this->baseClassSymbol;
+}
+
+Method* Class::getMethods(){
+	return this->methodMembers;
+}
+
+DataMember* Class::getDataMember(){
+	return this->dataMembers;
+}
+
+Class* Class::getOuterClass(){
+	return this->outerClass;
+}
+
+void Class::setOuterClass(Class* outerClass){
+	this->outerClass = outerClass;
+}
+
 /*
 ============================================
 DATA MEMBER:
