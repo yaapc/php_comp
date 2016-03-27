@@ -164,6 +164,16 @@ Class::Class(char* name, int colNo, int lineNo, Scope* bodyScope) : Symbol(name,
 	this->baseClassSymbol = nullptr;
 }
 
+Class::Class(char* name, int colNo, int lineNo, bool isFinal, bool isAbstract) : Symbol(name, CLASS, colNo, lineNo) {
+	this->isAbstract = isAbstract;
+	this->isFinal = isFinal;
+	this->inhertedFrom = "Object";
+	this->bodyScope = nullptr;
+	this->dataMembers = nullptr;
+	this->methodMembers = nullptr;
+	this->baseClassSymbol = nullptr;
+}
+
 Class::Class(int colNo, int lineNo, bool isFinal, bool isAbstract) : Symbol("", CLASS, colNo, lineNo){
 	this->isAbstract = isAbstract;
 	this->isFinal = isFinal;
