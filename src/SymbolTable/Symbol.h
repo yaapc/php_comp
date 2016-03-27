@@ -120,6 +120,7 @@ public:
 
 	Class(char* name, int colNo, int lineNo, Scope* bodyScope);
 	Class(int colNo, int lineNo, bool isFinal, bool isAbstract);
+	Class(char* name, int colNo, int lineNo, bool isFinal, bool isAbstract);
 	~Class();
 
 	bool isFinal;
