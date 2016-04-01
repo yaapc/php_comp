@@ -12,7 +12,7 @@ phpc: grammar.o lexer.o main.o Scope.o Symbol.o SymbolTable.o SymbolsParser.o ge
 main.o: src/main.cpp src/definitions.h
 	${CXX} ${CXXFLAGS} -c $<
 
-grammar.o: src/grammar.y src/definitions.h src/Logger.hpp
+grammar.o: src/grammar.y src/definitions.h src/Logger.hpp AST.o
 	${YACC} ${YFLAGS} $<
 	${CXX} ${CXXFLAGS} -c src/grammar.cpp
 
@@ -38,6 +38,9 @@ generate_dot.o: src/generate_dot.cpp src/generate_dot.hpp
 TypeChecker.o: src/TypeChecker.cpp src/TypeChecker.h
 	${CXX} ${CXXFLAGS} -c $<
 
+AST.o: src/AST/all.hpp src/AST/Node.hpp src/AST/ListNode.hpp src/AST/Node.hpp
+	touch AST.o
+
 DependencyGraph.o: src/DependencyGraph/DependencyGraph.cpp src/DependencyGraph/DependencyGraph.h
 	${CXX} ${CXXFLAGS} -c $<
 
@@ -47,11 +50,17 @@ symbol_table: symbol_table.dot
 dependency_graph_dot: dependency_graph.dot
 	dot -Tsvg -o dependency_graph.svg $<
 
+ast_dot: ast.dot
+	dot -Tsvg -o ast.svg $<
+
 clean:
 	rm *.o
+	rm *.txt
+	rm *.dot
 
 run:
 	make phpc
 	./phpc
 	make symbol_table
 	make dependency_graph_dot
+	make ast_dot

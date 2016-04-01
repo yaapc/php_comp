@@ -1,11 +1,14 @@
-%output = "grammar.cpp"
+%output = "src/grammar.cpp"
 %{
 	#include <iostream>
+	#include <fstream>
 	using namespace std;
 	#include "definitions.h"
 	#include "Logger.hpp"
 	#include "ErrorRecovery/ErrorRecovery.h"
 	#include "TypeChecker.h"
+
+	#include "AST/all.hpp"
 
 	Logger pl("parser_log.txt");
 	ErrorRecovery errorRec;
@@ -41,6 +44,8 @@
 	void initTypeChecker(){
 		typeChecker = new TypeChecker(&errorRec, symbolsParser);
 	}
+
+	ListNode *tree = new ListNode();
 %}
 
 %nonassoc _def_val_ low_prec
@@ -174,31 +179,44 @@
 		//symbol
 		class Symbol * symbol;
 		class Scope * scope;
+		class Node* node;
 	} r;
-	
+
 }
 
 
 %%
-program: start {pl.log("program");}
+program: start {pl.log("program"); ofstream ast_dot("ast.dot"); print_ast(tree, ast_dot); ast_dot.close(); }
 
 start:
-		start_part { pl.log("start");}
-	| start start_part
+		start_part { pl.log("start"); tree->add_nodes(dynamic_cast<ListNode*>($<r.node>1)->nodes); }
+	| start start_part { tree->add_nodes(dynamic_cast<ListNode*>($<r.node>2)->nodes); }
 ;
 
 start_part:
-	optional_inline_html T_OPEN_TAG top_statement_list T_CLOSE_TAG optional_inline_html	{ pl.log("start part"); }
+	optional_inline_html T_OPEN_TAG top_statement_list T_CLOSE_TAG optional_inline_html	{
+		pl.log("start part");
+		auto list = new ListNode();
+		list->add_node($<r.node>1);
+		list->add_nodes(dynamic_cast<ListNode*>($<r.node>3)->nodes);
+		list->add_node($<r.node>5);
+	 	$<r.node>$ = list; }
 ;
 
 optional_inline_html:
-		T_INLINE_HTML {pl.log("inline_html");}
-	| /* empty */ %prec low_prec
+		T_INLINE_HTML {
+			pl.log("inline_html");
+			$<r.node>$ = new EchoNode($<r.str>1); }
+	| /* empty */ %prec low_prec { $<r.node>$ = new Node(); }
 ;
 
 top_statement_list:
-		top_statement_list top_statement	{ pl.log("top_statement");}
-	| /* empty */
+		top_statement_list top_statement	{
+			pl.log("top_statement");
+			//$<r.node>2 = new Node();
+			dynamic_cast<ListNode*>($<r.node>1)->add_node($<r.node>2);
+			$<r.node>$ = $<r.node>1; }
+	| /* empty */ { $<r.node>$ = new ListNode(); }
 ;
 
 reserved_non_modifiers:
@@ -216,7 +234,7 @@ semi_reserved:
 ;
 
 identifier:
-		T_STRING 
+		T_STRING
 	| semi_reserved
 ;
 
@@ -232,17 +250,11 @@ top_statement:
 		statement { pl.log("statment"); }
 	| function_declaration_statement	{ pl.log("function declaration statement");}
 	| class_declaration_statement { pl.log("class declaration statement");}
-	| T_HALT_COMPILER
-	| T_NAMESPACE namespace_name ';'
-	| T_NAMESPACE namespace_name open_par top_statement_list close_par
-	| T_NAMESPACE open_par top_statement_list close_par
-	| T_USE use_declarations ';'
-	| T_USE use_type use_declarations ';'
-	| group_use_declaration ';'
+	| T_HALT_COMPILER { $<r.node>$ = nullptr; }
 	| T_CONST type constant_declaration_list ';' {
 			pl.log("constant declaration list");
 			//TODO:encapsulate
-			Variable* walker = dynamic_cast<Variable*>( $<Symbol>3 );
+			Variable* walker = dynamic_cast<Variable*>( $<r.symbol>3 );
 			while(walker != nullptr){ // TODO: document this
 				walker->setVariableType($<r.str>2);
 				walker->isConst = true;
@@ -258,7 +270,7 @@ top_statement:
 
 			pl.log("wrong constant declaration list");
 			//TODO:encapsulate
-			Variable* walker = dynamic_cast<Variable*>( $<Symbol>2 );
+			Variable* walker = dynamic_cast<Variable*>( $<r.symbol>2 );
 			while(walker != nullptr){ // TODO: document this
 				walker->setVariableType("Object");
 				walker->isConst = true;
@@ -350,7 +362,7 @@ class_const_list:
 ;
 
 class_const:
-	  identifier '=' static_scalar { 
+	  identifier '=' static_scalar {
 			pl.log("class constant", 0); pl.log($<r.str>1);
 			$<r.symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, true, $<r.col_no>1, $<r.line_no>1));
 		}
@@ -437,7 +449,7 @@ statement:
 	| yield_expr ';' {pl.log("yield stmt");}
 	| global_variable_statement {pl.log("global variable stmt");}
 	| static_variable_statement {pl.log("static variable stmt");}
-	| T_ECHO expr_list ';' {pl.log("echo stmt");}
+	| T_ECHO expr_list ';' { pl.log("echo stmt"); $<r.node>$ = new EchoNode($<r.node>2); }
 	| T_INLINE_HTML
 	| expr ';' {pl.log("expr stmt");}
 	| T_UNSET '(' variables_list ')' ';'
@@ -519,7 +531,7 @@ class_declaration_statement:
 		{
 			pl.log("class_declaration_statement");
 			symbolsParser->finishClassInsertion($<r.str>2, dynamic_cast<Class*>($<r.symbol>1), $<r.scope>4);
-			$<Symbol>$ = symbolsParser->getCurrentClassSym();
+			$<r.symbol>$ = symbolsParser->getCurrentClassSym();
 			symbolsParser->popFromClassesStack();
 		}
 	| T_INTERFACE T_STRING interface_extends_list open_par class_statement_list close_par {pl.log("interface:", 0); pl.log($<r.str>2);}
@@ -528,8 +540,8 @@ class_declaration_statement:
 		{
 			/* ERROR RULE: class without name */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'{\', expecting identifier (T_STRING)","");
-			symbolsParser->finishClassInsertion("ERR_C_NO_NAME", $<r.str>2, dynamic_cast<Class*>($<r.symbol>1), $<r.scope>4);
-			$<Symbol>$ = symbolsParser->getCurrentClassSym();
+			//symbolsParser->finishClassInsertion("ERR_C_NO_NAME", $<r.str>2, dynamic_cast<Class*>($<r.symbol>1), $<r.scope>4);
+			$<r.symbol>$ = symbolsParser->getCurrentClassSym();
 			symbolsParser->popFromClassesStack();
 		}
 ;
@@ -544,7 +556,6 @@ class_entry:
 			$<r.symbol>$ = symbolsParser->insertSymbol(classSym);
 			//symbolsParser->setCurrentClassSym(classSym);
 			symbolsParser->pushToClassesStack(classSym);
-			$<r.node>$ = nullptr;
 		}
 	| T_ABSTRACT T_CLASS T_STRING
 		{
@@ -553,7 +564,6 @@ class_entry:
 			$<r.symbol>$ = symbolsParser->insertSymbol(classSym);
 //			symbolsParser->setCurrentClassSym(classSym);
 			symbolsParser->pushToClassesStack(classSym);
-			$<r.node>$ = new Node(abstract_node);
 		}
 	| T_FINAL T_CLASS T_STRING
 		{
@@ -562,7 +572,6 @@ class_entry:
 			$<r.symbol>$ = symbolsParser->insertSymbol(classSym);
 			//symbolsParser->setCurrentClassSym(classSym);
 			symbolsParser->pushToClassesStack(classSym);
-			$<r.node>$ = new Node(final_node);
 		}
 	| T_ABSTRACT T_FINAL T_CLASS T_STRING
 		{
@@ -572,7 +581,6 @@ class_entry:
 			Class* classSym = new Class($<r.str>4, $<r.col_no>1, $<r.line_no>1, false,false);
 			$<r.symbol>$ = symbolsParser->insertSymbol(classSym); // assuming not final and not abstract
 			symbolsParser->pushToClassesStack(classSym);
-			$<r.node>$ = nullptr;
 		}
 	| T_FINAL T_ABSTRACT T_CLASS T_STRING
 		{
@@ -582,7 +590,6 @@ class_entry:
 			Class* classSym = new Class($<r.str>4, $<r.col_no>1, $<r.line_no>1, false,false);
 			$<r.symbol>$ = symbolsParser->insertSymbol(classSym); // assuming not final and not abstract
 			symbolsParser->pushToClassesStack(classSym);
-			$<r.node>$ = nullptr;
 		}
 ;
 
@@ -864,12 +871,12 @@ parameter_list:
 	| /* empty */
 		{
 			pl.log("empty parameters list");
-			$<Symbol>$ = nullptr;
+			$<r.symbol>$ = nullptr;
 		}
 ;
 
 non_empty_parameter_list:
-		parameter 
+		parameter
 	| non_empty_parameter_list ',' parameter
 		{
 			//**chain symbols in the list and pass it:
@@ -1050,9 +1057,9 @@ static_var_list:
 		static_var_list ',' static_var {
 			//chaining symbols:
 			$<r.symbol>3->node = $<r.symbol>1;
-			$<r.symbol>$ = $<r.symbol>3;		
+			$<r.symbol>$ = $<r.symbol>3;
 		}
-	| static_var {$<Symbol>$ = $<Symbol>1;}
+	| static_var {$<r.symbol>$ = $<r.symbol>1;}
 ;
 
 static_var:
@@ -1093,7 +1100,7 @@ class_statement:
 			pl.log("method");
 			$<r.symbol>$ = $<r.symbol>1;
 		}
-	| method_header_abstract ';' {$<Symbol>$ = $<Symbol>1;}
+	| method_header_abstract ';' {$<r.symbol>$ = $<r.symbol>1;}
 	| T_USE name_list trait_adaptations
 	| member_modifiers property_declaration_list ';' {
 			/* ERROR RULE: variable without type */
@@ -1187,14 +1194,14 @@ trait_method_reference:
 	| identifier
 ;
 
-member_modifiers : /* empty */ 
+member_modifiers : /* empty */
 	|  member_modifier_list
 ;
 
-member_modifier_list : member_modifier 
+member_modifier_list : member_modifier
 	| member_modifier_list member_modifier
 ;
-	
+
 member_modifier:
 	  T_PUBLIC {
 			$<r.m>$ = PUBLIC_ACCESS;
@@ -1204,17 +1211,17 @@ member_modifier:
 	| T_PROTECTED {
 			$<r.m>$ = PROTECTED_ACCESS;
 			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = PROTECTED_ACCESS;	
+				modifiersTags[arrCounter++] = PROTECTED_ACCESS;
 		}
 	| T_PRIVATE {
 			$<r.m>$ = PRIVATE_ACCESS;
 			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = PRIVATE_ACCESS;	
+				modifiersTags[arrCounter++] = PRIVATE_ACCESS;
 		}
 	| T_STATIC {
 			$<r.m>$ = STATIC_STORAGE;
 			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = STATIC_STORAGE;	
+				modifiersTags[arrCounter++] = STATIC_STORAGE;
 		}
 	| T_FINAL {
 			$<r.m>$ = FINAL_STORAGE;
@@ -1292,7 +1299,7 @@ expr_or_declaration:
 ;
 
 for_expr:
-		/* empty */ {$<Symbol>$ = nullptr;}
+		/* empty */ {$<r.symbol>$ = nullptr;}
 	| for_expr_list
 ;
 
@@ -1717,7 +1724,7 @@ open_par:
 	'{' {
 		pl.log("open_par",0);
 		//we create a new scope
-		$<Scope>$ = symbolsParser->createNewScope(forLoopFlag);
+		$<r.scope>$ = symbolsParser->createNewScope(forLoopFlag);
 	}
 ;
 
@@ -1733,5 +1740,3 @@ void yyerror(const char* s)
 	extern int line_no, col_no;
 	errorRec.errQ->enqueue(line_no, col_no, s, "");
 }
-
-
