@@ -281,49 +281,6 @@ top_statement:
 		}
 ;
 
-use_type:
-		T_FUNCTION
-	| T_CONST
-;
-
-/* Using namespace_name_parts here to avoid s/r conflict on '\\' */
-group_use_declaration:
-		T_USE use_type namespace_name_parts '\\' open_par unprefixed_use_declarations close_par
-	| T_USE use_type '\\' namespace_name_parts '\\' open_par unprefixed_use_declarations close_par
-	| T_USE namespace_name_parts '\\' open_par inline_use_declarations close_par
-	| T_USE '\\' namespace_name_parts '\\' open_par inline_use_declarations close_par
-;
-
-unprefixed_use_declarations:
-		unprefixed_use_declarations ',' unprefixed_use_declaration
-	| unprefixed_use_declaration
-;
-
-use_declarations:
-		use_declarations ',' use_declaration
-	| use_declaration
-;
-
-inline_use_declarations:
-		inline_use_declarations ',' inline_use_declaration
-	| inline_use_declaration
-;
-
-unprefixed_use_declaration:
-		namespace_name
-	| namespace_name T_AS T_STRING
-;
-
-use_declaration:
-		unprefixed_use_declaration
-	| '\\' unprefixed_use_declaration
-;
-
-inline_use_declaration:
-		unprefixed_use_declaration
-	| use_type unprefixed_use_declaration
-;
-
 constant_declaration_list:
 		constant_declaration_list ',' constant_declaration {
 			//**chain symbols in the list and pass it:
@@ -535,7 +492,6 @@ class_declaration_statement:
 			symbolsParser->popFromClassesStack();
 		}
 	| T_INTERFACE T_STRING interface_extends_list open_par class_statement_list close_par {pl.log("interface:", 0); pl.log($<r.str>2);}
-	| T_TRAIT T_STRING open_par class_statement_list close_par {pl.log("trait:", 0); pl.log($<r.str>2);}
 	| class_entry_without_name extends_from implements_list open_par class_statement_list close_par
 		{
 			/* ERROR RULE: class without name */
@@ -1101,7 +1057,6 @@ class_statement:
 			$<r.symbol>$ = $<r.symbol>1;
 		}
 	| method_header_abstract ';' {$<r.symbol>$ = $<r.symbol>1;}
-	| T_USE name_list trait_adaptations
 	| member_modifiers property_declaration_list ';' {
 			/* ERROR RULE: variable without type */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
@@ -1165,33 +1120,6 @@ method_header_without_name_abstract :
 ;
 method_body:
 		inner_statement_list {pl.log("method body");}
-;
-
-trait_adaptations:
-		';'
-	| open_par trait_adaptation_list close_par
-;
-
-trait_adaptation_list:
-		/* empty */
-	| trait_adaptation_list trait_adaptation
-;
-
-trait_adaptation:
-		trait_method_reference_fully_qualified T_INSTEADOF name_list ';'
-	| trait_method_reference T_AS member_modifier identifier ';'
-	| trait_method_reference T_AS member_modifier ';'
-	| trait_method_reference T_AS T_STRING ';'
-	| trait_method_reference T_AS reserved_non_modifiers ';'
-;
-
-trait_method_reference_fully_qualified:
-		name T_PAAMAYIM_NEKUDOTAYIM identifier
-;
-
-trait_method_reference:
-		trait_method_reference_fully_qualified
-	| identifier
 ;
 
 member_modifiers : /* empty */
@@ -1513,7 +1441,6 @@ common_scalar:
 	| T_FILE
 	| T_DIR
 	| T_CLASS_C
-	| T_TRAIT_C
 	| T_METHOD_C
 	| T_FUNC_C
 	| T_NS_C
