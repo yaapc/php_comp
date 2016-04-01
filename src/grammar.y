@@ -207,7 +207,7 @@ optional_inline_html:
 		T_INLINE_HTML {
 			pl.log("inline_html");
 			$<r.node>$ = new EchoNode($<r.str>1); }
-	| /* empty */ %prec low_prec { $<r.node>$ = new Node(); }
+	| /* empty */ %prec low_prec { $<r.node>$ = nullptr; }
 ;
 
 top_statement_list:
@@ -451,14 +451,16 @@ optional_ellipsis:
 ;
 
 function_declaration_statement:
-		function_header inner_statement_list close_par {pl.log("function:", 0); pl.log($<r.str>3);}
+		function_header inner_statement_list close_par {
+			pl.log("function:", 0); pl.log($<r.str>3);
+			$<r.node>$ = new FunctionNode($<r.symbol>1, $<r.node>2); }
 ;
 
 function_header:
 		T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par
 		{
 			pl.log("function header:", 0); pl.log($<r.str>3);
-			symbolsParser->insertFunctionSymbol($<r.str>3, $<r.str>8, $<r.col_no>1, $<r.line_no>1, $<r.scope>9, $<r.symbol>5);
+			$<r.symbol>$ = symbolsParser->insertFunctionSymbol($<r.str>3, $<r.str>8, $<r.col_no>1, $<r.line_no>1, $<r.scope>9, $<r.symbol>5);
 		}
 	| T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':'	open_par
 		{

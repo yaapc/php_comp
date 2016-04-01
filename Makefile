@@ -38,7 +38,7 @@ generate_dot.o: src/generate_dot.cpp src/generate_dot.hpp
 TypeChecker.o: src/TypeChecker.cpp src/TypeChecker.h
 	${CXX} ${CXXFLAGS} -c $<
 
-AST.o: src/AST/all.hpp src/AST/Node.hpp src/AST/ListNode.hpp src/AST/Node.hpp
+AST.o: src/AST/*
 	touch AST.o
 
 DependencyGraph.o: src/DependencyGraph/DependencyGraph.cpp src/DependencyGraph/DependencyGraph.h
