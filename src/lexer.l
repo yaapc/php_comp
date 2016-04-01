@@ -27,6 +27,9 @@
   void doForReturn(char *yytext){
     yylval.r.col_no = col_no;
     yylval.r.line_no = line_no;
+    yylval.r.node = nullptr;
+    yylval.r.symbol = nullptr;
+    yylval.r.scope = nullptr;
     col_no += strlen(yytext);
 }
 
