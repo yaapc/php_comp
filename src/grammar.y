@@ -336,8 +336,12 @@ class_const:
 ;
 
 inner_statement_list:
-		inner_statement_list inner_statement
-	| /* empty */
+		inner_statement_list inner_statement {
+			auto list = dynamic_cast<ListNode*>($<r.node>1);
+			list->add_node($<r.node>2);
+			$<r.node>$ = list;
+		}
+	| /* empty */ { $<r.node>$ = new ListNode(); }
 ;
 
 inner_statement:
@@ -378,7 +382,7 @@ variable_declaration:
 ;
 
 statement:
-		open_par inner_statement_list close_par {pl.log("code block");}
+		open_par inner_statement_list close_par {pl.log("code block"); $<r.node>$ = $<r.node>2; }
 	|   type variable_declaration_list ';'
 		{
 			pl.log("variable declaration list.");
@@ -402,7 +406,7 @@ statement:
 	| T_CONTINUE ';'{pl.log("contintue stmt");}
 	| T_CONTINUE expr ';' {pl.log("contintue expr stmt");}
 	| T_RETURN ';' {pl.log("return stmt");}
-	| T_RETURN expr ';' {pl.log("return expr stmt");}
+	| T_RETURN expr ';' { pl.log("return expr stmt"); $<r.node>$ = new ReturnNode($<r.node>2); }
 	| yield_expr ';' {pl.log("yield stmt");}
 	| global_variable_statement {pl.log("global variable stmt");}
 	| static_variable_statement {pl.log("static variable stmt");}
@@ -1238,6 +1242,7 @@ expr:
 		{
 			pl.log($<r.str>1,0);
 			typeChecker->checkVariable($<r.str>1,$<r.line_no>1,$<r.col_no>1);
+			$<r.node>$ = new VariableNode(symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1));
 		}
 	| '(' T_PRIMITIVE ')' expr
 	| list_expr '=' expr
@@ -1271,9 +1276,9 @@ expr:
 	| expr '&' expr
 	| expr '^' expr
 	| expr '.' expr
-	| expr '+' expr
+	| expr '+' expr { $<r.node>$ = new BinaryOperationNode("+", $<r.node>1, $<r.node>3); }
 	| expr '-' expr
-	| expr '*' expr
+	| expr '*' expr { $<r.node>$ = new BinaryOperationNode("*", $<r.node>1, $<r.node>3); }
 	| expr '/' expr
 	| expr '%' expr
 	| expr T_SL expr
