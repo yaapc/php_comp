@@ -24,12 +24,12 @@ int main(int argc, char** argv) {
 	}
 	yyparse();
 
-	typeChecker->checkForwardDeclarations();
-	typeChecker->checkDependency(); // check circular dependency and create dependency graph
-	typeChecker->checkInnerClasses();
-	
-	symbolsParser->printSymbolTables(); // log symbol table	
-	errorRec.printErrQueue();
+	typeChecker->checkForwardDeclarations(); cout << "checkForwardDeclarations\n";
+	typeChecker->checkDependency(); cout << "checkDependency\n"; // check circular dependency and create dependency graph
+	//typeChecker->checkInnerClasses(); cout << "checkInnerClasses\n";
+
+	symbolsParser->printSymbolTables(); cout << "printSymbolTables\n";// log symbol table
+	errorRec.printErrQueue(); cout << "printErrQueue\n";
 
 	//Visualizing
 	ofstream dot_file("symbol_table.dot");
