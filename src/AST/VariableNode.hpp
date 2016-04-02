@@ -9,6 +9,7 @@ public:
   Variable *variable;
   VariableNode(Symbol *var) {
     variable = dynamic_cast<Variable*>(var);
+    if (!variable) throw "Bad variable";
   }
 
   virtual void print(ostream &os) {
