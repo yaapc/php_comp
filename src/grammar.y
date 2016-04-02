@@ -357,8 +357,13 @@ variable_declaration_list:
 			//**chain symbols in the list and pass it:
 			$<r.symbol>3->node = $<r.symbol>1;
 			$<r.symbol>$ = $<r.symbol>3;
+			dynamic_cast<ListNode*>($<r.node>1)->add_node($<r.node>3);
+			$<r.node>$ = $<r.node>1;
 		}
-	| variable_declaration {$<r.symbol>$ = $<r.symbol>1;}
+	| variable_declaration {
+			$<r.symbol>$ = $<r.symbol>1;
+			$<r.node>$ = new ListNode();
+			dynamic_cast<ListNode*>($<r.node>$)->add_node($<r.node>1); }
 ;
 
 variable_declaration:
@@ -366,11 +371,14 @@ variable_declaration:
 		{
 			pl.log("initialized variable declaration.", 0); pl.log($<r.str>1);
 			$<r.symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, true, $<r.col_no>1, $<r.line_no>1));
+			$<r.node>$ = (new ListNode())->add_node(new DeclarationNode($<r.symbol>$))
+																	 ->add_node(new AssignmentNode(new VariableNode($<r.symbol>$), $<r.node>3));
 		}
 	| T_VARIABLE
 		{
 			pl.log("uninitialized variable declaration.");
 			$<r.symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.col_no>1, $<r.line_no>1));
+			$<r.node>$ = (new ListNode())->add_node(new DeclarationNode($<r.symbol>$));
 		}
 	| T_VARIABLE '='
 		{
@@ -387,6 +395,7 @@ statement:
 		{
 			pl.log("variable declaration list.");
 			//TODO:encapsulate
+			reverse_list(&$<r.symbol>2);
 			Variable* walker = dynamic_cast<Variable*>( $<r.symbol>2 );
 			while(walker != nullptr){ // TODO: document this
 				walker->setVariableType($<r.str>1);
@@ -394,6 +403,11 @@ statement:
 				walker = dynamic_cast<Variable*>(walker->node);
 				prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
 			}
+			auto nodes_list = new ListNode();
+			for (auto &node :dynamic_cast<ListNode*>($<r.node>2)->nodes) {
+				nodes_list->add_nodes(dynamic_cast<ListNode*>(node)->nodes);
+			}
+			$<r.node>$ = nodes_list;
 		}
 	| if_start statement elseif_list else_single {pl.log("if statement");}
 	| T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';' {pl.log("if stmt new");}
@@ -1246,7 +1260,7 @@ expr:
 		}
 	| '(' T_PRIMITIVE ')' expr
 	| list_expr '=' expr
-	| variable '=' expr
+	| variable '=' expr { $<r.node>$ = new AssignmentNode($<r.node>1, $<r.node>3); }
 	| variable '=' '&' variable
 	| variable '=' '&' new_expr
 	| new_expr		%prec _def_val_
@@ -1439,7 +1453,7 @@ ctor_arguments:
 ;
 
 common_scalar:
-		T_LNUMBER
+		T_LNUMBER { $<r.node>$ = new ScalarNode($<r.i>1); }
 	| T_DNUMBER
 	| T_TRUE
 	| T_FALSE
@@ -1584,7 +1598,10 @@ static_property_with_arrays:
 reference_variable:
 		reference_variable '[' dim_offset ']'
 	| reference_variable open_par expr close_par
-	| T_VARIABLE
+	| T_VARIABLE {
+		$<r.symbol>$ = symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1);
+		cout<<"SHIT:::" << ($<r.symbol>$ ? $<r.symbol>$->getName() : "SS") << endl;
+		$<r.node>$ = new VariableNode($<r.symbol>$); }
 	| '$' open_par expr close_par
 ;
 

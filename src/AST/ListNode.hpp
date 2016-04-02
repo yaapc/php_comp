@@ -10,14 +10,16 @@ class ListNode : public Node {
 public:
   vector<Node*> nodes;
 
-  void add_node(Node* node) {
+  ListNode* add_node(Node* node) {
     nodes.push_back(node);
+    return this;
   }
 
-  void add_nodes(const vector<Node*>& nodes_list) {
+  ListNode* add_nodes(const vector<Node*>& nodes_list) {
     for (auto &node : nodes_list) {
       add_node(node);
     }
+    return this;
   }
 
   virtual bool type_checking() {

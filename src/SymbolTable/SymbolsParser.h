@@ -72,5 +72,6 @@ private :
 	string buildTableString(Scope* scope);
 };
 
+void reverse_list(Symbol**);
 
 #endif

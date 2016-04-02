@@ -112,7 +112,7 @@ bool SymbolTable::remove(char* name){
 		this->map[hashIndex] = this->map[hashIndex]->getNext();
 		return true;
 	}
-		
+
 	if (this->get(hashIndex) == nullptr)
 		return true;
 	Symbol* next = this->get(hashIndex)->getNext();
@@ -126,4 +126,17 @@ bool SymbolTable::remove(char* name){
 		next = next->getNext();
 	}
 	return nullptr;
+}
+
+void reverse_list(Symbol **head) {
+	Symbol *prev = nullptr;
+	Symbol *current = *head;
+	Symbol *next;
+	while (current != nullptr) {
+		next = current->node;
+		current->node = prev;
+		prev = current;
+		current = next;
+	}
+	*head = prev;
 }

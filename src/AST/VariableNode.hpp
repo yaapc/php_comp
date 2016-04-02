@@ -9,13 +9,13 @@ public:
   Variable *variable;
   VariableNode(Symbol *var) {
     variable = dynamic_cast<Variable*>(var);
-    if (!variable) throw "Bad variable";
+  //  if (!variable) throw "Bad variable";
   }
 
   virtual void print(ostream &os) {
     os << int(this)
        << "[label = \""
-       << variable->getName()
+       << (variable ? variable->getName() : "!!!")
        <<"\"]"
        << endl;
   }
