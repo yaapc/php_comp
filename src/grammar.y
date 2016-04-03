@@ -409,7 +409,17 @@ statement:
 			}
 			$<r.node>$ = nodes_list;
 		}
-	| if_start statement elseif_list else_single {pl.log("if statement");}
+	| T_IF parentheses_expr statement elseif_list else_single {
+		pl.log("if statement");
+		Node *else_node = nullptr;
+		if ($<r.node>4) {
+			IfNode *deepest_if = find_deepest_if($<r.node>4);
+			deepest_if->else_node = dynamic_cast<ElseNode*>($<r.node>5);
+			else_node = new ElseNode($<r.node>4);
+		} else {
+			else_node = $<r.node>5;
+		}
+		$<r.node>$ = new IfNode($<r.node>2, $<r.node>3, else_node); }
 	| T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';' {pl.log("if stmt new");}
 	| T_WHILE parentheses_expr while_statement {pl.log("while stmt");}
 	| do_while_loop {pl.log("do while stmt");}
@@ -765,25 +775,27 @@ while_statement:
 	| ':' inner_statement_list T_ENDWHILE ';'
 ;
 
-if_start:
-		T_IF parentheses_expr {
-
-	}
-;
 elseif_list:
-		/* empty */
-	| elseif_list elseif
+		/* empty */ { $<r.node>$ = nullptr; pl.log(":::EMPTY ELSEIF"); }
+	| elseif_list elseif {
+		pl.log(":::ELSEIF LIST");
+		if ($<r.node>1 == nullptr) {
+			// $<r.node>1 = $<r.node>2;
+			$<r.node>$ = $<r.node>2;
+			pl.log(":::FIRST TIME");
+		} else {
+			pl.log(":::CHAIN");
+			IfNode *deepest_if = find_deepest_if($<r.node>1);
+			deepest_if->else_node = new ElseNode($<r.node>2);
+			$<r.node>$ = $<r.node>1;
+		}
+	}
 ;
 
 elseif:
-		 elseif_start statement {
-	 }
+		 T_ELSEIF parentheses_expr statement { pl.log(":::ELSEIF");$<r.node>$ = new IfNode($<r.node>2, $<r.node>3, nullptr); }
 ;
 
-elseif_start :
-	T_ELSEIF parentheses_expr {
-	}
-;
 new_elseif_list:
 		/* empty */
 	| new_elseif_list new_elseif
@@ -794,20 +806,13 @@ new_elseif:
 ;
 
 else_single:
-		/* empty */ %prec low_prec {
-	}
-	| else_start statement {
-	}
-;
-
-else_start :
-	T_ELSE {
-	}
+		/* empty */ %prec low_prec { $<r.node>$ = nullptr; }
+	| T_ELSE statement { $<r.node>$ = new ElseNode($<r.node>2);	}
 ;
 
 new_else_single:
 		/* empty */
-	| else_start ':' inner_statement_list
+	| T_ELSE ':' inner_statement_list
 ;
 
 foreach_key:
@@ -1307,10 +1312,10 @@ expr:
 	| expr T_IS_EQUAL expr
 	| expr T_IS_NOT_EQUAL expr
 	| expr T_SPACESHIP expr
-	| expr '<' expr
-	| expr T_IS_SMALLER_OR_EQUAL expr
-	| expr '>' expr
-	| expr T_IS_GREATER_OR_EQUAL expr
+	| expr '<' expr { $<r.node>$ = new BinaryOperationNode("<", $<r.node>1, $<r.node>3); }
+	| expr T_IS_SMALLER_OR_EQUAL expr { $<r.node>$ = new BinaryOperationNode("<=", $<r.node>1, $<r.node>3); }
+	| expr '>' expr { $<r.node>$ = new BinaryOperationNode(">", $<r.node>1, $<r.node>3); }
+	| expr T_IS_GREATER_OR_EQUAL expr { $<r.node>$ = new BinaryOperationNode(">=", $<r.node>1, $<r.node>3); }
 	| expr T_INSTANCEOF class_name_reference
 	| parentheses_expr
 	/* we need a separate '(' new_expr ')' rule to avoid problems caused by a s/r conflict */
@@ -1346,7 +1351,7 @@ expr:
 ;
 
 parentheses_expr:
-		'(' expr ')'
+		'(' expr ')' { $<r.node>$ = $<r.node>2; }
 	| '(' yield_expr ')'
 ;
 
