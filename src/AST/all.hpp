@@ -12,6 +12,7 @@
 #include "ScalarNode.hpp"
 #include "IfNode.hpp"
 #include "ElseNode.hpp"
+#include "WhileNode.hpp"
 
 #include <iostream>
 void print_ast(Node *root, std::ostream &os) {

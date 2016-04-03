@@ -421,7 +421,9 @@ statement:
 		}
 		$<r.node>$ = new IfNode($<r.node>2, $<r.node>3, else_node); }
 	| T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';' {pl.log("if stmt new");}
-	| T_WHILE parentheses_expr while_statement {pl.log("while stmt");}
+	| T_WHILE parentheses_expr while_statement {
+		pl.log("while stmt");
+		$<r.node>$ = new WhileNode($<r.node>2, $<r.node>3); }
 	| do_while_loop {pl.log("do while stmt");}
 	| for_loop {pl.log("for loop stmt");}
 	| switch_start parentheses_expr switch_case_list {pl.log("switch stmt");}
@@ -771,8 +773,8 @@ to_do_loop_start :
 ;
 
 while_statement:
-		statement
-	| ':' inner_statement_list T_ENDWHILE ';'
+		statement { $<r.node>$ = $<r.node>1; }
+	| ':' inner_statement_list T_ENDWHILE ';' { $<r.node>$ = $<r.node>2; }
 ;
 
 elseif_list:
