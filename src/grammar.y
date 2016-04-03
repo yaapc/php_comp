@@ -669,6 +669,7 @@ for_loop:
 				forLoopFlag = false;
 				symbolsParser->goUp();
 			}
+			$<r.node>$ = new ForNode($<r.node>3, $<r.node>5, $<r.node>7, $<r.node>9);
 		}
 	| for_loop_start '(' for_expr	')' for_statement
 		{
@@ -1227,8 +1228,8 @@ expr_list:
 ;
 
 for_expr_list:
-		for_expr_list ',' expr_or_declaration
-	| expr_or_declaration
+		for_expr_list ',' expr_or_declaration { dynamic_cast<ListNode*>($<r.node>1)->add_node($<r.node>3); }
+	| expr_or_declaration { $<r.node>$ = (new ListNode())->add_node($<r.node>1); }
 ;
 
 expr_or_declaration:
@@ -1240,6 +1241,8 @@ expr_or_declaration:
 			var->setVariableType($<r.str>1);
 			symbolsParser->insertSymbol(var);
 			$<r.symbol>$ = var;
+			$<r.node>$ = (new ListNode)->add_node(new DeclarationNode(var))
+																 ->add_node(new AssignmentNode(new VariableNode(var), $<r.node>3));
 		}
 	| type T_VARIABLE '='
 		{

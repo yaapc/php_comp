@@ -13,6 +13,7 @@
 #include "IfNode.hpp"
 #include "ElseNode.hpp"
 #include "WhileNode.hpp"
+#include "ForNode.hpp"
 
 #include <iostream>
 void print_ast(Node *root, std::ostream &os) {
