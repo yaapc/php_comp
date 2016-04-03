@@ -779,15 +779,12 @@ while_statement:
 ;
 
 elseif_list:
-		/* empty */ { $<r.node>$ = nullptr; pl.log(":::EMPTY ELSEIF"); }
+		/* empty */ { $<r.node>$ = nullptr; }
 	| elseif_list elseif {
-		pl.log(":::ELSEIF LIST");
 		if ($<r.node>1 == nullptr) {
 			// $<r.node>1 = $<r.node>2;
 			$<r.node>$ = $<r.node>2;
-			pl.log(":::FIRST TIME");
 		} else {
-			pl.log(":::CHAIN");
 			IfNode *deepest_if = find_deepest_if($<r.node>1);
 			deepest_if->else_node = new ElseNode($<r.node>2);
 			$<r.node>$ = $<r.node>1;
@@ -796,7 +793,7 @@ elseif_list:
 ;
 
 elseif:
-		 T_ELSEIF parentheses_expr statement { pl.log(":::ELSEIF");$<r.node>$ = new IfNode($<r.node>2, $<r.node>3, nullptr); }
+		 T_ELSEIF parentheses_expr statement { $<r.node>$ = new IfNode($<r.node>2, $<r.node>3, nullptr); }
 ;
 
 new_elseif_list:
@@ -1242,7 +1239,7 @@ expr_or_declaration:
 			symbolsParser->insertSymbol(var);
 			$<r.symbol>$ = var;
 			$<r.node>$ = (new ListNode)->add_node(new DeclarationNode(var))
-																 ->add_node(new AssignmentNode(new VariableNode(var), $<r.node>3));
+																 ->add_node(new AssignmentNode(new VariableNode(var), $<r.node>4));
 		}
 	| type T_VARIABLE '='
 		{
@@ -1610,7 +1607,6 @@ reference_variable:
 	| reference_variable open_par expr close_par
 	| T_VARIABLE {
 		$<r.symbol>$ = symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1);
-		cout<<"SHIT:::" << ($<r.symbol>$ ? $<r.symbol>$->getName() : "SS") << endl;
 		$<r.node>$ = new VariableNode($<r.symbol>$); }
 	| '$' open_par expr close_par
 ;
