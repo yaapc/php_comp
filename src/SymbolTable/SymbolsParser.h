@@ -29,7 +29,9 @@ public :
 	//look up the symbol in current scope and up the hierarchy :
 	Symbol* lookUpSymbol(char* name, int lineNo, int colNo);
 	//look up a symbol starting from a given scope
+	Symbol* lookUpSymbol(Scope* scope, char* name, int lineNo, int colNo);
 	Symbol* lookUpSymbol(Scope* scope, char* name);
+
 
 	void goUp(); // go up the hierarchy of scopes
 

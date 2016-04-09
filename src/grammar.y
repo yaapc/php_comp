@@ -1214,7 +1214,7 @@ expr:
 		{
 			pl.log($<r.str>1,0);
 			typeChecker->checkVariable($<r.str>1,$<r.line_no>1,$<r.col_no>1);
-			$<r.node>$ = new VariableNode(symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1));
+			$<r.node>$ = new VariableNode(symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1, $<r.line_no>1, $<r.col_no>1));
 		}
 	| '(' T_PRIMITIVE ')' expr
 	| variable '=' expr { $<r.node>$ = new AssignmentNode($<r.node>1, $<r.node>3); }
@@ -1496,7 +1496,7 @@ reference_variable:
 		reference_variable '[' dim_offset ']'
 	| reference_variable open_par expr close_par
 	| T_VARIABLE {
-		$<r.symbol>$ = symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1);
+		$<r.symbol>$ = symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1, $<r.line_no>1, $<r.col_no>1);
 		$<r.node>$ = new VariableNode($<r.symbol>$); }
 	| '$' open_par expr close_par
 ;
