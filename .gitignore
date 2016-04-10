@@ -25,11 +25,11 @@ libiconv2.dll
 	
 libintl3.dll
 	
-php_comp.vcxproj
+*.vcxproj
 	
-php_comp.vcxproj.filters
+*.vcxproj.filters
 	
-php_comp.vcxproj.user
+*.vcxproj.user
 	
 regex2.dll
 	
