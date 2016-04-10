@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <Windows.h>
 
 using namespace std;
 extern void initSymbolsParser();
@@ -24,8 +25,8 @@ int main(int argc, char** argv) {
 	}
 	yyparse();
 
-	typeChecker->checkForwardDeclarations(); cout << "checkForwardDeclarations\n";
-	typeChecker->checkDependency(); cout << "checkDependency\n"; // check circular dependency and create dependency graph
+	//typeChecker->checkForwardDeclarations(); cout << "checkForwardDeclarations\n";
+	//typeChecker->checkDependency(); cout << "checkDependency\n"; // check circular dependency and create dependency graph
 	//typeChecker->checkInnerClasses(); cout << "checkInnerClasses\n";
 
 	symbolsParser->printSymbolTables(); cout << "printSymbolTables\n";// log symbol table
@@ -35,6 +36,9 @@ int main(int argc, char** argv) {
 	ofstream dot_file("symbol_table.dot");
 	generate_dot(symbolsParser->getRootScope(), dot_file);
 	dot_file.close();
+
+
+	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
 
 	cout << "compilation done" << endl;
 	return 0;

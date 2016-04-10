@@ -1,4 +1,4 @@
-%output = "src/grammar.cpp"
+%output = "grammar.cpp"
 %{
 	#include <iostream>
 	#include <fstream>
@@ -186,7 +186,9 @@
 
 
 %%
-program: start {pl.log("program"); ofstream ast_dot("ast.dot"); print_ast(tree, ast_dot); ast_dot.close(); }
+program: start {pl.log("program"); ofstream ast_dot("ast.dot"); print_ast(tree, ast_dot); ast_dot.close(); 
+				tree->generate_code();
+}
 
 start:
 		start_part { pl.log("start"); tree->add_nodes(dynamic_cast<ListNode*>($<r.node>1)->nodes); }
