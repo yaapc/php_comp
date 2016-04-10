@@ -2,6 +2,7 @@
 
 #include "Node.hpp"
 #include <iostream>
+#include "../Code Generator/AsmGenerator.h"
 
 class ScalarNode : public Node {
 public:
@@ -14,5 +15,10 @@ public:
        << int_value
        <<"\"]"
        << endl;
+  }
+  void generate_code(){
+	astLog.log("generate_code ScalarNode ("+to_string(int_value)+")");
+	AsmGenerator::li("t9",int_value);
+	AsmGenerator::push("t9");
   }
 };

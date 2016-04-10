@@ -16,4 +16,7 @@ public:
     body->print(os);
     os << self << "->" << int(body) << endl;
   }
+  virtual void generate_code(){
+	astLog.log("generate_code ElseNode");
+  }
 };

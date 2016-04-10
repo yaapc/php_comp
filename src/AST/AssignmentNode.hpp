@@ -18,4 +18,7 @@ public:
     os << self << "->" << int(lhs) << endl;
     os << self << "->" << int(rhs) << endl;
   }
+  virtual void generate_code(){
+	astLog.log("generate_code AssignmentNode");
+  }
 };

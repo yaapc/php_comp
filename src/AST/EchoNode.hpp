@@ -20,4 +20,8 @@ public:
     if (text) os << text;
     os << "\"]" <<endl;
   }
+
+  virtual void generate_code(){
+	astLog.log("generate_code EchoNode");
+  }
 };

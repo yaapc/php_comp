@@ -1,7 +1,7 @@
 #include "AsmGenerator.h"
 #include <string> 
 void AsmGenerator::initialize_file(){
-	assembly_code_file.open("AssemblyCode.asm");
+	assembly_code_file.open("src/Code Generator/AssemblyCode.asm");
 	data << ".data\n";
 	text << ".text\n" << ".globl main\n" << "main:\n\n";
 }
@@ -82,6 +82,52 @@ void AsmGenerator::binary_operation(string reg1,string reg2,string reg3,int oper
 
 }
 
+void AsmGenerator::comment(string comment_message)
+{
+	stringstream cmt(comment_message);
+	string line;
+	while (getline(cmt, line))
+	{
+		string c = " #";
+		c += line + "\n";
+		AsmGenerator::add_instruction(c);
+	}
+}
+
+void AsmGenerator::system_call(int system_call_code)
+{
+	AsmGenerator::li("v0",system_call_code);
+	text << "syscall\n";
+}
+
+void AsmGenerator::print_sring(int string_label)
+{
+	AsmGenerator::li("a0",string_label);
+	AsmGenerator::system_call(4);
+}
+
+void AsmGenerator::print_int(int printed_int)
+{
+	AsmGenerator::li("a0",printed_int);
+	AsmGenerator::system_call(1);
+}
+
+void AsmGenerator::print_reg(string reg)
+{
+	AsmGenerator::move("a0",reg);
+	AsmGenerator::system_call(1);
+}
+
+
+void AsmGenerator::move(string dest_reg,string source_reg)
+{
+	string c = "move $";
+	c+=dest_reg;
+	c+=",$";
+	c+=source_reg;
+	c+="\n";
+	AsmGenerator::add_instruction(c);
+}
 
 ofstream AsmGenerator::assembly_code_file;
 stringstream AsmGenerator::text;

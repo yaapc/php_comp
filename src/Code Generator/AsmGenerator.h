@@ -33,6 +33,18 @@ public:
 	static void binary_operation(string reg1,string reg2,string reg3,int operation);
 
 	static void add_instruction(string instruction);
+
+	static void comment(string comment_meesage);
+
+	static void system_call(int systam_call_code);
+
+	static void print_sring (int string_label);
+
+	static void print_int (int printed_int);
+
+	static void print_reg (string reg);
+
+	static void move(string dest_reg ,string source_reg);
 };
 
 

@@ -7,6 +7,7 @@
 #include <fstream>
 #include <stdio.h>
 #include <Windows.h>
+#include <unistd.h>
 
 using namespace std;
 extern void initSymbolsParser();
@@ -39,6 +40,8 @@ int main(int argc, char** argv) {
 
 
 	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
+
+	system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");
 
 	cout << "compilation done" << endl;
 	return 0;

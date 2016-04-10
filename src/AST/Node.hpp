@@ -13,7 +13,7 @@ public:
 	}
 
 	virtual void generate_code(){
-		astLog.log("generate_code for Node (not implemented)");
+		astLog.log("generate_code Node (not implemented)");
 	}
 
 	virtual void print(ostream& os) {
