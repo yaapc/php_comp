@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 	symbolsParser->printSymbolTables(); cout << "printSymbolTables\n";// log symbol table
 	errorRec.printErrQueue(); cout << "printErrQueue\n";
 
-	tree->type_checking(); cout << "TypeChecking Pass";
+	tree->type_checking(); cout << "TypeChecking Pass\n";
 
 	//Visualizing
 	ofstream dot_file("symbol_table.dot");

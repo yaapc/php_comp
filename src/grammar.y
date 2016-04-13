@@ -197,7 +197,7 @@ start_part:
 	optional_inline_html T_OPEN_TAG top_statement_list T_CLOSE_TAG optional_inline_html	{
 		pl.log("start part");
 		auto list = new ListNode();
-		list->add_node($<r.node>1);
+		//list->add_node($<r.node>1);
 		list->add_nodes(dynamic_cast<ListNode*>($<r.node>3)->nodes);
 		list->add_node($<r.node>5);
 	 	$<r.node>$ = list; }
