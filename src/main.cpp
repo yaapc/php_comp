@@ -2,6 +2,7 @@
 #include "grammar.hpp"
 #include "generate_dot.hpp"
 #include "TypeChecker.h"
+#include "AST\ListNode.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -12,6 +13,7 @@ extern void initSymbolsParser();
 extern SymbolsParser * symbolsParser;
 extern TypeChecker * typeChecker;
 extern void initTypeChecker();
+extern ListNode* tree;
 
 int main(int argc, char** argv) {
 	initSymbolsParser();
@@ -30,6 +32,8 @@ int main(int argc, char** argv) {
 
 	symbolsParser->printSymbolTables(); cout << "printSymbolTables\n";// log symbol table
 	errorRec.printErrQueue(); cout << "printErrQueue\n";
+
+	tree->type_checking(); cout << "TypeChecking Pass";
 
 	//Visualizing
 	ofstream dot_file("symbol_table.dot");

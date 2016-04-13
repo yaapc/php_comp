@@ -19,4 +19,14 @@ public:
        <<"\"]"
        << endl;
   }
+
+  bool type_checking() {
+	  if (this->variable->getVariableType() == "int") {
+		  this->nodeType = TypesTable::getInstance()->getType(INTEGER_TYPE_ID);
+	  }
+	  else {
+		  this->nodeType = TypesTable::getInstance()->getType(ERROR_TYPE_ID);
+	  }
+	  return true;
+  }
 };
