@@ -9,6 +9,8 @@
 #include <Windows.h>
 #include <unistd.h>
 
+#define SIMULATOR 1
+
 using namespace std;
 extern void initSymbolsParser();
 extern SymbolsParser * symbolsParser;
@@ -41,7 +43,13 @@ int main(int argc, char** argv) {
 
 	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
 
-	system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");
+	if (SIMULATOR == 1){
+		system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");
+	}else{
+		system("QtSpim.exe -a ./src/\"Code Generator\"/mips1.asm");
+	}
+
+
 
 	cout << "compilation done" << endl;
 	return 0;

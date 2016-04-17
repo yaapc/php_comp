@@ -9,6 +9,9 @@ int yylex(void);
 int yyparse();
 void yyerror(const char *);
 
+#define SIMULATOR 1
+
+
 enum primitive {
 	T_PRIMITIVE_INTEGER = 1, T_PRIMITIVE_FLOAT, T_PRIMITIVE_DOUBLE, T_PRIMITIVE_BOOLEAN, T_PRIMITIVE_STRING, T_PRIMITIVE_CHAR, T_PRIMITIVE_VOID
 };

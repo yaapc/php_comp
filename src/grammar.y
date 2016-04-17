@@ -1248,10 +1248,10 @@ expr:
 	| expr '^' expr
 	| expr '.' expr
 	| expr '+' expr { $<r.node>$ = new BinaryOperationNode("+", $<r.node>1, $<r.node>3); }
-	| expr '-' expr
+	| expr '-' expr	{ $<r.node>$ = new BinaryOperationNode("-", $<r.node>1, $<r.node>3); }
 	| expr '*' expr { $<r.node>$ = new BinaryOperationNode("*", $<r.node>1, $<r.node>3); }
-	| expr '/' expr
-	| expr '%' expr
+	| expr '/' expr { $<r.node>$ = new BinaryOperationNode("/", $<r.node>1, $<r.node>3); }
+	| expr '%' expr { $<r.node>$ = new BinaryOperationNode("%", $<r.node>1, $<r.node>3); }
 	| expr T_SL expr
 	| expr T_SR expr
 	| expr T_POW expr
@@ -1261,7 +1261,7 @@ expr:
 	| '~' expr
 	| expr T_IS_IDENTICAL expr
 	| expr T_IS_NOT_IDENTICAL expr
-	| expr T_IS_EQUAL expr
+	| expr T_IS_EQUAL expr { $<r.node>$ = new BinaryOperationNode("==", $<r.node>1, $<r.node>3); }
 	| expr T_IS_NOT_EQUAL expr
 	| expr T_SPACESHIP expr
 	| expr '<' expr { $<r.node>$ = new BinaryOperationNode("<", $<r.node>1, $<r.node>3); }
@@ -1360,7 +1360,7 @@ ctor_arguments:
 
 common_scalar:
 		T_LNUMBER { $<r.node>$ = new ScalarNode($<r.i>1); }
-	| T_DNUMBER
+	| T_DNUMBER   { $<r.node>$ = new ScalarNode($<r.f>1);}
 	| T_TRUE
 	| T_FALSE
 	| T_CONSTANT_ENCAPSED_STRING
