@@ -16,4 +16,7 @@ public:
        << "\"]"
        << endl;
   }
+  virtual void generate_code(){
+	astLog.log("generate_code DeclarationNode");
+  }
 };

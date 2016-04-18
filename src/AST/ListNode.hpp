@@ -3,6 +3,7 @@
 #include "Node.hpp"
 #include <vector>
 #include <iostream>
+#include "../Code Generator/AsmGenerator.h"
 
 using namespace std;
 
@@ -38,5 +39,13 @@ public:
       node->print(os);
       os << self << "->" << (int)node << endl;
     }
+  }
+
+   void generate_code(){
+	astLog.log("generate_code ListNode");
+	for (auto &node : nodes) {
+		if (node == nullptr) continue;
+		node->generate_code();
+	}
   }
 };

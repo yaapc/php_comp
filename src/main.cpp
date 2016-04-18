@@ -2,15 +2,21 @@
 #include "grammar.hpp"
 #include "generate_dot.hpp"
 #include "TypeChecker.h"
+#include "AST\ListNode.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <Windows.h>
+#include <unistd.h>
+
+#define SIMULATOR 1
 
 using namespace std;
 extern void initSymbolsParser();
 extern SymbolsParser * symbolsParser;
 extern TypeChecker * typeChecker;
+extern ListNode *tree;
 extern void initTypeChecker();
 
 int main(int argc, char** argv) {
@@ -35,6 +41,24 @@ int main(int argc, char** argv) {
 	ofstream dot_file("symbol_table.dot");
 	generate_dot(symbolsParser->getRootScope(), dot_file);
 	dot_file.close();
+
+
+	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
+
+
+	AsmGenerator::initialize_file();
+	tree->generate_code();
+	AsmGenerator::generate_code_file();
+
+	if (SIMULATOR == 1){
+		system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");
+	}
+
+	if (SIMULATOR == 2){
+		system("QtSpim.exe -a ./src/\"Code Generator\"/mips1.asm");
+	}
+
+
 
 	cout << "compilation done" << endl;
 	return 0;
