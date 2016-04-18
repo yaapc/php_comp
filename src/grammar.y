@@ -186,9 +186,7 @@
 
 
 %%
-program: start {pl.log("program"); ofstream ast_dot("ast.dot"); print_ast(tree, ast_dot); ast_dot.close(); 
-				tree->generate_code();
-}
+program: start {pl.log("program"); ofstream ast_dot("ast.dot"); print_ast(tree, ast_dot); ast_dot.close(); }
 
 start:
 		start_part { pl.log("start"); tree->add_nodes(dynamic_cast<ListNode*>($<r.node>1)->nodes); }
@@ -1361,9 +1359,9 @@ ctor_arguments:
 common_scalar:
 		T_LNUMBER { $<r.node>$ = new ScalarNode($<r.i>1); }
 	| T_DNUMBER   { $<r.node>$ = new ScalarNode($<r.f>1);}
-	| T_TRUE
-	| T_FALSE
-	| T_CONSTANT_ENCAPSED_STRING
+	| T_TRUE	  { $<r.node>$ = new ScalarNode(bool(true));}
+	| T_FALSE	  { $<r.node>$ = new ScalarNode(bool(false));}
+	| T_CONSTANT_ENCAPSED_STRING  { $<r.node>$ = new ScalarNode(std::string($<r.str>1));}
 	| T_LINE
 	| T_FILE
 	| T_DIR

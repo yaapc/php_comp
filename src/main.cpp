@@ -2,6 +2,7 @@
 #include "grammar.hpp"
 #include "generate_dot.hpp"
 #include "TypeChecker.h"
+#include "AST\ListNode.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -15,6 +16,7 @@ using namespace std;
 extern void initSymbolsParser();
 extern SymbolsParser * symbolsParser;
 extern TypeChecker * typeChecker;
+extern ListNode *tree;
 extern void initTypeChecker();
 
 int main(int argc, char** argv) {
@@ -28,8 +30,8 @@ int main(int argc, char** argv) {
 	}
 	yyparse();
 
-	//typeChecker->checkForwardDeclarations(); cout << "checkForwardDeclarations\n";
-	//typeChecker->checkDependency(); cout << "checkDependency\n"; // check circular dependency and create dependency graph
+	typeChecker->checkForwardDeclarations(); cout << "checkForwardDeclarations\n";
+	typeChecker->checkDependency(); cout << "checkDependency\n"; // check circular dependency and create dependency graph
 	//typeChecker->checkInnerClasses(); cout << "checkInnerClasses\n";
 
 	symbolsParser->printSymbolTables(); cout << "printSymbolTables\n";// log symbol table
@@ -43,9 +45,16 @@ int main(int argc, char** argv) {
 
 	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
 
+
+	AsmGenerator::initialize_file();
+	tree->generate_code();
+	AsmGenerator::generate_code_file();
+
 	if (SIMULATOR == 1){
 		system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");
-	}else{
+	}
+
+	if (SIMULATOR == 2){
 		system("QtSpim.exe -a ./src/\"Code Generator\"/mips1.asm");
 	}
 

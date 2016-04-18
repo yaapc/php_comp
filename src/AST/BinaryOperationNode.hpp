@@ -25,17 +25,26 @@ public:
 
   virtual void generate_code(){
 	astLog.log("generate_code BinaryOperationNode ("+string(op_type)+")");
+	AsmGenerator::comment("Binary Operation:");
+
+
 	string t0 = "t0";
 	string t1 = "t1";
 	string t2 = "t2";
 
 	//TODO get the type of right and left node 
-	int type = 3;
+	int type = 1;
 
+	AsmGenerator::comment("Binary Operation Left node:");
 	left->generate_code();
+	AsmGenerator::comment("Binary Operation Left node.");
+
+	AsmGenerator::comment("Binary Operation right node:");
 	right->generate_code();
+	AsmGenerator::comment("Binary Operation right node.");
 
 
+	AsmGenerator::comment("Binary Operation Calculation");
 	if (type == 1){ //Integer
 
 		AsmGenerator::pop(t1); //get the result of right and put it in reg t1
@@ -175,5 +184,7 @@ public:
 			AsmGenerator::print_reg(t2);
 		}
 	}
+	AsmGenerator::comment("Binary Operation Calculation.");
+	AsmGenerator::comment("Binary Operation.");
   }
 };

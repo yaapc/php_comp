@@ -28,15 +28,32 @@ void AsmGenerator::generate_code_file()\
 
 string AsmGenerator::store_float(float value)
 {
-	string data_name = "fp"+to_string(temp_float_count);
+	string data_label = "fp_"+to_string(floats_count++);
 	string c="";
-	c+= data_name;
+	c+= data_label;
 	c+=": .float ";
 	c+=to_string(value);
-	c+="\n";
-	data << c;
-	temp_float_count++;
-	return data_name;
+	AsmGenerator::add_data(c);
+
+	return data_label;
+}
+
+string AsmGenerator::store_string(string value)
+{
+	string data_label;
+	if (strings_map.find(value) == strings_map.end()){
+		data_label = "string_" + to_string(strings_map[value]);
+	}else{
+		data_label = "string_" + to_string(strings_count);
+		strings_map[value] = strings_count++;
+		string c="";
+		c+= data_label;
+		c+=": .asciiz \"";
+		c+=value;
+		c+="\"";
+		AsmGenerator::add_data(c);
+	}
+	return data_label;
 }
 
 void AsmGenerator::li(string reg,int value)
@@ -66,6 +83,15 @@ void AsmGenerator::f_li(string reg,float value)
 	}
 }
 
+void AsmGenerator::la(string reg,string value)
+{
+	string c="la $";
+	c+=reg;
+	c+=", ";
+	c+=value;
+	AsmGenerator::add_instruction(c);
+}
+
 void AsmGenerator::add_label (string label_name)
 {
 	AsmGenerator::add_instruction(label_name+":");
@@ -82,33 +108,30 @@ void AsmGenerator::jump_label (string label_name)
 
 void AsmGenerator::push(string source_register)
 {
-	AsmGenerator::comment("-----------------------");
-	AsmGenerator::add_instruction("sub $sp,$sp,4");
+
+	AsmGenerator::add_instruction("\tsub $sp,$sp,4");
 	string c="sw $";
 	c+=source_register;
 	c+=", 0($sp)";
-	AsmGenerator::add_instruction(c);
-	AsmGenerator::comment("-----------------------");
+	AsmGenerator::add_instruction("\t"+c);
 }
 
 void AsmGenerator::pop(string destination_register)
 {
 	string c = "lw $";
 	c += destination_register;
-	c += ", 0($sp)\n";
+	c += ", 0($sp)";
 	AsmGenerator::add_instruction(c);
-	AsmGenerator::add_instruction("add $sp,$sp,4\n");
+	AsmGenerator::add_instruction("add $sp,$sp,4");
 }
 
 void AsmGenerator::f_push(string source_register)
 {
-	AsmGenerator::comment("-----------------------");
-	AsmGenerator::add_instruction("sub $sp,$sp,4");
+	AsmGenerator::add_instruction("\tsub $sp,$sp,4");
 	string c="s.s $";
 	c+=source_register;
 	c+=", 0($sp)";
-	AsmGenerator::add_instruction(c);
-	AsmGenerator::comment("-----------------------");
+	AsmGenerator::add_instruction("\t"+c);
 }
 
 void AsmGenerator::f_pop(string destination_register)
@@ -118,6 +141,17 @@ void AsmGenerator::f_pop(string destination_register)
 	c+=", 0($sp)";
 	AsmGenerator::add_instruction(c);
 	AsmGenerator::add_instruction("add $sp,$sp,4");
+}
+
+void AsmGenerator::beq(string reg1,string reg2,string label)
+{
+	string c ="";
+	c+="beq $";
+	c+=reg1;
+	c+=" ,$";
+	c+=reg2;
+	c+=" ," + label;
+	AsmGenerator::add_instruction(c);
 }
 
 void AsmGenerator::binary_operation(string dest_reg,string reg1,string reg2,int operation)
@@ -353,12 +387,18 @@ void AsmGenerator::f_greater_or_equal_operation(string dest_reg,string reg1,stri
 	temp_label_count++;
 }
 
-
 void AsmGenerator::add_instruction(string instruction)
 {
 	instruction += "\n";
 	text << instruction;
 }
+
+void AsmGenerator::add_data(string data_instruction)
+{
+	data_instruction += "\n";
+	data << data_instruction;
+}
+
 
 void AsmGenerator::comment(string comment_message)
 {
@@ -366,8 +406,8 @@ void AsmGenerator::comment(string comment_message)
 	string line;
 	while (getline(cmt, line))
 	{
-		string c = "#";
-		c += line;
+		string c = "#-----------";
+		c+= line;
 		AsmGenerator::add_instruction(c);
 	}
 }
@@ -423,5 +463,10 @@ void AsmGenerator::f_move(string dest_reg,string source_reg)
 ofstream AsmGenerator::assembly_code_file;
 stringstream AsmGenerator::text;
 stringstream AsmGenerator::data;
-int AsmGenerator::temp_label_count = 0;
-int AsmGenerator::temp_float_count = 0;
+map<string,int> AsmGenerator::strings_map;
+
+int AsmGenerator::temp_label_count			= 0;
+int AsmGenerator::floats_count				= 0;
+int AsmGenerator::strings_count				= 0;
+int AsmGenerator::if_temp_label_count		= 0;
+int AsmGenerator::else_temp_label_count		= 0;

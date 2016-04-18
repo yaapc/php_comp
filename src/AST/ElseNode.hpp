@@ -18,5 +18,8 @@ public:
   }
   virtual void generate_code(){
 	astLog.log("generate_code ElseNode");
+	AsmGenerator::comment("Else Node:");
+	body->generate_code();
+	AsmGenerator::comment("Else Node.");
   }
 };

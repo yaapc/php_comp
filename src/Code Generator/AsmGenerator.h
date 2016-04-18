@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <map>
 
 
 using namespace std;
@@ -17,7 +18,12 @@ private:
 	static stringstream data;
 
 	static int temp_label_count;
-	static int temp_float_count;
+	static int floats_count;
+	static int strings_count;
+
+	static map<string,int> strings_map;
+
+	
 
 public:
 	static void initialize_file(); 
@@ -26,10 +32,12 @@ public:
 	static void generate_code_file();
 
 	static string store_float				(float value);
+	static string store_string				(string value);
 
 	static void li							(string reg,int value);
-
 	static void f_li						(string reg,float value);
+
+	static void la							(string reg,string value);
 
 	static void add_label					(string label_name);
 
@@ -40,6 +48,8 @@ public:
 
 	static void pop							(string destination_register);
 	static void f_pop						(string destination_register);
+
+	static void beq							(string reg1,string reg2,string label);
 
 	static void binary_operation			(string dest_reg,string reg1,string reg2,int operation);
 	static void f_binary_operation			(string dest_reg,string reg1,string reg2,int operation);
@@ -57,6 +67,8 @@ public:
 
 	static void add_instruction				(string instruction);
 
+	static void add_data					(string data_instruction);
+
 	static void comment						(string comment_meesage);
 
 	static void system_call					(int systam_call_code);
@@ -70,6 +82,9 @@ public:
 
 	static void move						(string dest_reg ,string source_reg);
 	static void f_move						(string dest_reg ,string source_reg);
+
+	static int if_temp_label_count;
+	static int else_temp_label_count;
 };
 
 

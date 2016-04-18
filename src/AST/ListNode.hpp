@@ -43,11 +43,9 @@ public:
 
    void generate_code(){
 	astLog.log("generate_code ListNode");
-	AsmGenerator::initialize_file();
 	for (auto &node : nodes) {
 		if (node == nullptr) continue;
 		node->generate_code();
 	}
-	AsmGenerator::generate_code_file();
   }
 };
