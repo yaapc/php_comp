@@ -7,14 +7,11 @@ src/lexer.cpp
 grammar.cpp
 grammar.hpp
 grammar.output
-lexer_log.txt
-parser_log.txt
-scope.txt
-errors.txt
-graph_log.txt
+*.txt
 *.php
 *.dot
 *.svg
+*.asm
 Debug/
 
 Docs/
@@ -31,8 +28,15 @@ libintl3.dll
 
 *.vcxproj.user
 
+*.sln
+*.sdf
+*.suo
+*.opensdf
+
 regex2.dll
 
 src/tmp-__-
 
 tmp-__-
+
+.gitattributes
