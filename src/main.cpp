@@ -19,6 +19,8 @@ extern TypeChecker * typeChecker;
 extern ListNode *tree;
 extern void initTypeChecker();
 
+void print_ast(Node *root, std::ostream &os);
+
 int main(int argc, char** argv) {
 	initSymbolsParser();
 	initTypeChecker();
@@ -29,7 +31,17 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 	yyparse();
+
+	ofstream ast_dot("ast.dot");
+	print_ast(tree, ast_dot);
+	ast_dot.close();
 	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
+	
+	ofstream dot_file("symbol_table.dot");
+	generate_dot(symbolsParser->getRootScope(), dot_file);
+	dot_file.close();
+	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg symbol_table.dot -o symbol_table.svg", NULL, SW_HIDE);
+
 	typeChecker->checkForwardDeclarations(); cout << "checkForwardDeclarations\n";
 	typeChecker->checkDependency(); cout << "checkDependency\n"; // check circular dependency and create dependency graph
 	//typeChecker->checkInnerClasses(); cout << "checkInnerClasses\n";
@@ -38,13 +50,6 @@ int main(int argc, char** argv) {
 	errorRec.printErrQueue(); cout << "printErrQueue\n";
 
 	tree->type_checking(); cout << "TypeChecking Pass\n";
-
-	//Visualizing
-	ofstream dot_file("symbol_table.dot");
-	generate_dot(symbolsParser->getRootScope(), dot_file);
-	dot_file.close();
-
-
 
 
 
@@ -64,4 +69,12 @@ int main(int argc, char** argv) {
 
 	cout << "compilation done" << endl;
 	return 0;
+}
+
+void print_ast(Node *root, std::ostream &os) {
+  cout<< "Printing Ast\n";
+  os << "digraph AST {\n";
+  root->print(os);
+  os << "}\n";
+  cout<< "Printing Done\n";
 }

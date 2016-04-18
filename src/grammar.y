@@ -186,7 +186,7 @@
 
 
 %%
-program: start {pl.log("program"); ofstream ast_dot("ast.dot"); print_ast(tree, ast_dot); ast_dot.close(); }
+program: start {pl.log("program");}
 
 start:
 		start_part { pl.log("start"); tree->add_nodes(dynamic_cast<ListNode*>($<r.node>1)->nodes); }
@@ -206,7 +206,7 @@ start_part:
 optional_inline_html:
 		T_INLINE_HTML {
 			pl.log("inline_html");
-			$<r.node>$ = new EchoNode(new ScalarNode($<r.str>1)); }
+			$<r.node>$ = new EchoNode(new ScalarNode(string($<r.str>1))); }
 	| /* empty */ %prec low_prec { $<r.node>$ = nullptr; }
 ;
 
