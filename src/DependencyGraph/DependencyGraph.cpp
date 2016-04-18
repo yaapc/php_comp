@@ -13,6 +13,7 @@ DependencyGraph::DependencyGraph(ErrorRecovery* errRecovery){
 	this->errRecovery = errRecovery;
 	this->strCComp = new list<int>[MAX_NUMBER_OF_SCC];
 	this->compoCounter = -1;
+	this->totalNodes = 0;
 }
 
 void DependencyGraph::insertIntoNodes(char* nodeName, Symbol* nodeSymbol, string dependName){
