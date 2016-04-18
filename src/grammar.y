@@ -1220,11 +1220,11 @@ expr:
 	| variable '=' expr { $<r.node>$ = new AssignmentNode($<r.node>1, $<r.node>3); }
 	| new_expr		%prec _def_val_
 	| T_CLONE expr
-	| variable T_PLUS_EQUAL expr
-	| variable T_MINUS_EQUAL expr
-	| variable T_MUL_EQUAL expr
-	| variable T_DIV_EQUAL expr
-	| variable T_CONCAT_EQUAL expr
+	| variable T_PLUS_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("+", $<r.node>1, $<r.node>3)); }
+	| variable T_MINUS_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("-", $<r.node>1, $<r.node>3)); }
+	| variable T_MUL_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("*", $<r.node>1, $<r.node>3)); }
+	| variable T_DIV_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("/", $<r.node>1, $<r.node>3)); }
+	| variable T_CONCAT_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode(".", $<r.node>1, $<r.node>3)); }
 	| variable T_MOD_EQUAL expr
 	| variable T_AND_EQUAL expr
 	| variable T_OR_EQUAL expr
