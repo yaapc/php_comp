@@ -206,7 +206,7 @@ start_part:
 optional_inline_html:
 		T_INLINE_HTML {
 			pl.log("inline_html");
-			$<r.node>$ = new EchoNode($<r.str>1); }
+			$<r.node>$ = new EchoNode(new ScalarNode($<r.str>1)); }
 	| /* empty */ %prec low_prec { $<r.node>$ = nullptr; }
 ;
 
@@ -1171,8 +1171,8 @@ property_declaration:
 ;
 
 expr_list:
-		expr_list ',' expr
-	| expr
+		expr_list ',' expr { dynamic_cast<ListNode*>($<r.node>1)->add_node($<r.node>3); }
+	| expr { $<r.node>$ = (new ListNode())->add_node($<r.node>1); }
 ;
 
 for_expr_list:
