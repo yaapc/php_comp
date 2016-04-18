@@ -92,7 +92,7 @@ public:
   }
   void generate_code(){
 	astLog.log("generate_code ScalarNode ("+value.to_string()+")");
-	AsmGenerator::comment("Scaler Node:");
+	AsmGenerator::comment("<Scaler Node");
 	switch (value.type)
 		{
 		case 1:
@@ -116,7 +116,7 @@ public:
 			AsmGenerator::push("t0");
 			break;
 		}
-	AsmGenerator::comment("Scaler Node.");
+	AsmGenerator::comment("Scaler Node/>");
 	}
 
 

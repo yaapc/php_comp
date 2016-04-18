@@ -23,15 +23,18 @@ public:
   virtual void generate_code(){
 	astLog.log("generate_code EchoNode");
 
-	AsmGenerator::comment("Echo Node:");
+	AsmGenerator::comment("<Echo Node");
 
 	if (expression){
 		string t0 = "t0";
-		AsmGenerator::comment("Experesions Node:");
+		AsmGenerator::comment("<Experesions Node");
 		expression->generate_code();
 		AsmGenerator::pop(t0);
 		AsmGenerator::print_reg(t0);
+		AsmGenerator::comment("Experesions Node/>");
 	}
+
+	AsmGenerator::comment("Echo Node/>");
 
   }
 };
