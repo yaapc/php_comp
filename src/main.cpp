@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 	yyparse();
-
+	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
 	typeChecker->checkForwardDeclarations(); cout << "checkForwardDeclarations\n";
 	typeChecker->checkDependency(); cout << "checkDependency\n"; // check circular dependency and create dependency graph
 	//typeChecker->checkInnerClasses(); cout << "checkInnerClasses\n";
@@ -37,13 +37,15 @@ int main(int argc, char** argv) {
 	symbolsParser->printSymbolTables(); cout << "printSymbolTables\n";// log symbol table
 	errorRec.printErrQueue(); cout << "printErrQueue\n";
 
+	tree->type_checking(); cout << "TypeChecking Pass\n";
+
 	//Visualizing
 	ofstream dot_file("symbol_table.dot");
 	generate_dot(symbolsParser->getRootScope(), dot_file);
 	dot_file.close();
 
 
-	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
+
 
 
 	AsmGenerator::initialize_file();

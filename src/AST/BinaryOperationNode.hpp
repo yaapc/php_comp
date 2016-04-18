@@ -2,13 +2,18 @@
 
 #include "Node.hpp"
 #include <iostream>
+
 #include "../Code Generator/AsmGenerator.h"
+//#include "../TypeSystem/TypeExpression.hpp"
 
 class BinaryOperationNode : public Node {
 public:
   Node *left, *right;
   char* op_type;
-  BinaryOperationNode(char* op, Node *lft, Node *rgt) : left(lft), right(rgt), op_type(op) {}
+
+  BinaryOperationNode(char* op, Node *lft, Node *rgt) : left(lft), right(rgt), op_type(op) {
+	  nodeType = nullptr;
+  }
 
   virtual void print(ostream &os) {
 	int self = int(this);
@@ -32,7 +37,7 @@ public:
 	string t1 = "t1";
 	string t2 = "t2";
 
-	//TODO get the type of right and left node 
+	//TODO get the type of right and left node
 	int type = 1;
 
 	AsmGenerator::comment("Binary Operation Left node:");
@@ -91,18 +96,18 @@ public:
 			AsmGenerator::print_reg(t2);
 		}
 
-		if (strcmp(op_type, ">") == 0){ 
+		if (strcmp(op_type, ">") == 0){
 			AsmGenerator::less_than_operation(t2, t1, t0); //perform slt and put the result in t2 (true 1 or false 0)
 			AsmGenerator::push(t2);						//push t2 (the result) into stack
 			AsmGenerator::print_reg(t2);
 		}
 
-		if (strcmp(op_type, ">=") == 0){ 
+		if (strcmp(op_type, ">=") == 0){
 			AsmGenerator::greater_or_equal_operation(t2, t0, t1); //perform greater or equal and put the result in t2 (true 1 or false 0)
 			AsmGenerator::push(t2);						//push t2 (the result) into stack
 		}
 
-		if (strcmp(op_type, "<=") == 0){ 
+		if (strcmp(op_type, "<=") == 0){
 			AsmGenerator::greater_or_equal_operation(t2, t1, t0); //perform slt and put the result in t2
 			AsmGenerator::push(t2);						//push t2 (the result) into stack
 		}
@@ -151,34 +156,34 @@ public:
 		}
 
 		if (strcmp(op_type, "==") == 0){
-			AsmGenerator::f_equal_operation(t2,f0,f1,false); 
+			AsmGenerator::f_equal_operation(t2,f0,f1,false);
 			AsmGenerator::push(t2);
 		}
 
 		if (strcmp(op_type, "!=") == 0){
-			AsmGenerator::f_equal_operation(t2,f0,f1,true); 
+			AsmGenerator::f_equal_operation(t2,f0,f1,true);
 			AsmGenerator::push(t2);
 		}
 
 		if (strcmp(op_type, "<") == 0){
-			AsmGenerator::f_less_than_operation(t2, f0, f1);  
-			AsmGenerator::push(t2);						
-			AsmGenerator::print_reg(t2);	
-		}
-
-		if (strcmp(op_type, ">") == 0){ 
-			AsmGenerator::f_greater_than_operation(t2, f0, f1);  
-			AsmGenerator::push(t2);						
-			AsmGenerator::print_reg(t2);	
-		}
-
-		if (strcmp(op_type, ">=") == 0){ 
-			AsmGenerator::f_greater_or_equal_operation(t2, f0, f1); 
+			AsmGenerator::f_less_than_operation(t2, f0, f1);
 			AsmGenerator::push(t2);
 			AsmGenerator::print_reg(t2);
 		}
 
-		if (strcmp(op_type, "<=") == 0){ 
+		if (strcmp(op_type, ">") == 0){
+			AsmGenerator::f_greater_than_operation(t2, f0, f1);
+			AsmGenerator::push(t2);
+			AsmGenerator::print_reg(t2);
+		}
+
+		if (strcmp(op_type, ">=") == 0){
+			AsmGenerator::f_greater_or_equal_operation(t2, f0, f1);
+			AsmGenerator::push(t2);
+			AsmGenerator::print_reg(t2);
+		}
+
+		if (strcmp(op_type, "<=") == 0){
 			AsmGenerator::f_less_or_equal_operation(t2, f0, f1);
 			AsmGenerator::push(t2);
 			AsmGenerator::print_reg(t2);
@@ -186,5 +191,17 @@ public:
 	}
 	AsmGenerator::comment("Binary Operation Calculation.");
 	AsmGenerator::comment("Binary Operation.");
+  }
+
+  TypeExpression* getType() {
+	  if (!this->nodeType)
+		  this->type_checking();
+	  return this->nodeType;
+  }
+
+
+  bool type_checking() {
+	  TypeExpression* binType = this->left->getNodeType()->opAggregate(this->right->getNodeType()->getTypeId());
+	  return true;
   }
 };

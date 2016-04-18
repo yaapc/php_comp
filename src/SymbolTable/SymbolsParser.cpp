@@ -87,7 +87,7 @@ Symbol* SymbolsParser::lookUpSymbol(char* name,int lineNo,int colNo){
 /*
  * looks up a symbol from a given scope 
  */
-Symbol* SymbolsParser::lookUpSymbol(Scope* scope, char* name){
+Symbol* SymbolsParser::lookUpSymbol(Scope* scope, char* name, int lineNo, int colNo){
 	Scope* scanningScope = scope; // starts searching from the current scope
 	while (scanningScope != nullptr){ // while not out of root scope
 		//invoke @scanningScope's symbolTable lookup Method
@@ -97,9 +97,30 @@ Symbol* SymbolsParser::lookUpSymbol(Scope* scope, char* name){
 		else
 			scanningScope = scanningScope->getParentScope(); // let's search outer scope 
 	}
+	int errId = this->errRecovery->errQ->enqueue(lineNo, colNo, "Undefined", name);
+	//if a symbol not found, insert an error symbol for forward declaration
+	this->insertSymbol(new ErrorSymbol(name, colNo, lineNo, errId));
+
 	return nullptr;
 }
 
+
+/*
+ * looks up a symbole from a given scope
+ * invoked when searching for symbols in Scopes.
+ */
+Symbol* SymbolsParser::lookUpSymbol(Scope* scope, char* name) {
+	Scope* scanningScope = scope; // starts searching from the current scope
+	while (scanningScope != nullptr) { // while not out of root scope
+									   //invoke @scanningScope's symbolTable lookup Method
+		Symbol* symbol = scanningScope->getSymbolTable()->lookup(name);
+		if (symbol)
+			return symbol;
+		else
+			scanningScope = scanningScope->getParentScope(); // let's search outer scope 
+	}
+	return nullptr;
+}
 
 void SymbolsParser::goUp(){
 	this->currScope = this->currScope->getParentScope();

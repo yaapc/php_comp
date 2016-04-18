@@ -1,3 +1,13 @@
+/* i hate compilers */
+/* i hate visual studio */
+/* if you fear/hate sharing your ideas, don't use my stupid tool */
+
+
+/* i hate compilers */
+/* i hate visual studio */
+/* if you fear/hate sharing your ideas, don't use my stupid tool */
+
+
 %{
   #include <unistd.h>
   #include <iostream>
@@ -8,6 +18,7 @@
   #include "grammar.hpp"
   #include "definitions.h"
   #include "Logger.hpp"
+  #include "AST/Node.hpp"
 
   using namespace std;
   int line_no = 1;
@@ -27,7 +38,7 @@
   void doForReturn(char *yytext){
     yylval.r.col_no = col_no;
     yylval.r.line_no = line_no;
-    yylval.r.node = nullptr;
+    yylval.r.node = new Node();
     yylval.r.symbol = nullptr;
     yylval.r.scope = nullptr;
     col_no += strlen(yytext);

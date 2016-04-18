@@ -197,9 +197,9 @@ start_part:
 	optional_inline_html T_OPEN_TAG top_statement_list T_CLOSE_TAG optional_inline_html	{
 		pl.log("start part");
 		auto list = new ListNode();
-		list->add_node($<r.node>1);
+		if ($<r.node>1) list->add_node($<r.node>1);
 		list->add_nodes(dynamic_cast<ListNode*>($<r.node>3)->nodes);
-		list->add_node($<r.node>5);
+		if ($<r.node>5) list->add_node($<r.node>5);
 	 	$<r.node>$ = list; }
 ;
 
@@ -1214,7 +1214,7 @@ expr:
 		{
 			pl.log($<r.str>1,0);
 			typeChecker->checkVariable($<r.str>1,$<r.line_no>1,$<r.col_no>1);
-			$<r.node>$ = new VariableNode(symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1));
+			$<r.node>$ = new VariableNode(symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1, $<r.line_no>1, $<r.col_no>1));
 		}
 	| '(' T_PRIMITIVE ')' expr
 	| variable '=' expr { $<r.node>$ = new AssignmentNode($<r.node>1, $<r.node>3); }
@@ -1496,7 +1496,7 @@ reference_variable:
 		reference_variable '[' dim_offset ']'
 	| reference_variable open_par expr close_par
 	| T_VARIABLE {
-		$<r.symbol>$ = symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1);
+		$<r.symbol>$ = symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1, $<r.line_no>1, $<r.col_no>1);
 		$<r.node>$ = new VariableNode($<r.symbol>$); }
 	| '$' open_par expr close_par
 ;
@@ -1546,6 +1546,7 @@ close_par:
 
 void yyerror(const char* s)
 {
+
 	extern int line_no, col_no;
 	errorRec.errQ->enqueue(line_no, col_no, s, "");
 }
