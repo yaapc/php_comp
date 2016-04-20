@@ -41,7 +41,7 @@ string AsmGenerator::store_float(float value)
 string AsmGenerator::store_string(string value)
 {
 	string data_label;
-	if (strings_map.find(value) == strings_map.end()){
+	if (strings_map.find(value) != strings_map.end()){
 		data_label = "string_" + to_string(strings_map[value]);
 	}else{
 		data_label = "string_" + to_string(strings_count);
@@ -49,7 +49,13 @@ string AsmGenerator::store_string(string value)
 		string c="";
 		c+= data_label;
 		c+=": .asciiz \"";
-		c+=value;
+		// if value contian \n , this will print newline 
+		stringstream cmt(value);
+		string line;
+		int i = 0;
+		while (getline(cmt, line)){
+			c+= line + "\\n";
+		}
 		c+="\"";
 		AsmGenerator::add_data(c);
 	}
@@ -418,9 +424,9 @@ void AsmGenerator::system_call(int system_call_code)
 	text << "syscall\n";
 }
 
-void AsmGenerator::print_sring(int string_label)
+void AsmGenerator::print_string(string reg_string_address)
 {
-	AsmGenerator::li("a0",string_label);
+	AsmGenerator::move("a0",reg_string_address);
 	AsmGenerator::system_call(4);
 }
 

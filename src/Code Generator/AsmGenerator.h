@@ -73,7 +73,7 @@ public:
 
 	static void system_call					(int systam_call_code);
 
-	static void print_sring					(int string_label);
+	static void print_string				(string reg_string_address);
 
 	static void print_int					(int printed_int);
 
