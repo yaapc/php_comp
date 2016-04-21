@@ -2,21 +2,13 @@
 
 #include "Node.hpp"
 #include <iostream>
+#include "../SymbolTable/Symbol.h"
 
 class DeclarationNode : public Node {
 public:
   Variable *variable;
-  DeclarationNode(Symbol *v) : variable(dynamic_cast<Variable*>(v)) {}
+  DeclarationNode(Symbol *v);
 
-  virtual void print(ostream &os) {
-    int self = int(this);
-    os << self
-       << "[label=\"Declare "
-       << (variable ? variable->getName() : "!!!")
-       << "\"]"
-       << endl;
-  }
-  virtual void generate_code(){
-	astLog.log("generate_code DeclarationNode");
-  }
+  virtual void print(ostream &os);
+  virtual void generate_code();
 };

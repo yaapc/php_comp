@@ -1,24 +1,14 @@
 #pragma once
 
-#include "NOde.hpp"
+#include "Node.hpp"
 #include <iostream>
 
 class AssignmentNode : public Node {
 public:
   Node *lhs, *rhs;
-  AssignmentNode(Node *l, Node *r) : lhs(l), rhs(r) {}
+  AssignmentNode(Node *l, Node *r);
 
-  virtual void print(ostream &os) {
-    int self = int(this);
-    os << self
-       << "[label=\"=\"]"
-       << endl;
-    lhs->print(os);
-    if (rhs) rhs->print(os);
-    os << self << "->" << int(lhs) << endl;
-    os << self << "->" << int(rhs) << endl;
-  }
-  virtual void generate_code(){
-	astLog.log("generate_code AssignmentNode");
-  }
+  virtual void print(ostream &os);
+
+  virtual void generate_code();
 };

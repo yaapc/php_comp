@@ -2,7 +2,7 @@
 
 #include "Node.hpp"
 #include <iostream>
-#include "../Code Generator/AsmGenerator.h"
+
 
 typedef struct Values
 {
@@ -60,65 +60,20 @@ class ScalarNode : public Node {
 protected:
 	Values  value;
 public:
-  ScalarNode(int i) {
-	value.type = 1;
-	value.int_val = i;
-  }
-  ScalarNode(float f) {
-	value.type = 2;
-	value.float_val = f;
-  }
+  ScalarNode(int i);
+  ScalarNode(float f);
 
-   ScalarNode(bool b) {
-	value.type = 3;
-	value.bool_val = b;
-  }
-   ScalarNode(char c) {
-	value.type = 4;
-	value.char_val = c;
-  }
-   ScalarNode(string s) {
-	value.type = 5;
-	value.string_val = s;
-  }
+   ScalarNode(bool b);
+   ScalarNode(char c);
+   ScalarNode(string s);
 
 
-  virtual void print(ostream &os) {
-    os << int(this)
-       << "[label=\"";
-	value.print(os);
-       os<<"\"]"
-       << endl;
-  }
-  void generate_code(){
-	astLog.log("generate_code ScalarNode ("+value.to_string()+")");
-	AsmGenerator::comment("<Scaler Node");
-	switch (value.type)
-		{
-		case 1:
-			AsmGenerator::li("t0",value.int_val);
-			AsmGenerator::push("t0");
-			break;
-		case 2:
-			AsmGenerator::f_li("f0",value.float_val);
-			AsmGenerator::f_push("f0");
-			break;
-		case 3:
-			AsmGenerator::li("t0",value.bool_val);
-			AsmGenerator::push("t0");
-			break;
-		case 4:
-			AsmGenerator::li("t0",value.char_val);
-			AsmGenerator::push("t0");
-			break;
-		case 5:
-			AsmGenerator::la("t0",AsmGenerator::store_string(value.string_val));
-			AsmGenerator::push("t0");
-			break;
-		}
-	AsmGenerator::comment("Scaler Node/>");
-	}
+  virtual void print(ostream &os);
+  void generate_code();
+
+    virtual bool type_checking();
 
 
+  TypeExpression* getNodeType();
 
 };

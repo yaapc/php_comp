@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Node.hpp"
 #include "ElseNode.hpp"
 #include <iostream>
 
@@ -11,64 +10,25 @@ public:
   Node *condition, *body;
   ElseNode *else_node;
 
-  IfNode(Node *cond, Node *bod, Node *el) : condition(cond), body(bod), else_node(dynamic_cast<ElseNode*>(el)) {}
+  IfNode(Node *cond, Node *bod, Node *el);
 
-  virtual void print(ostream &os) {
-    int self = int(this);
-    os << self
-       << "[label=\"If\"]"
-       << endl;
-    condition->print(os);
-    body->print(os);
-    if (else_node) else_node->print(os);
-    os << self << "->" << int(condition) << endl;
-    os << self << "->" << int(body) << endl;
-    if (else_node) os << self << "->" << int(else_node) << endl;
-  }
+  virtual void print(ostream &os);
 
 
   
-  void generate_code(){
-	astLog.log("generate_code If Node");
-	AsmGenerator::comment("<If Statment");
+  void generate_code();
 
 
-	string t0 = "t0";
-	string else_label	= "else_label_" + to_string(AsmGenerator::if_temp_label_count);
-	string finish		= "finish_if_"  + to_string(AsmGenerator::if_temp_label_count);
-	
-	AsmGenerator::comment("<If Statment Condition Node");
-	condition->generate_code();
-	AsmGenerator::comment("<If Statment Condition Node/>");
-
-	AsmGenerator::pop(t0);
-	AsmGenerator::beq(t0,"0",else_label); // if t0 (condition) equal 0 ==> control go to else node
-
-	if (body != NULL)					// else t0 (condition) equal 1 ==> control got to body node
-	{
-		AsmGenerator::comment("<If Statment Body Node");
-		body->generate_code();
-		AsmGenerator::comment("If Statment Body Node/>");
+  
+  
+   static IfNode* find_deepest_if(Node *root) {
+	IfNode *deepest_if = dynamic_cast<IfNode*>(root);
+		while (deepest_if->else_node) {
+			deepest_if = dynamic_cast<IfNode*>(deepest_if->else_node->body);
+		}
+	return deepest_if;
 	}
-	AsmGenerator::jump_label(finish);	 // body completed got to finish label
-	AsmGenerator::add_label(else_label);
-	if (else_node != NULL){
-		AsmGenerator::comment("<If Statment Else Node");
-		else_node->generate_code();
-		AsmGenerator::comment("If Statment Else Node/>");
-	}
-	AsmGenerator::add_label(finish);
-	AsmGenerator::if_temp_label_count++;
-	AsmGenerator::comment("If Statment.");
-  }
-
 };
 
-IfNode* find_deepest_if(Node *root) {
-  IfNode *deepest_if = dynamic_cast<IfNode*>(root);
-  while (deepest_if->else_node) {
-    deepest_if = dynamic_cast<IfNode*>(deepest_if->else_node->body);
-  }
-  return deepest_if;
-}
+
 

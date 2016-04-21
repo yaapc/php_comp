@@ -408,7 +408,7 @@ statement:
 		pl.log("if statement");
 		Node *else_node = nullptr;
 		if ($<r.node>4) {
-			IfNode *deepest_if = find_deepest_if($<r.node>4);
+			IfNode *deepest_if = IfNode::find_deepest_if($<r.node>4);
 			deepest_if->else_node = dynamic_cast<ElseNode*>($<r.node>5);
 			else_node = new ElseNode($<r.node>4);
 		} else {
@@ -744,7 +744,7 @@ elseif_list:
 			// $<r.node>1 = $<r.node>2;
 			$<r.node>$ = $<r.node>2;
 		} else {
-			IfNode *deepest_if = find_deepest_if($<r.node>1);
+			IfNode *deepest_if = IfNode::find_deepest_if($<r.node>1);
 			deepest_if->else_node = new ElseNode($<r.node>2);
 			$<r.node>$ = $<r.node>1;
 		}
@@ -1244,7 +1244,6 @@ expr:
 	| expr '|' expr
 	| expr '&' expr
 	| expr '^' expr
-	| expr '.' expr
 	| expr '+' expr { $<r.node>$ = new BinaryOperationNode("+", $<r.node>1, $<r.node>3); }
 	| expr '-' expr	{ $<r.node>$ = new BinaryOperationNode("-", $<r.node>1, $<r.node>3); }
 	| expr '*' expr { $<r.node>$ = new BinaryOperationNode("*", $<r.node>1, $<r.node>3); }

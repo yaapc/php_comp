@@ -14,7 +14,35 @@ TypeInteger* TypeInteger::getInstance() {
 
 // overrided Operations' Methods that Integer Type can be applied to , goes here:
 // + - * /
-TypeExpression* TypeInteger::opAggregate(int secondTypeId) {
+TypeExpression* TypeInteger::opPlus(int secondTypeId) {
+	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
+	if (secondTypeId == INTEGER_TYPE_ID)
+		return TypeInteger::getInstance();
+	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
+}
+
+TypeExpression* TypeInteger::opMinus(int secondTypeId) {
+	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
+	if (secondTypeId == INTEGER_TYPE_ID)
+		return TypeInteger::getInstance();
+	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
+}
+
+TypeExpression* TypeInteger::opMult(int secondTypeId) {
+	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
+	if (secondTypeId == INTEGER_TYPE_ID)
+		return TypeInteger::getInstance();
+	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
+}
+
+TypeExpression* TypeInteger::opDiv(int secondTypeId) {
+	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
+	if (secondTypeId == INTEGER_TYPE_ID)
+		return TypeInteger::getInstance();
+	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
+}
+
+TypeExpression* TypeInteger::opMod(int secondTypeId) {
 	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
 	if (secondTypeId == INTEGER_TYPE_ID)
 		return TypeInteger::getInstance();

@@ -3,6 +3,7 @@
 #include "generate_dot.hpp"
 #include "TypeChecker.h"
 #include "AST\ListNode.hpp"
+#include "Code Generator/AsmGenerator.h"
 
 #include <iostream>
 #include <fstream>
