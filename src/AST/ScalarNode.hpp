@@ -59,16 +59,15 @@ class ScalarNode : public Node {
 
 protected:
 	Values  value;
-	ScalarNode();
+
 
 public:
 
-  ScalarNode(int i);
-  ScalarNode(float f);
-
-   ScalarNode(bool b);
-   ScalarNode(char c);
-   ScalarNode(string s);
+	ScalarNode(int i);
+	ScalarNode(float f);
+	ScalarNode(bool b);
+	ScalarNode(char c);
+	ScalarNode(string s);
 
 
   virtual void print(ostream &os);

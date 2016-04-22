@@ -9,7 +9,7 @@ int yylex(void);
 int yyparse();
 void yyerror(const char *);
 
-#define SIMULATOR 0
+#define SIMULATOR 1
 
 
 enum primitive {

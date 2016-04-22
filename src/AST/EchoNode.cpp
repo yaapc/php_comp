@@ -26,14 +26,19 @@ void EchoNode::generate_code(){
 					for (auto &node : listNode->nodes) {
 							if (node == nullptr) continue;
 							node->generate_code();
-							int type = 1;
+							int type = 3;
 							if (type == 1) { //Integer
-									AsmGenerator::pop(t0);
-									AsmGenerator::print_reg(t0);
+								AsmGenerator::pop(t0);
+								AsmGenerator::print_reg(t0);
 							}
 							if (type == 2) { //String
-									AsmGenerator::pop(t0);
-									AsmGenerator::print_string(t0);
+								AsmGenerator::pop(t0);
+								AsmGenerator::print_string(t0);
+							}
+
+							if (type == 3){ // float
+								AsmGenerator::f_pop("f0");
+								AsmGenerator::f_print_reg("f0");
 							}
 					}
 					AsmGenerator::comment("List Node/>");
