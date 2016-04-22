@@ -3,27 +3,32 @@
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/AsmGenerator.h"
 
-ScalarNode::ScalarNode(int i) {
+ScalarNode::ScalarNode() {
+	this->nodeType = nullptr;
+}
+
+ScalarNode::ScalarNode(int i) : ScalarNode() {
 	value.type = 1;
 	value.int_val = i;
+	this->nodeType = nullptr;
   }
 
- ScalarNode::ScalarNode(float f) {
+ ScalarNode::ScalarNode(float f) : ScalarNode() {
 	value.type = 2;
 	value.float_val = f;
   }
 
-ScalarNode::ScalarNode(bool b) {
+ScalarNode::ScalarNode(bool b) : ScalarNode() {
 	value.type = 3;
 	value.bool_val = b;
   }
 
-ScalarNode::ScalarNode(char c) {
+ScalarNode::ScalarNode(char c) : ScalarNode() {
 	value.type = 4;
 	value.char_val = c;
   }
 
-ScalarNode::ScalarNode(string s) {
+ScalarNode::ScalarNode(string s) : ScalarNode() {
 	value.type = 5;
 	value.string_val = s;
   }

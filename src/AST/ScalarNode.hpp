@@ -59,7 +59,10 @@ class ScalarNode : public Node {
 
 protected:
 	Values  value;
+	ScalarNode();
+
 public:
+
   ScalarNode(int i);
   ScalarNode(float f);
 
