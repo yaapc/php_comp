@@ -45,7 +45,7 @@ void BinaryOperationNode::print(ostream &os) {
 		if (*op_type == '+'){
 			AsmGenerator::binary_operation(t0, t0, t1, 1); //perform add and put the result in t0
 			AsmGenerator::push(t0); //push t0 (the result) into stack
-			AsmGenerator::print_reg(t0);
+			//AsmGenerator::print_reg(t0);
 		}
 
 		if (*op_type == '-'){
