@@ -52,7 +52,8 @@ string AsmGenerator::store_string(string value)
 		// if value contian \n , this will print newline 
 		stringstream cmt(value);
 		string line;
-		int i = 0;
+		getline(cmt,line);
+		c+= line;
 		while (getline(cmt, line)){
 			c+= line + "\\n";
 		}
