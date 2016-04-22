@@ -10,7 +10,6 @@ ScalarNode::ScalarNode() {
 ScalarNode::ScalarNode(int i) : ScalarNode() {
 	value.type = 1;
 	value.int_val = i;
-	this->nodeType = nullptr;
   }
 
  ScalarNode::ScalarNode(float f) : ScalarNode() {
