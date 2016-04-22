@@ -71,7 +71,7 @@ public:
   virtual void print(ostream &os);
   void generate_code();
 
-    virtual bool type_checking();
+  virtual bool type_checking();
 
 
   TypeExpression* getNodeType();

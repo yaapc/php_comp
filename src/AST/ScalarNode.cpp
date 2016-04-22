@@ -90,8 +90,8 @@ bool ScalarNode::type_checking() {
   }
 
 TypeExpression* ScalarNode::getNodeType() {
-	  if (!this->nodeType){
+	  if (!this->nodeType)
 		  this->type_checking();
 	  return this->nodeType;
-  }
+      
 }

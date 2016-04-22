@@ -31,33 +31,33 @@ public:
      * the naming convention of the methods is: op[Operation Name]
 	 */
 
-	TypeExpression* opDot();
+	virtual TypeExpression* opDot();
 
-	TypeExpression* opPlus(int secondTypeId);
+	virtual TypeExpression* opPlus(int secondTypeId);
 
-	TypeExpression* opMinus(int secondTypeId);
+	virtual TypeExpression* opMinus(int secondTypeId);
 
-	TypeExpression* opMult(int secondTypeId);
+	virtual TypeExpression* opMult(int secondTypeId);
 
-	TypeExpression* opDiv(int secondTypeId);
+	virtual TypeExpression* opDiv(int secondTypeId);
 
-	TypeExpression* opMod(int secondTypeId);
+	virtual TypeExpression* opMod(int secondTypeId);
 
-	TypeExpression* opGreaterThan(int secondTypeId);
+	virtual TypeExpression* opGreaterThan(int secondTypeId);
 
-	TypeExpression* opLessThan(int secondTypeId);
+	virtual TypeExpression* opLessThan(int secondTypeId);
 
-	TypeExpression* opGreaterOrEq(int secondTypeId);
+	virtual TypeExpression* opGreaterOrEq(int secondTypeId);
 
-	TypeExpression* opLessOrEq(int secondTypeId);
+	virtual TypeExpression* opLessOrEq(int secondTypeId);
 
-	TypeExpression* opAnd(int secondTypeId);
+	virtual TypeExpression* opAnd(int secondTypeId);
 
-	TypeExpression* opOr(int secondTypeId);
+	virtual TypeExpression* opOr(int secondTypeId);
 
-	TypeExpression* opEqual(int secondTypeId);
+	virtual TypeExpression* opEqual(int secondTypeId);
 
-	TypeExpression* opSqrBrackets(int secondTypeId);
+	virtual TypeExpression* opSqrBrackets(int secondTypeId);
 
 };
 

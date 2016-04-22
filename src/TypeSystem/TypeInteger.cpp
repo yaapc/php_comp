@@ -76,6 +76,12 @@ TypeExpression* TypeInteger::opLessOrEq(int secondTypeId) {
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support <= operation");
 }
 
+TypeExpression* TypeInteger::opEqual(int secondTypeId) {
+	if (secondTypeId == INTEGER_TYPE_ID)
+		return TypeBoolean::getInstance();
+	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + " Type doesn't support == operation");
+}
+
 //overriding virtual method
 int TypeInteger::getTypeId() {
 	return INTEGER_TYPE_ID;

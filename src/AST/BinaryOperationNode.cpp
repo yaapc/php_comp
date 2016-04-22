@@ -4,7 +4,7 @@
 
 BinaryOperationNode::BinaryOperationNode(char* op, Node *lft, Node *rgt) : left(lft), right(rgt), op_type(op) {
 	  nodeType = nullptr;
-  }
+}
 
 void BinaryOperationNode::print(ostream &os) {
 	int self = int(this);
@@ -17,7 +17,7 @@ void BinaryOperationNode::print(ostream &os) {
 	if (right) right->print(os);
 	os << self << "->" << int(left)<<endl;
 	os << self << "->" << int(right)<<endl;
-  }
+}
 
  void BinaryOperationNode::generate_code(){
 	AsmGenerator::comment("<Binary Operation");
@@ -179,13 +179,13 @@ void BinaryOperationNode::print(ostream &os) {
 	}
 	AsmGenerator::comment("Binary Operation Calculation/>");
 	AsmGenerator::comment("Binary Operation/>");
-  }
+}
 
  TypeExpression* BinaryOperationNode::getType() {
 	  if (!this->nodeType)
 		  this->type_checking();
 	  return this->nodeType;
-  }
+}
 
  bool BinaryOperationNode::type_checking() {
 		if (strcmp(op_type, "==") == 0){

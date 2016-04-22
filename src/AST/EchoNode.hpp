@@ -7,9 +7,9 @@ using namespace std;
 
 class EchoNode : public Node {
 public:
-Node* expression;
-EchoNode(Node* node);
-virtual bool type_checking();
-virtual void print(ostream& os);
-virtual void generate_code();
+	Node* expression;
+	EchoNode(Node* node);
+	virtual bool type_checking();
+	virtual void print(ostream& os);
+	virtual void generate_code();
 };
