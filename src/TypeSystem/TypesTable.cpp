@@ -1,7 +1,7 @@
 #include "TypesTable.h"
 #include "TypeInteger.hpp"
 #include "TypeFloat.hpp"
-
+#include "TypeString.hpp"
 
 //static definition
 TypesTable* TypesTable::mTypesTable;
@@ -22,6 +22,8 @@ TypeExpression* TypesTable::getType(int typeId) {
 		return TypeInteger::getInstance();
 	case FLOAT_TYPE_ID:
 		return TypeFloat::getInstance();
+	case STRING_TYPE_ID:
+		return TypeString::getInstance();
 	default:
 		return nullptr;
 	}
