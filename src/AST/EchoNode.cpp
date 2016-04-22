@@ -25,18 +25,19 @@ void EchoNode::generate_code(){
 					AsmGenerator::comment("<List Node");
 					for (auto &node : listNode->nodes) {
 							if (node == nullptr) continue;
+							
 							node->generate_code();
-							int type = 3;
-							if (type == 1) { //Integer
+							//int type = 3;
+							if (node->getNodeType()->getTypeId() == INTEGER_TYPE_ID) { //Integer
 								AsmGenerator::pop(t0);
 								AsmGenerator::print_reg(t0);
 							}
-							if (type == 2) { //String
+							if (node->getNodeType()->getTypeId() == STRING_TYPE_ID) { //String
 								AsmGenerator::pop(t0);
 								AsmGenerator::print_string(t0);
 							}
 
-							if (type == 3){ // float
+							if (node->getNodeType()->getTypeId() == FLOAT_TYPE_ID){ // float
 								AsmGenerator::f_pop("f0");
 								AsmGenerator::f_print_reg("f0");
 							}
