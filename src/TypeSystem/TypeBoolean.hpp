@@ -9,24 +9,14 @@
 class TypeBoolean : public TypeExpression {
 
 public:
-    static TypeBoolean* getInstance(){
-        if(!mInstance){
-          mInstance = new TypeBoolean();
-        }
-        return mInstance;
-    }
+	static TypeBoolean* getInstance();
 
-    int getTypeId(){
-      return BOOLEAN_TYPE_ID;
-    }
+	int getTypeId();
 
 protected:
     static TypeBoolean* mInstance;
     TypeBoolean(){}
 
 };
-
-//static defifintion
-TypeBoolean* TypeBoolean::mInstance;
 
 #endif
