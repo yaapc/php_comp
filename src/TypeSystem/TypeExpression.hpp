@@ -59,6 +59,9 @@ public:
 
 	virtual TypeExpression* opSqrBrackets(int secondTypeId);
 
+	//Type Equivelance
+	virtual bool equivelantTo(int secondTypeId);
+
 };
 
 

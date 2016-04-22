@@ -15,15 +15,13 @@ TypeString* TypeString::getInstance() {
 }
 
 TypeExpression* TypeString::opPlus(int secondTypeId) {
-	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
-	if (secondTypeId == STRING_TYPE_ID)
+	if (this->equivelantTo(secondTypeId))
 		return TypeString::getInstance();
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
 }
 
 TypeExpression* TypeString::opEqual(int secondTypeId) {
-	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
-	if (secondTypeId == STRING_TYPE_ID)
+	if (this->equivelantTo(secondTypeId))
 		return TypeString::getInstance();
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
 }
@@ -32,3 +30,11 @@ int TypeString::getTypeId() {
 	return STRING_TYPE_ID;
 }
 
+bool TypeString::equivelantTo(int secondTypeId) {
+	if (secondTypeId == STRING_TYPE_ID || 
+		secondTypeId == INTEGER_TYPE_ID	||
+		secondTypeId == FLOAT_TYPE_ID)
+		return true;
+
+	return false;
+}
