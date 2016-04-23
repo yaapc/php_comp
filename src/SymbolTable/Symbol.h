@@ -105,6 +105,7 @@ public:
 	vector<Parameter*> parameters();
 	void setParams(Symbol* params);
 	
+<<<<<<< HEAD
 	void setId(int id);
 	int getId();
 
@@ -119,6 +120,8 @@ public:
 	string getLabel();
 
 	static int functionCounter; // 
+
+	string generateTypeExpression();
 
 private:
 	char* returnType;

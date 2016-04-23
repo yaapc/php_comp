@@ -174,7 +174,6 @@ vector<Parameter*> Function::parameters() {
 	return res;
 }
 
-<<<<<<< HEAD
 void Function::setId(int id) {
 	this->id = id;
 }
@@ -220,7 +219,24 @@ string Function::getLabel() {
 }
 
 string Function::generateTypeExpression() {
-	return "hello world";
+	std::ostringstream os;
+	os << "(";
+	auto par = this->params;
+	bool firstParamFlag = true;
+	while (par) {
+		if (!firstParamFlag)
+			os << ",";
+		
+		Parameter* parameter = dynamic_cast<Parameter*>(par);
+		os << parameter->getVariableType();
+
+		par = par->node;
+
+		firstParamFlag = false; //we passed the first parameter
+	}
+	os << ")" << ">" << this->getReturnType();
+	return os.str();
+
 }
 
 /*
