@@ -5,7 +5,7 @@
 FunctionNode::FunctionNode(Symbol* func, Node* bod) {
     function = dynamic_cast<Function*>(func);
     body = dynamic_cast<ListNode*>(bod);
-  }
+}
 
 void FunctionNode::print(ostream &os) {
     int self = int(this);
@@ -15,5 +15,9 @@ void FunctionNode::print(ostream &os) {
        <<endl;
     os << self << "->" << int(body) << endl;
     if (body) body->print(os);
-  }
+}
+
+TypeExpression* FunctionNode::getNodeType() {
+	return nullptr;
+}
 

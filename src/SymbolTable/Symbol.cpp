@@ -1,5 +1,7 @@
 #include"Symbol.h"
 #include"../definitions.h"
+#include <sstream>
+
 
 Symbol::Symbol(char* name, int type, int colNo, int lineNo){
 	this->name = name;
@@ -123,7 +125,7 @@ string Function::toString(){
 	string name, returnType;
 	this->returnType ? returnType = this->returnType : returnType = "NULL";
 	this->getName() ? name = this->getName() : name = "NULL";
-	return " FUNCTION | " + name + " | " + returnType;
+	return " FUNCTION | " + name + " | " + returnType + " | " + this->generateTypeExpression();
 }
 
 int Function::getSymbolType(){
@@ -161,7 +163,24 @@ vector<Parameter*> Function::parameters() {
 }
 
 string Function::generateTypeExpression() {
-	return "hello world";
+	std::ostringstream os;
+	os << "(";
+	auto par = this->params;
+	bool firstParamFlag = true;
+	while (par) {
+		if (!firstParamFlag)
+			os << ",";
+		
+		Parameter* parameter = dynamic_cast<Parameter*>(par);
+		os << parameter->getVariableType();
+
+		par = par->node;
+
+		firstParamFlag = false; //we passed the first parameter
+	}
+	os << ")" << ">" << this->getReturnType();
+	return os.str();
+
 }
 
 

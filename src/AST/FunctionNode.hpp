@@ -14,4 +14,5 @@ public:
 
   virtual void print(ostream &os);
  
+  TypeExpression* getNodeType();
 };
