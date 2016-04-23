@@ -111,6 +111,9 @@ public:
 	string getUniqueName();
 
 	string toString();
+
+	string generateTypeExpression();
+
 private:
 	char* returnType;
 	Scope* bodyScope;
