@@ -107,6 +107,7 @@ public:
 	vector<Parameter*> parameters();
 	void setParams(Symbol* params);
 	
+	string generateTypeExpression();
 private:
 	char* returnType;
 	Scope* bodyScope;
