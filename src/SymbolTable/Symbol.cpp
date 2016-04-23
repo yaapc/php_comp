@@ -164,6 +164,12 @@ vector<Parameter*> Function::parameters() {
 	}
 	return res;
 }
+
+string Function::generateTypeExpression() {
+	return "hello world";
+}
+
+
 /*
 ========================================
 CLASS:
