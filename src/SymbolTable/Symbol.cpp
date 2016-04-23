@@ -174,6 +174,7 @@ vector<Parameter*> Function::parameters() {
 	return res;
 }
 
+<<<<<<< HEAD
 void Function::setId(int id) {
 	this->id = id;
 }
@@ -216,6 +217,10 @@ void Function::generateLabel() {
 
 string Function::getLabel() {
 	return this->label;
+}
+
+string Function::generateTypeExpression() {
+	return "hello world";
 }
 
 /*
