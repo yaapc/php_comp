@@ -125,7 +125,7 @@ string Function::toString(){
 	string name, returnType;
 	this->returnType ? returnType = this->returnType : returnType = "NULL";
 	this->getName() ? name = this->getName() : name = "NULL";
-	return " FUNCTION | " + name + " | " + returnType + " | " + this->generateTypeExpression();
+	return " FUNCTION | " + name + " | " + returnType + " | " + this->generateFunctionSignature();
 }
 
 int Function::getSymbolType(){
@@ -162,7 +162,7 @@ vector<Parameter*> Function::parameters() {
 	return res;
 }
 
-string Function::generateTypeExpression() {
+string Function::generateFunctionSignature() {
 	std::ostringstream os;
 	os << "(";
 	auto par = this->params;
