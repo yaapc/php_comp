@@ -114,6 +114,8 @@ public:
 
 	string generateTypeExpression();
 
+	string generateFunctionSignature();
+
 private:
 	char* returnType;
 	Scope* bodyScope;
