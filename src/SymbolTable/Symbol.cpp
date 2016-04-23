@@ -165,6 +165,7 @@ vector<Parameter*> Function::parameters() {
 	}
 	return res;
 }
+
 void Function::setId(int id) {
 	this->id = id;
 }
@@ -177,6 +178,7 @@ string Function::getUniqueName() {
 	string uniqueName = this->getName();
 	return uniqueName+to_string(id);
 }
+
 /*
 ========================================
 CLASS:
