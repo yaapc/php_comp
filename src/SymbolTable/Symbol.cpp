@@ -218,7 +218,7 @@ string Function::getLabel() {
 	return this->label;
 }
 
-string Function::generateTypeExpression() {
+string Function::generateFunctionSignature() {
 	std::ostringstream os;
 	os << "(";
 	auto par = this->params;
