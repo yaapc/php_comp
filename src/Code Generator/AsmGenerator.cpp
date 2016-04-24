@@ -6,24 +6,59 @@
 void AsmGenerator::initialize_file()
 {
 	assembly_code_file.open("src/Code Generator/AssemblyCode.asm");
-	data << ".data\n";
-	text << ".text\n" << ".globl main\n" << "main:\n\n";
+	initialize_data();
+	initialize_main();
+}
+
+void AsmGenerator::write_file()
+{
+	write_data();
+	write_main();
+	write_functions();
+	assembly_code_file.close();
+}
+
+void AsmGenerator::initialize_data()
+{
+	data_stream << ".data\n";
 }
 
 void AsmGenerator::write_data()
 {
-	assembly_code_file << data.str();
+	assembly_code_file << data_stream.str();
 }
 
-void AsmGenerator::write_text(){
-	assembly_code_file << text.str();
-}
-
-void AsmGenerator::generate_code_file()\
+void AsmGenerator::initialize_main()
 {
-	write_data();
-	write_text();
-	assembly_code_file.close();
+	main_stream	<< ".text\n" 
+				<< ".globl main\n" 
+				<< "main:\n\n";
+}
+
+void AsmGenerator::write_main()
+{
+	AsmGenerator::system_call(10); 
+	assembly_code_file << main_stream.str();
+}
+
+void AsmGenerator::initialize_function(string function_name)
+{
+	current_stream = FUNCUTION_STREAM;
+	AsmGenerator::comment("Function:"+function_name+"---------------------");
+	AsmGenerator::add_label(function_name);
+}
+
+void AsmGenerator::write_function()
+{
+	AsmGenerator::jr("ra");
+	current_stream = MAIN_STREAM;
+}
+
+void AsmGenerator::write_functions()
+{
+	AsmGenerator::strcpy();
+	AsmGenerator::strlen();
+	assembly_code_file << functions_stream.str();
 }
 
 string AsmGenerator::store_float(float value)
@@ -48,18 +83,31 @@ string AsmGenerator::store_string(string value)
 		strings_map[value] = strings_count++;
 		string c="";
 		c+= data_label;
-		c+=": .asciiz \"";
+		c+=": .asciiz ";
+		c+= "\"";
 		// if value contian \n , this will print newline 
 		stringstream cmt(value);
 		string line;
 		getline(cmt,line);
 		c+= line;
 		while (getline(cmt, line)){
-			c+= line + "\\n";
+		c+= line + "\\n";
 		}
 		c+="\"";
+		
 		AsmGenerator::add_data(c);
 	}
+	return data_label;
+}
+
+string AsmGenerator::store_string_empty()
+{
+	string data_label = "string_" + to_string(strings_count);
+	strings_count++;
+	string c="";
+	c+= data_label;
+	c+=": .asciiz";
+	AsmGenerator::add_data(c);
 	return data_label;
 }
 
@@ -104,12 +152,26 @@ void AsmGenerator::add_label (string label_name)
 	AsmGenerator::add_instruction(label_name+":");
 }
 
+void AsmGenerator::jal(string function_name)
+{
+	string c ="";
+	c+= "jal ";
+	c+= function_name;
+	AsmGenerator::add_instruction(c);
+}
+
 void AsmGenerator::jump_label (string label_name)
 {
 	string c ="";
 	c+= "j ";
 	c+= label_name;
-	c+= "\n";
+	AsmGenerator::add_instruction(c);
+}
+
+void AsmGenerator::jr (string reg)
+{
+	string c ="jr $";
+	c+= reg;
 	AsmGenerator::add_instruction(c);
 }
 
@@ -397,15 +459,14 @@ void AsmGenerator::f_greater_or_equal_operation(string dest_reg,string reg1,stri
 void AsmGenerator::add_instruction(string instruction)
 {
 	instruction += "\n";
-	text << instruction;
+	(current_stream == MAIN_STREAM) ? main_stream << instruction: functions_stream << instruction;
 }
 
 void AsmGenerator::add_data(string data_instruction)
 {
 	data_instruction += "\n";
-	data << data_instruction;
+	data_stream << data_instruction;
 }
-
 
 void AsmGenerator::comment(string comment_message)
 {
@@ -422,7 +483,14 @@ void AsmGenerator::comment(string comment_message)
 void AsmGenerator::system_call(int system_call_code)
 {
 	AsmGenerator::li("v0",system_call_code);
-	text << "syscall\n";
+	(current_stream == MAIN_STREAM) ? main_stream << "syscall\n" : functions_stream << "syscall\n";
+}
+
+void AsmGenerator::sbrk (string amount_reg,string returned_address_memory)
+{
+	AsmGenerator::move("a0",amount_reg);
+	AsmGenerator::system_call(9);
+	AsmGenerator::move(returned_address_memory,"v0");
 }
 
 void AsmGenerator::print_string(string reg_string_address)
@@ -467,13 +535,59 @@ void AsmGenerator::f_move(string dest_reg,string source_reg)
 	AsmGenerator::add_instruction(c);
 }
 
+void AsmGenerator::strcpy()
+{
+	AsmGenerator::initialize_function(strcpy_functoion_name);
+		AsmGenerator::add_label("strcpy_copyFirst");
+		AsmGenerator::add_instruction("lb $t0 0($a0)");
+		AsmGenerator::add_instruction("beq  $t0 $0 strcpy_copySecond");
+		AsmGenerator::add_instruction("sb   $t0 0($a2)");
+		AsmGenerator::add_instruction("addi $a0 $a0 1");
+		AsmGenerator::add_instruction("addi $a2 $a2 1");
+		AsmGenerator::add_instruction("b strcpy_copyFirst");
+		AsmGenerator::add_label("strcpy_copySecond");
+		AsmGenerator::add_instruction("lb   $t0 0($a1)");
+		AsmGenerator::add_instruction("beq  $t0 $0 exit_strcpy");
+		AsmGenerator::add_instruction("sb   $t0 0($a2)");
+		AsmGenerator::add_instruction("addi $a1 $a1 1");
+		AsmGenerator::add_instruction("addi $a2 $a2 1");
+		AsmGenerator::add_instruction("b strcpy_copySecond");
+		AsmGenerator::add_label("exit_strcpy");
+		AsmGenerator::add_instruction("sb $0 0($a2)");
+
+	AsmGenerator::write_function();
+}
+
+void AsmGenerator::strlen()
+{
+	AsmGenerator::initialize_function(strlen_functoion_name);
+
+		AsmGenerator::add_instruction("li $t0, 0");
+		AsmGenerator::add_label("strlen_loop");
+		AsmGenerator::add_instruction("lb $t1, 0($a0)");
+		AsmGenerator::add_instruction("beqz $t1, exit_strlen");
+		AsmGenerator::add_instruction("addi $a0, $a0, 1");
+		AsmGenerator::add_instruction("addi $t0, $t0, 1");
+		AsmGenerator::jump_label("strlen_loop");
+		AsmGenerator::add_label("exit_strlen");
+		AsmGenerator::move("v1","t0");
+	AsmGenerator::write_function();
+}
+
 ofstream AsmGenerator::assembly_code_file;
-stringstream AsmGenerator::text;
-stringstream AsmGenerator::data;
+stringstream AsmGenerator::data_stream;
+stringstream AsmGenerator::main_stream;
+stringstream AsmGenerator::functions_stream;
+
 map<string,int> AsmGenerator::strings_map;
 
+int AsmGenerator::current_stream			= MAIN_STREAM;
 int AsmGenerator::temp_label_count			= 0;
 int AsmGenerator::floats_count				= 0;
 int AsmGenerator::strings_count				= 0;
 int AsmGenerator::if_temp_label_count		= 0;
 int AsmGenerator::else_temp_label_count		= 0;
+
+string AsmGenerator::strcpy_functoion_name = "strcpy";
+string AsmGenerator::strlen_functoion_name = "strlen";
+

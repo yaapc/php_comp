@@ -39,7 +39,6 @@ void EchoNode::generate_code(){
 
 							if (node->getNodeType()->getTypeId() == FLOAT_TYPE_ID){ // float
 								AsmGenerator::f_pop("f0");
-								AsmGenerator::f_print_reg("f0");
 							}
 					}
 					AsmGenerator::comment("List Node/>");

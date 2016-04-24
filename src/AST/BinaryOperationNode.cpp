@@ -176,6 +176,50 @@ void BinaryOperationNode::print(ostream &os) {
 			AsmGenerator::print_reg(t2);
 		}
 	}
+
+	if (this->getNodeType()->getTypeId() == STRING_TYPE_ID){
+		string s0 = "s0";
+		string s1 = "s1";
+		string s2 = "s2";
+		string s3 = "s3";
+
+		string t0 = "t0";
+		string t1 = "t1";
+		string t2 = "t2";
+
+		AsmGenerator::pop(s1);
+		AsmGenerator::pop(s0);
+
+
+		//Calculate lenght of fisrt String
+		AsmGenerator::move("a0",s0); 
+		AsmGenerator::jal(AsmGenerator::strlen_functoion_name);
+		AsmGenerator::move(s2,"v1"); //store returned length in t0
+		
+	
+		
+
+		//Calculate lenght of second String
+		AsmGenerator::move("a0",s1); 
+		AsmGenerator::jal(AsmGenerator::strlen_functoion_name);
+		AsmGenerator::move(s3,"v1"); //store returned length in t1
+
+		
+		AsmGenerator::binary_operation(t2,s2,s3,1);
+		AsmGenerator::add_instruction("addi $t2,$t2,1"); // add another extra byte for null terminator
+		
+		AsmGenerator::sbrk(t2,s2);	 // allocate memory for new string s2 contian the address of allocated memeory
+
+		AsmGenerator::move	("a0",s0);
+		AsmGenerator::move	("a1",s1);
+		AsmGenerator::move	("a2",s2);
+		AsmGenerator::jal(AsmGenerator::strcpy_functoion_name);
+
+		
+		AsmGenerator::push(s2);
+
+	}
+
 	AsmGenerator::comment("Binary Operation Calculation/>");
 	AsmGenerator::comment("Binary Operation/>");
 }

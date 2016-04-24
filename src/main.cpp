@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
 	AsmGenerator::initialize_file();
 	tree->generate_code();
-	AsmGenerator::generate_code_file();
+	AsmGenerator::write_file();
 
 	if (SIMULATOR == 1){
 		system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");
