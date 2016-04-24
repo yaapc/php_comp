@@ -119,6 +119,10 @@ public:
 
 	static string strlen_functoion_name;
 	static void strlen				();	
+
+	static string int_to_asci_functoion_name;
+	static void int_to_asci	();
+
 };
 
 

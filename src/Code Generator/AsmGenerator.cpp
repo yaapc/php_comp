@@ -58,6 +58,7 @@ void AsmGenerator::write_functions()
 {
 	AsmGenerator::strcpy();
 	AsmGenerator::strlen();
+	AsmGenerator::int_to_asci();
 	assembly_code_file << functions_stream.str();
 }
 
@@ -574,6 +575,62 @@ void AsmGenerator::strlen()
 	AsmGenerator::write_function();
 }
 
+void AsmGenerator::int_to_asci()
+{
+	//https://www.daniweb.com/programming/software-development/code/435631/integer-to-string-in-mips-assembly
+	// arguments: $a0 - integer to convert $a1 - character buffer to write to
+	// return: number of characters in converted string
+	AsmGenerator::initialize_function(int_to_asci_functoion_name);
+	AsmGenerator::add_instruction("bnez $a0, ItoA.non_zero");
+	AsmGenerator::add_instruction("nop");
+	AsmGenerator::add_instruction("li   $t0, '0'");
+	AsmGenerator::add_instruction("sb   $t0, 0($a1)");
+	AsmGenerator::add_instruction("sb   $zero, 1($a1)");
+	AsmGenerator::add_instruction("li   $v0, 1");
+	AsmGenerator::add_instruction("jr   $ra");
+	AsmGenerator::add_instruction("ItoA.non_zero:");
+	AsmGenerator::add_instruction("addi $t0, $zero, 10");
+	AsmGenerator::add_instruction("li $v0, 0");
+	AsmGenerator::add_instruction("bgtz $a0, ItoA.recurse");
+	AsmGenerator::add_instruction("nop");
+	AsmGenerator::add_instruction("li   $t1, '-'");
+	AsmGenerator::add_instruction("sb   $t1, 0($a1)");
+	AsmGenerator::add_instruction("addi $v0, $v0, 1");
+	AsmGenerator::add_instruction("neg  $a0, $a0");
+	AsmGenerator::add_instruction("ItoA.recurse:");
+	AsmGenerator::add_instruction("addi $sp, $sp, -24");
+	AsmGenerator::add_instruction("sw   $fp, 8($sp)");
+	AsmGenerator::add_instruction("addi $fp, $sp, 8");
+	AsmGenerator::add_instruction("sw   $a0, 4($fp)");
+	AsmGenerator::add_instruction("sw   $a1, 8($fp)");
+	AsmGenerator::add_instruction("sw   $ra, -4($fp)");
+	AsmGenerator::add_instruction("sw   $s0, -8($fp)");
+	AsmGenerator::add_instruction("sw   $s1, -12($fp)");
+	AsmGenerator::add_instruction("div  $a0, $t0");
+	AsmGenerator::add_instruction("mflo $s0");
+	AsmGenerator::add_instruction("mfhi $s1");
+	AsmGenerator::add_instruction("beqz $s0, ItoA.write");
+	AsmGenerator::add_instruction("ItoA.continue:");
+	AsmGenerator::add_instruction("move $a0, $s0");
+	AsmGenerator::add_instruction("jal ItoA.recurse");
+	AsmGenerator::add_instruction("nop");
+	AsmGenerator::add_instruction("ItoA.write:");
+	AsmGenerator::add_instruction("add  $t1, $a1, $v0");
+	AsmGenerator::add_instruction("addi $v0, $v0, 1  ");
+	AsmGenerator::add_instruction("addi $t2, $s1, 0x30");
+	AsmGenerator::add_instruction("sb   $t2, 0($t1)");
+	AsmGenerator::add_instruction("sb   $zero, 1($t1)");
+	AsmGenerator::add_instruction("ItoA.exit:");
+	AsmGenerator::add_instruction("lw   $a1, 8($fp)");
+	AsmGenerator::add_instruction("lw   $a0, 4($fp)");
+	AsmGenerator::add_instruction("lw   $ra, -4($fp)");
+	AsmGenerator::add_instruction("lw   $s0, -8($fp)");
+	AsmGenerator::add_instruction("lw   $s1, -12($fp)");
+	AsmGenerator::add_instruction("lw   $fp, 8($sp) ");
+	AsmGenerator::add_instruction("addi $sp, $sp, 24");
+	AsmGenerator::write_function();
+}
+
 ofstream AsmGenerator::assembly_code_file;
 stringstream AsmGenerator::data_stream;
 stringstream AsmGenerator::main_stream;
@@ -590,4 +647,5 @@ int AsmGenerator::else_temp_label_count		= 0;
 
 string AsmGenerator::strcpy_functoion_name = "strcpy";
 string AsmGenerator::strlen_functoion_name = "strlen";
+string AsmGenerator::int_to_asci_functoion_name = "ItoA";
 

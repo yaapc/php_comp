@@ -177,46 +177,125 @@ void BinaryOperationNode::print(ostream &os) {
 		}
 	}
 
-	if (this->getNodeType()->getTypeId() == STRING_TYPE_ID){
-		string s0 = "s0";
-		string s1 = "s1";
-		string s2 = "s2";
-		string s3 = "s3";
+	if (getNodeType()->getTypeId() == STRING_TYPE_ID){
 
-		string t0 = "t0";
-		string t1 = "t1";
-		string t2 = "t2";
+		if (right->getNodeType()->getTypeId() == STRING_TYPE_ID && 
+			left-> getNodeType()->getTypeId() == STRING_TYPE_ID)
+		{
+			string s0 = "s0";
+			string s1 = "s1";
+			string s2 = "s2";
+			string s3 = "s3";
 
-		AsmGenerator::pop(s1);
-		AsmGenerator::pop(s0);
+			string t0 = "t0";
+			string t1 = "t1";
+			string t2 = "t2";
+
+			AsmGenerator::pop(s1);
+			AsmGenerator::pop(s0);
 
 
-		//Calculate lenght of fisrt String
-		AsmGenerator::move("a0",s0); 
-		AsmGenerator::jal(AsmGenerator::strlen_functoion_name);
-		AsmGenerator::move(s2,"v1"); //store returned length in t0
+			//Calculate lenght of fisrt String
+			AsmGenerator::move("a0",s0); 
+			AsmGenerator::jal(AsmGenerator::strlen_functoion_name);
+			AsmGenerator::move(s2,"v1"); //store returned length in t0
 		
 	
 		
 
-		//Calculate lenght of second String
-		AsmGenerator::move("a0",s1); 
-		AsmGenerator::jal(AsmGenerator::strlen_functoion_name);
-		AsmGenerator::move(s3,"v1"); //store returned length in t1
+			//Calculate lenght of second String
+			AsmGenerator::move("a0",s1); 
+			AsmGenerator::jal(AsmGenerator::strlen_functoion_name);
+			AsmGenerator::move(s3,"v1"); //store returned length in t1
 
 		
-		AsmGenerator::binary_operation(t2,s2,s3,1);
-		AsmGenerator::add_instruction("addi $t2,$t2,1"); // add another extra byte for null terminator
+			AsmGenerator::binary_operation(t2,s2,s3,1);
+			AsmGenerator::add_instruction("addi $t2,$t2,1"); // add another extra byte for null terminator
 		
-		AsmGenerator::sbrk(t2,s2);	 // allocate memory for new string s2 contian the address of allocated memeory
+			AsmGenerator::sbrk(t2,s2);	 // allocate memory for new string s2 contian the address of allocated memeory
 
-		AsmGenerator::move	("a0",s0);
-		AsmGenerator::move	("a1",s1);
-		AsmGenerator::move	("a2",s2);
-		AsmGenerator::jal(AsmGenerator::strcpy_functoion_name);
+			AsmGenerator::move	("a0",s0);
+			AsmGenerator::move	("a1",s1);
+			AsmGenerator::move	("a2",s2);
+			AsmGenerator::jal(AsmGenerator::strcpy_functoion_name);
+			AsmGenerator::push(s2);
+		}
 
-		
-		AsmGenerator::push(s2);
+		if (right->getNodeType()->getTypeId() == INTEGER_TYPE_ID)
+		{
+			string s0 = "s0";
+			string s1 = "s1";
+			string t0 = "t0";
+			string t1 = "t1";
+			string t3 = "t3";
+
+			string begin_loop_label		= "concat_begin" + temp_label_count;
+			string finish_loop_leble	= "concat_end" + temp_label_count;
+			temp_label_count++;
+
+	
+			AsmGenerator::pop(s1); //integer type
+			AsmGenerator::pop(s0);// string type
+			AsmGenerator::move("a0",s0); // copy address of string into a0
+			AsmGenerator::jal(AsmGenerator::strlen_functoion_name); // calculate length of string - result in $v1
+			AsmGenerator::add_instruction("addi $t0,$v1,5"); // calculate new string length N = stringlenth + 4 (integer) + 1 (null terminator) 
+			AsmGenerator::sbrk(t0,t1);						// allcoate memory
+			AsmGenerator::move(t1,"v0");					// save memory address in t1
+			AsmGenerator::move(t3,"v0");					//save memory address in t3
+
+			// loop over string and store it in newly created memory 
+			AsmGenerator::add_label(begin_loop_label);
+			AsmGenerator::add_instruction("lb $t0 0($s0)");
+			AsmGenerator::add_instruction("beq  $t0 $0 "+finish_loop_leble);
+			AsmGenerator::add_instruction("sb   $t0 0($t1)");
+			AsmGenerator::add_instruction("addi $s0 $s0 1");
+			AsmGenerator::add_instruction("addi $t1 $t1 1");
+			AsmGenerator::add_instruction("b "+begin_loop_label);
+			AsmGenerator::add_label(finish_loop_leble);
+
+			
+			AsmGenerator::move("a0",s1);	//copy integer value into a0
+			AsmGenerator::move("a1",t1);	//copy memory address (in the place where we left off loop) 
+			AsmGenerator::jal(AsmGenerator::int_to_asci_functoion_name); // use predefine function to store integer as asci in memory
+			AsmGenerator::add_instruction("sb $0 4($t1)");	// null terminator into string 
+			AsmGenerator::push(t3); //push address of newly created string into stack
+		}		
+
+
+		//Todo Ask Bassel
+		if (left->getNodeType()->getTypeId() == INTEGER_TYPE_ID)
+		{
+			string s0 = "s0";
+			string s1 = "s1";
+			string t0 = "t0";
+			string t1 = "t1";
+			string t3 = "t3";
+			string begin_loop_label		= "concat_begin" + temp_label_count;
+			string finish_loop_leble	= "concat_end" + temp_label_count;
+			temp_label_count++;
+			AsmGenerator::pop(s0);
+			AsmGenerator::pop(s1);
+			AsmGenerator::move("a0",s0);
+			AsmGenerator::jal(AsmGenerator::strlen_functoion_name);
+			AsmGenerator::add_instruction("addi $t0,$v1,5");
+			AsmGenerator::sbrk(t0,t1);
+			AsmGenerator::move(t1,"v0");
+			AsmGenerator::move(t3,"v0");
+			AsmGenerator::move("a0",s1);
+			AsmGenerator::move("a1","v0");
+			AsmGenerator::jal(AsmGenerator::int_to_asci_functoion_name);
+			AsmGenerator::add_instruction("addi $t1,$t1,4");
+			AsmGenerator::add_label(begin_loop_label);
+			AsmGenerator::add_instruction("lb $t0 0($s0)");
+			AsmGenerator::add_instruction("beq  $t0 $0 "+finish_loop_leble);
+			AsmGenerator::add_instruction("sb   $t0 0($t1)");
+			AsmGenerator::add_instruction("addi $s0 $s0 1");
+			AsmGenerator::add_instruction("addi $t1 $t1 1");
+			AsmGenerator::add_instruction("b "+begin_loop_label);
+			AsmGenerator::add_label(finish_loop_leble);
+			AsmGenerator::add_instruction("sb $0 0($t1)");
+			AsmGenerator::push(t3);
+		}
 
 	}
 
@@ -288,3 +367,5 @@ void BinaryOperationNode::print(ostream &os) {
 		this->nodeType = TypesTable::getInstance()->getType(ERROR_TYPE_ID);
 		return false;
   }
+
+ int BinaryOperationNode::temp_label_count = 0;
