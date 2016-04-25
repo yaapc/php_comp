@@ -42,7 +42,7 @@ Symbol* SymbolTable::lookup(char* name){
 		return nullptr;
 	Symbol* next = this->get(hashIndex)->getNext();
 	while (next != nullptr){
-		if (next->getName() == name)
+		if (strcmp(next->getName(), name) == 0) 
 			return next;
 		next = next->getNext();
 	}
@@ -118,7 +118,7 @@ bool SymbolTable::remove(char* name){
 	Symbol* next = this->get(hashIndex)->getNext();
 	Symbol* prev = next;
 	while (next != nullptr){
-		if (next->getName() == name){
+		if (strcmp(next->getName(), name) == 0){
 			prev->setNext(next->getNext());
 			return true;
 		}
