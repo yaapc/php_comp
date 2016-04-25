@@ -144,7 +144,7 @@ void DependencyGraph::SCCUtil(int u, int disc[], int low[],
 		}
 		w = (int)st->top();
 		this->strCComp[compoCounter].push_back(w);
-		cout << w << "\n";
+		//cout << w << "\n";
 		stackMember[w] = false;
 		st->pop();
 	}
