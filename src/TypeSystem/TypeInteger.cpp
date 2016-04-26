@@ -16,7 +16,7 @@ TypeInteger* TypeInteger::getInstance() {
 // + - * /
 TypeExpression* TypeInteger::opPlus(int secondTypeId) {
 	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
-	if (secondTypeId == INTEGER_TYPE_ID)
+	if (this->equivelantTo(secondTypeId))
 		return TypeInteger::getInstance();
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
 }
@@ -81,6 +81,16 @@ TypeExpression* TypeInteger::opEqual(int secondTypeId) {
 		return TypeBoolean::getInstance();
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + " Type doesn't support == operation");
 }
+
+bool TypeInteger::equivelantTo(int secondTypeId) {
+	if (secondTypeId == STRING_TYPE_ID || 
+		secondTypeId == INTEGER_TYPE_ID	||
+		secondTypeId == FLOAT_TYPE_ID)
+		return true;
+
+	return false;
+}
+
 
 //overriding virtual method
 int TypeInteger::getTypeId() {
