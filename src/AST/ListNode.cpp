@@ -18,7 +18,8 @@ ListNode* ListNode::add_node(Node* node) {
  bool ListNode::type_checking() {
     bool result = true;
     for (auto node : nodes) {
-      result = result &&  node->type_checking();
+      //result = result &&  node->type_checking();
+		node->type_checking();
     }
     return result;
   }
@@ -33,7 +34,7 @@ void ListNode::print(ostream& os) {
     }
   }
 
-   void ListNode::generate_code(){
+ void ListNode::generate_code(){
 	for (auto &node : nodes) {
 		if (node == nullptr) continue;
 		node->generate_code();

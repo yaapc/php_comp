@@ -13,7 +13,6 @@ public:
 
 	virtual bool type_checking();
 
-
     virtual TypeExpression* getNodeType();
 protected:
 	TypeExpression* nodeType;
