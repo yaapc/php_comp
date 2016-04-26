@@ -2,6 +2,8 @@
 
 #include "IfNode.hpp"
 #include "../Code Generator/AsmGenerator.h"
+#include "../TypeSystem/TypesTable.h"
+#include "../TypeSystem/TypeError.hpp"
 
 IfNode::IfNode(Node *cond, Node *bod, Node *el) : condition(cond), body(bod), else_node(dynamic_cast<ElseNode*>(el)) {}
 
@@ -54,3 +56,20 @@ IfNode::IfNode(Node *cond, Node *bod, Node *el) : condition(cond), body(bod), el
   }
 
 
+  bool IfNode::type_checking() {
+	  if (this->condition->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID) {
+		  this->nodeType = TypesTable::getInstance()->getType(VOID_TYPE_ID);
+		  return true;
+	  }
+	  else {
+		  this->nodeType = new TypeError("Expected Boolean Expression for the Condition.");
+		  return false;
+	  }
+  }
+
+
+  TypeExpression* IfNode::getNodeType() {
+	  if (!this->nodeType)
+		  this->type_checking();
+	  return this->nodeType;
+  }

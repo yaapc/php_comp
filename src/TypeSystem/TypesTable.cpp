@@ -3,6 +3,7 @@
 #include "TypeFloat.hpp"
 #include "TypeString.hpp"
 #include "TypeVoid.hpp"
+#include "TypeBoolean.hpp"
 
 //static definition
 TypesTable* TypesTable::mTypesTable;
@@ -27,6 +28,8 @@ TypeExpression* TypesTable::getType(int typeId) {
 		return TypeString::getInstance();
 	case VOID_TYPE_ID:
 		return TypeVoid::getInstance();
+	case BOOLEAN_TYPE_ID:
+		return TypeBoolean::getInstance();
 	default:
 		return nullptr;
 	}

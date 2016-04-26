@@ -18,7 +18,9 @@ public:
   
   void generate_code();
 
+  bool type_checking();
 
+  TypeExpression* getNodeType();
   
   
    static IfNode* find_deepest_if(Node *root) {
