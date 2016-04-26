@@ -2,6 +2,7 @@
 #include "TypeInteger.hpp"
 #include "TypeFloat.hpp"
 #include "TypeString.hpp"
+#include "TypeVoid.hpp"
 
 //static definition
 TypesTable* TypesTable::mTypesTable;
@@ -24,6 +25,8 @@ TypeExpression* TypesTable::getType(int typeId) {
 		return TypeFloat::getInstance();
 	case STRING_TYPE_ID:
 		return TypeString::getInstance();
+	case VOID_TYPE_ID:
+		return TypeVoid::getInstance();
 	default:
 		return nullptr;
 	}
