@@ -47,6 +47,10 @@ Symbol* SymbolsParser::insertSymbol(Symbol* symbol){
 		symbol->setName(string(symbol->getName()) + "_ERR");
 		insertedSym = this->currScope->getSymbolTable()->insert(symbol); // reinsert it.
 	}
+	
+	//if the symbol is a Variable then, 
+	//add an Id for it.
+	this->setVariableId(dynamic_cast<Variable*>(insertedSym), this->currScope);  
 	return insertedSym;
 }
 
@@ -57,8 +61,12 @@ Symbol* SymbolsParser::insertSymbol(Symbol* symbol, Scope* scope){
 		this->errRecovery->errQ->enqueue(symbol->getLineNo(), symbol->getColNo(), "Identifier Already Declared.", symbol->getName());
 		//TODO:change name of symbol, insert it and continue:
 		symbol->setName(string(symbol->getName()) + "_ERR");
-		insertedSym = this->currScope->getSymbolTable()->insert(symbol); // reinsert it.
+		insertedSym = scope->getSymbolTable()->insert(symbol); // reinsert it.
 	}
+
+	//if the symbol is a Variable then, 
+	//add an Id for it.
+	this->setVariableId(dynamic_cast<Variable*>(insertedSym), scope);
 	return insertedSym;
 }
 /*
@@ -437,4 +445,22 @@ void SymbolsParser::pushToClassesStack(Class* classSym){
 
 void SymbolsParser::popFromClassesStack(){
 	return this->classesStack->pop();
+}
+
+int SymbolsParser::getStaticsCounter() {
+	return this->getRootScope()->getStaticsCounter();
+}
+
+int SymbolsParser::addToStaticsCounter() {
+	return this->getRootScope()->addToStaticsCounter();
+}
+
+void SymbolsParser::setVariableId(Variable* var, Scope* scope) {
+	//** Variables Counters
+	if (var) {
+		if (var->isStatic)
+			var->setId(scope->addToStaticsCounter());
+		else
+			var->setId(scope->addToVarCounter());
+	}
 }

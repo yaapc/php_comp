@@ -24,6 +24,12 @@ public :
 	void setOwnerSymbol(Symbol* owner);
 	Symbol* getOwnerSymbol();
 	
+	int addToVarCounter();
+	int addToStaticsCounter();
+
+	int getStaticsCounter();
+	int getVarCounter();
+
 private :
 	//members;
 	Scope * parentScope;
@@ -33,6 +39,10 @@ private :
 	Scope* nextScope; // to chain scopes at the same level.(brothers)
 
 	Symbol* ownerSymbol;
+
+	int variablesCounter;
+	int staticsCounter;
+	int functionsCounter;
 };
 
 

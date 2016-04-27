@@ -54,6 +54,7 @@ Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int line
 	this->isConst = false;
 	this->isStatic = false;
 	this->variableType = "Object";
+	this->id = -1;
 }
 
 Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int lineNo, bool isConst, bool isStatic) : Symbol(name, symbolType, colNo, lineNo) {
@@ -61,6 +62,7 @@ Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int line
 	this->isStatic = isStatic;
 	this->isConst = isConst;
 	this->variableType = "Object";
+	this->id = -1;
 }
 
 Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int lineNo, bool isStatic) : Symbol(name, symbolType, colNo, lineNo) {
@@ -68,6 +70,7 @@ Variable::Variable(char * name, int symbolType, bool isInit, int colNo, int line
 	this->isStatic = isStatic;
 	this->isConst = false;
 	this->variableType = "Object";
+	this->id = -1;
 }
 
 int Variable::getSymbolType(){
@@ -94,10 +97,16 @@ string Variable::toString(){
 	this->isStatic ? isStatic = "Static" : isStatic = "NOT Static";
 	this->isConst ? isConst = "Constant" : isConst = "NOT Constant";
 	return
-		" VARIABLE | " + name + " | " + variableType + " | " + isInit + " | " + isStatic + " | " + isConst;
+		" VARIABLE | " + name + " | " + variableType + " | " + isInit + " | " + isStatic + " | " + isConst + " | " + to_string(id);
 }
 
+void Variable::setId(int id) {
+	this->id = id;
+}
 
+int Variable::getId() {
+	return this->id;
+}
 /*
 =========================================
 FUNCTION:

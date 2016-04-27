@@ -67,10 +67,15 @@ public:
 	char* getVariableType();
 	void setVariableType(char* type);
 
+	void setId(int id);
+	int getId();
+
 	string toString();
 private:
 	char* variableType;
 	bool isInited;
+
+	int id;
 };
 
 

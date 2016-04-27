@@ -7,6 +7,8 @@ Scope::Scope(Scope* parentScope){
 	this->symTable = new SymbolTable();
 	this->symTable->setOwnerScope(this); // point to the scope of the symbol table
 	this->ownerSymbol = nullptr;
+	this->variablesCounter = 0;
+	this->staticsCounter = 0;
 }
 
 //TODO: implement destructor
@@ -58,4 +60,24 @@ void Scope::setOwnerSymbol(Symbol* owner){
 
 Symbol* Scope::getOwnerSymbol(){
 	return this->ownerSymbol;
+}
+
+int Scope::addToVarCounter() {
+	int currentCounter = this->variablesCounter;
+	variablesCounter++;
+	return currentCounter;
+}
+
+int Scope::addToStaticsCounter() {
+	int currentCounter = this->staticsCounter;
+	staticsCounter++;
+	return currentCounter;
+}
+
+int Scope::getStaticsCounter() {
+	return this->staticsCounter;
+}
+
+int Scope::getVarCounter() {
+	return this->variablesCounter;
 }

@@ -63,6 +63,12 @@ public :
 	void checkModifiersAndSet(DataMember *mem, int* mods, int count);
 	void checkModifiersAndSet(Method *method, int* mods, int count);
 
+	int getStaticsCounter();
+	int addToStaticsCounter();
+
+	//sets a variable counter id
+	void setVariableId(Variable* var, Scope* scope);
+
 private :
 	ErrorRecovery *errRecovery;
 	Scope * currScope;
