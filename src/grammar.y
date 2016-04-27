@@ -964,7 +964,6 @@ static_variable_statement:
 				walker->setVariableType($<r.str>2);
 				walker->isStatic = true;
 				symbolsParser->insertSymbol(walker);
-				//symbolsParser->setVariableId(walker, symbolsParser->getCurrentScope()); // variable id
 				Variable* prevNode = walker;//used to clear @node
 				walker = dynamic_cast<Variable*>(walker->node);
 				prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
@@ -981,7 +980,6 @@ static_variable_statement:
 				walker->setVariableType("Object");
 				walker->isStatic = true;
 				symbolsParser->insertSymbol(walker);
-				//symbolsParser->setVariableId(walker, symbolsParser->getCurrentScope()); // variable id
 				Variable* prevNode = walker;//used to clear @node
 				walker = dynamic_cast<Variable*>(walker->node);
 				prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
