@@ -963,6 +963,8 @@ static_variable_statement:
 			while(walker != nullptr){ // TODO: document this
 				walker->setVariableType($<r.str>2);
 				walker->isStatic = true;
+				symbolsParser->insertSymbol(walker);
+				//symbolsParser->setVariableId(walker, symbolsParser->getCurrentScope()); // variable id
 				Variable* prevNode = walker;//used to clear @node
 				walker = dynamic_cast<Variable*>(walker->node);
 				prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
@@ -978,6 +980,8 @@ static_variable_statement:
 			while(walker != nullptr){ // TODO: document this
 				walker->setVariableType("Object");
 				walker->isStatic = true;
+				symbolsParser->insertSymbol(walker);
+				//symbolsParser->setVariableId(walker, symbolsParser->getCurrentScope()); // variable id
 				Variable* prevNode = walker;//used to clear @node
 				walker = dynamic_cast<Variable*>(walker->node);
 				prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
@@ -997,11 +1001,11 @@ static_var_list:
 static_var:
 		T_VARIABLE {
 				pl.log("static variable", 0); pl.log($<r.str>1);
-				$<r.symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.line_no>1, $<r.col_no>1));
+				$<r.symbol>$ = new Variable($<r.str>1,VARIABLE, false, $<r.line_no>1, $<r.col_no>1);
 			}
 	| T_VARIABLE '=' static_scalar {
 				pl.log("static variable - assigned", 0); pl.log($<r.str>1);
-				$<r.symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, true, $<r.line_no>1, $<r.col_no>1));
+				$<r.symbol>$ = new Variable($<r.str>1,VARIABLE, true, $<r.line_no>1, $<r.col_no>1);
 			}
 	| T_VARIABLE '='
 		{
@@ -1188,6 +1192,7 @@ expr_or_declaration:
 			Variable* var = new Variable($<r.str>2,VARIABLE, true, $<r.line_no>1, $<r.col_no>1);
 			var->setVariableType($<r.str>1);
 			symbolsParser->insertSymbol(var);
+			
 			$<r.symbol>$ = var;
 			$<r.node>$ = (new ListNode)->add_node(new DeclarationNode(var))
 																 ->add_node(new AssignmentNode(new VariableNode(var), $<r.node>4));
@@ -1200,6 +1205,7 @@ expr_or_declaration:
 			Variable* var = new Variable($<r.str>2,VARIABLE, false, $<r.line_no>1, $<r.col_no>1);
 			var->setVariableType($<r.str>1);
 			symbolsParser->insertSymbol(var);
+			
 			$<r.symbol>$ = var;
 		}
 ;
