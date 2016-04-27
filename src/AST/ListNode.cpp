@@ -19,7 +19,9 @@ ListNode* ListNode::add_node(Node* node) {
     bool result = true;
     for (auto node : nodes) {
       //result = result &&  node->type_checking();
-		node->type_checking();
+	  //TODO: remove the condition when all nodes has implemented type_check()
+	  if(node != nullptr)
+			node->type_checking();
     }
     return result;
   }
