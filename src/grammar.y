@@ -1,4 +1,4 @@
-%output = "grammar.cpp"
+%output = "src/grammar.cpp"
 %{
 	#include <iostream>
 	#include <fstream>
@@ -240,6 +240,11 @@ identifier:
 
 namespace_name_parts:
 		T_STRING	{ $<r.str>$ = $<r.str>1; }
+	| namespace_name_parts '\\' T_STRING
+;
+namespace_name:
+		namespace_name_parts
+;
 
 top_statement:
 		statement { pl.log("statment"); }
@@ -428,6 +433,7 @@ statement:
 	| T_CONTINUE expr ';' {pl.log("contintue expr stmt");}
 	| T_RETURN ';' {pl.log("return stmt");}
 	| T_RETURN expr ';' { pl.log("return expr stmt"); $<r.node>$ = new ReturnNode($<r.node>2); }
+	| yield_expr ';' {pl.log("yield stmt");}
 	| global_variable_statement {pl.log("global variable stmt");}
 	| static_variable_statement {pl.log("static variable stmt");}
 	| T_ECHO expr_list ';' { pl.log("echo stmt"); $<r.node>$ = new EchoNode($<r.node>2); }
@@ -436,6 +442,7 @@ statement:
 	| T_UNSET '(' variables_list ')' ';'
 	| T_FOREACH '(' expr T_AS foreach_variable ')' foreach_statement {pl.log("foreach stmt");}
 	| T_FOREACH '(' expr T_AS foreach_key T_DOUBLE_ARROW foreach_variable ')' foreach_statement {pl.log("foreach stmt associative");}
+	| T_DECLARE '(' declare_list ')' declare_statement {pl.log("declare stmt");}
 	| ';' {pl.log("; stmt");}
 	| T_TRY open_par inner_statement_list close_par catches optional_finally {pl.log("try stmt");}
 	| T_THROW expr ';' {pl.log("throw stmt");}
@@ -463,6 +470,16 @@ variables_list:
 	| variables_list ',' variable
 ;
 
+optional_ref:
+		/* empty */
+	| '&'
+;
+
+optional_ellipsis:
+		/* empty */
+	| T_ELLIPSIS
+;
+
 function_declaration_statement:
 		function_header inner_statement_list close_par {
 			pl.log("function:", 0); pl.log($<r.str>3);
@@ -470,31 +487,31 @@ function_declaration_statement:
 ;
 
 function_header:
-		T_FUNCTION T_STRING '(' parameter_list ')' ':' type open_par
+		T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par
 		{
-			pl.log("function header:", 0); pl.log($<r.str>2);
-			$<r.symbol>$ = symbolsParser->insertFunctionSymbol($<r.str>2, $<r.str>7, $<r.col_no>1, $<r.line_no>1, $<r.scope>8, $<r.symbol>4);
+			pl.log("function header:", 0); pl.log($<r.str>3);
+			$<r.symbol>$ = symbolsParser->insertFunctionSymbol($<r.str>3, $<r.str>8, $<r.col_no>1, $<r.line_no>1, $<r.scope>9, $<r.symbol>5);
 		}
-	| T_FUNCTION T_STRING '(' parameter_list ')' ':'	open_par
+	| T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':'	open_par
 		{
-			pl.log("function header:", 0); pl.log($<r.str>2);
+			pl.log("function header:", 0); pl.log($<r.str>3);
 			/* ERROR RULE: function without returned type */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting return type, functions must have return type","");
-			symbolsParser->insertFunctionSymbol($<r.str>2, "void", $<r.col_no>1, $<r.line_no>1, $<r.scope>7, $<r.symbol>4);// assume return type is void
+			symbolsParser->insertFunctionSymbol($<r.str>3, "void", $<r.col_no>1, $<r.line_no>1, $<r.scope>8, $<r.symbol>5);// assume return type is void
 		}
-	| T_STATIC T_FUNCTION T_STRING '(' parameter_list ')' ':' type open_par
-		{
-			pl.log("function header:", 0); pl.log($<r.str>2);
-			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
-			symbolsParser->insertFunctionSymbol($<r.str>3, $<r.str>8, $<r.col_no>1, $<r.line_no>1, $<r.scope>9, $<r.symbol>5);
-	}
-	|  member_modifier_without_static T_FUNCTION T_STRING '(' parameter_list ')' ':' type open_par
+	| T_STATIC T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par
 		{
 			pl.log("function header:", 0); pl.log($<r.str>3);
 			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
-			symbolsParser->insertFunctionSymbol($<r.str>3, $<r.str>8, $<r.col_no>1, $<r.line_no>1, $<r.scope>9, $<r.symbol>5);
+			symbolsParser->insertFunctionSymbol($<r.str>4, $<r.str>9, $<r.col_no>1, $<r.line_no>1, $<r.scope>10, $<r.symbol>6);
+	}
+	|  member_modifier_without_static T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par
+		{
+			pl.log("function header:", 0); pl.log($<r.str>3);
+			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
+			symbolsParser->insertFunctionSymbol($<r.str>4, $<r.str>9, $<r.col_no>1, $<r.line_no>1, $<r.scope>10, $<r.symbol>6);
 		}
 ;
 
@@ -688,6 +705,30 @@ foreach_statement:
 	| ':' inner_statement_list T_ENDFOREACH ';'
 ;
 
+declare_statement:
+		statement
+	| ':' inner_statement_list T_ENDDECLARE ';'
+;
+
+declare_list:
+		declare_list_element
+	| declare_list ',' declare_list_element
+;
+
+declare_list_element:
+		type T_STRING '=' static_scalar
+	| type T_STRING '='
+		{
+			/* ERROR RULE: constant without value */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Constant can't be without value","");
+		}
+	| T_STRING '=' static_scalar
+		{
+			/* ERROR RULE: constant without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Constant can't be without type","");
+		}
+;
+
 switch_start :
 	T_SWITCH {}
 ;
@@ -781,12 +822,18 @@ foreach_key:
 foreach_variable:
 		type T_VARIABLE {pl.log("foreach var:", 0); pl.log($<r.str>2);}
 	| type '&' T_VARIABLE {pl.log("foreach var:", 0); pl.log($<r.str>3);}
+	| type list_expr
 	| T_VARIABLE
 		{
 			/* ERROR RULE:	foreach variable without type */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare foreach variable without type","");
 		}
 	| '&'	T_VARIABLE
+		{
+			/* ERROR RULE:	foreach variable without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare foreach variable without type","");
+		}
+	| list_expr
 		{
 			/* ERROR RULE:	foreach variable without type */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting type,you can\'t declare foreach variable without type","");
@@ -838,44 +885,44 @@ non_empty_default_parameter_list:
 ;
 
 parameter:
-		type T_VARIABLE
+		type optional_ref optional_ellipsis T_VARIABLE
 		{
-			pl.log("parameter:", 0); pl.log($<r.str>2);
-			Parameter* paramSymbol = new Parameter($<r.str>2, $<r.col_no>1, $<r.line_no>1, false); // we assume variable is initialized
+			pl.log("parameter:", 0); pl.log($<r.str>4);
+			Parameter* paramSymbol = new Parameter($<r.str>4, $<r.col_no>1, $<r.line_no>1, false); // we assume variable is initialized
 			paramSymbol->setVariableType($<r.str>1);// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 		}
-	| T_VARIABLE
+	| optional_ref optional_ellipsis T_VARIABLE
 		{
 			/* ERROR RULE */
-			errorRec.errQ->enqueue($<r.line_no>1, $<r.col_no>1, "missing type in parameter", "");
-			Parameter* paramSymbol = new Parameter($<r.str>1, $<r.col_no>1, $<r.line_no>1, false); // we assume variable is initialized
+			errorRec.errQ->enqueue($<r.line_no>3, $<r.col_no>3, "missing type in parameter", "");
+			Parameter* paramSymbol = new Parameter($<r.str>3, $<r.col_no>1, $<r.line_no>1, false); // we assume variable is initialized
 			paramSymbol->setVariableType("Object");// assume type is Object and continue // TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 		}
 ;
 
 default_parameter:
-		type T_VARIABLE '=' static_scalar
+		type optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
 		{
-			pl.log("default parameter", 0); pl.log($<r.str>1);
-			Parameter* paramSymbol = new Parameter($<r.str>1, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized
+			pl.log("default parameter", 0); pl.log($<r.str>4);
+			Parameter* paramSymbol = new Parameter($<r.str>4, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized
 			paramSymbol->setVariableType($<r.str>1);// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 		}
-	| T_VARIABLE '=' static_scalar
+	| optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
 		{
 			/* ERROR RULE */
-			errorRec.errQ->enqueue($<r.line_no>1, $<r.col_no>1, "missing type in parameter", "");
-			Parameter* paramSymbol = new Parameter($<r.str>1, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized
+			errorRec.errQ->enqueue($<r.line_no>3, $<r.col_no>3, "missing type in parameter", "");
+			Parameter* paramSymbol = new Parameter($<r.str>3, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized
 			paramSymbol->setVariableType("Object"); // assume type is Object and continue// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 		}
-	| type T_VARIABLE '='
+	| type optional_ref optional_ellipsis T_VARIABLE '='
 		{
 			/* ERROR RULE */
-			errorRec.errQ->enqueue($<r.line_no>2, $<r.col_no>2, "missing value in parameter", "");
-			Parameter* paramSymbol = new Parameter($<r.str>2, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized
+			errorRec.errQ->enqueue($<r.line_no>5, $<r.col_no>5, "missing value in parameter", "");
+			Parameter* paramSymbol = new Parameter($<r.str>4, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized
 			paramSymbol->setVariableType($<r.str>1); // assume type is Object and continue// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 		}
@@ -923,6 +970,7 @@ optional_return_type:
 argument_list:
 		'(' ')'
 	| '(' non_empty_argument_list ')'
+	| '(' yield_expr ')'
 ;
 
 non_empty_argument_list:
@@ -933,6 +981,7 @@ non_empty_argument_list:
 argument:
 		expr {pl.log("expr argument");}
 	| '&' variable {pl.log("reference variable argument");}
+	| T_ELLIPSIS expr
 ;
 
 global_variable_statement:
@@ -969,7 +1018,7 @@ static_variable_statement:
 				prevNode->node = nullptr; // remove the pointer to chain, no need for it anymore.
 			}
 	}
-	T_STATIC static_var_list ';'
+	| T_STATIC static_var_list ';'
 	{
 			/* ERROR RULE: static variable	without type*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected token expecting type","");
@@ -1061,37 +1110,37 @@ class_statement:
 
 
 method_header:
-	member_modifiers T_FUNCTION identifier '(' parameter_list ')' optional_return_type open_par
+	member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type open_par
 	{
 		//we insert the method symbol
-		$<r.symbol>$ = symbolsParser->insertMethodSymbol($<r.str>3,$<r.col_no>1,$<r.line_no>1,modifiersTags, arrCounter, $<r.str>7, $<r.scope>8, $<r.symbol>5);
+		$<r.symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4,$<r.col_no>1,$<r.line_no>1,modifiersTags, arrCounter, $<r.str>8, $<r.scope>9, $<r.symbol>6);
 		arrCounter = 0;
 	}
 ;
 
 method_header_abstract:
-	T_ABSTRACT member_modifiers T_FUNCTION identifier '(' parameter_list ')' optional_return_type
+	T_ABSTRACT member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type
 	{
-		$<r.symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4, $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>8, nullptr, $<r.symbol>6);	//abstract
+		$<r.symbol>$ = symbolsParser->insertMethodSymbol($<r.str>5, $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>9, nullptr, $<r.symbol>7);	//abstract
 		symbolsParser->getCurrentClassSym()->isAbstract = true;
 		arrCounter = 0;
 	}
 ;
 
 method_header_without_name :
-	member_modifiers T_FUNCTION '(' parameter_list ')' optional_return_type open_par
+	member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type open_par
 	{
 		//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
-		$<r.symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>6, $<r.scope>7, $<r.symbol>4);
+		$<r.symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>7, $<r.scope>8, $<r.symbol>5);
 		arrCounter = 0;
 	}
 ;
 
 method_header_without_name_abstract :
-	T_ABSTRACT member_modifiers T_FUNCTION '(' parameter_list ')' optional_return_type
+	T_ABSTRACT member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type
 	{
 		//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
-		$<r.symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>7, nullptr, $<r.symbol>5);	//abstract
+		$<r.symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>8, nullptr, $<r.symbol>6);	//abstract
 		symbolsParser->getCurrentClassSym()->isAbstract = true;
 		arrCounter = 0;
 	}
@@ -1221,7 +1270,10 @@ expr:
 			$<r.node>$ = new VariableNode(symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1, $<r.line_no>1, $<r.col_no>1));
 		}
 	| '(' T_PRIMITIVE ')' expr
+	| list_expr '=' expr
 	| variable '=' expr { $<r.node>$ = new AssignmentNode($<r.node>1, $<r.node>3); }
+	| variable '=' '&' variable
+	| variable '=' '&' new_expr
 	| new_expr		%prec _def_val_
 	| T_CLONE expr
 	| variable T_PLUS_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("+", $<r.node>1, $<r.node>3)); }
@@ -1295,11 +1347,22 @@ expr:
 	| scalar
 	| array_expr
 	| scalar_dereference
+	| '`' backticks_expr '`'
 	| T_PRINT expr
+	| T_YIELD
+	| T_YIELD_FROM expr
+	| T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars ':' type		open_par inner_statement_list close_par
+	| T_STATIC T_FUNCTION optional_ref '(' parameter_list ')' lexical_vars ':' type		open_par inner_statement_list close_par
 ;
 
 parentheses_expr:
 		'(' expr ')' { $<r.node>$ = $<r.node>2; }
+	| '(' yield_expr ')'
+;
+
+yield_expr:
+		T_YIELD expr
+	| T_YIELD expr T_DOUBLE_ARROW expr
 ;
 
 array_expr: /* typing? */
@@ -1316,8 +1379,27 @@ scalar_dereference:
 	/* alternative array syntax missing intentionally */
 ;
 
+anonymous_class:
+		T_CLASS ctor_arguments extends_from implements_list open_par class_statement_list close_par
+;
+
 new_expr:
 		T_NEW class_name_reference ctor_arguments
+	| T_NEW anonymous_class
+;
+
+lexical_vars:
+		/* empty */
+	| T_USE '(' lexical_var_list ')'
+;
+
+lexical_var_list:
+		lexical_var
+	| lexical_var_list ',' lexical_var
+;
+
+lexical_var:
+		optional_ref T_VARIABLE
 ;
 
 function_call:
@@ -1337,10 +1419,18 @@ class_name:
 
 name:
 		namespace_name_parts { $<r.str>$ = $<r.str>1; }
+	| '\\' namespace_name_parts
+	| T_NAMESPACE '\\' namespace_name_parts
 ;
 
 class_name_reference:
 		class_name
+	| dynamic_class_name_reference
+;
+
+dynamic_class_name_reference:
+		object_access_for_dcnr
+	| base_variable
 ;
 
 class_name_or_var:
@@ -1348,10 +1438,23 @@ class_name_or_var:
 	| reference_variable
 ;
 
+object_access_for_dcnr:
+		base_variable T_OBJECT_OPERATOR object_property
+	| object_access_for_dcnr T_OBJECT_OPERATOR object_property
+	| object_access_for_dcnr '[' dim_offset ']'
+	| object_access_for_dcnr '{' expr '}'
+;
+
 exit_expr:
 		/* empty */
 	| '(' ')'
 	| parentheses_expr
+;
+
+backticks_expr:
+		/* empty */
+	| T_ENCAPSED_AND_WHITESPACE
+	| encaps_list
 ;
 
 ctor_arguments:
@@ -1372,6 +1475,8 @@ common_scalar:
 	| T_METHOD_C
 	| T_FUNC_C
 	| T_NS_C
+	| T_START_HEREDOC T_ENCAPSED_AND_WHITESPACE T_END_HEREDOC
+	| T_START_HEREDOC T_END_HEREDOC
 ;
 
 static_scalar:
@@ -1428,6 +1533,8 @@ constant:
 scalar:
 		common_scalar
 	| constant
+	| '"' encaps_list '"'
+	| T_START_HEREDOC encaps_list T_END_HEREDOC
 ;
 
 static_array_pair_list:
@@ -1478,6 +1585,7 @@ variable_or_new_expr:
 
 variable_without_objects:
 		reference_variable		%prec low_prec
+	| '$' variable_without_objects
 ;
 
 base_variable:
@@ -1486,11 +1594,13 @@ base_variable:
 ;
 
 static_property:
+		class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '$' reference_variable
 	| static_property_with_arrays
 ;
 
 static_property_with_arrays:
 		class_name_or_var T_PAAMAYIM_NEKUDOTAYIM T_VARIABLE
+	| class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '$' open_par expr close_par
 	| static_property_with_arrays '[' dim_offset ']'
 	| static_property_with_arrays open_par expr close_par
 ;
@@ -1515,6 +1625,21 @@ object_property:
 	| variable_without_objects
 ;
 
+list_expr:
+		T_LIST '(' list_expr_elements ')'
+;
+
+list_expr_elements:
+		list_expr_elements ',' list_expr_element
+	| list_expr_element
+;
+
+list_expr_element:
+		variable
+	| list_expr
+	| /* empty */
+;
+
 array_pair_list:
 		/* empty */
 	| non_empty_array_pair_list optional_comma
@@ -1530,6 +1655,29 @@ array_pair:
 	| expr
 	| expr T_DOUBLE_ARROW '&' variable
 	| '&' variable
+;
+
+encaps_list:
+		encaps_list encaps_var
+	| encaps_list T_ENCAPSED_AND_WHITESPACE
+	| encaps_var
+	| T_ENCAPSED_AND_WHITESPACE encaps_var
+;
+
+encaps_var:
+		T_VARIABLE
+	| T_VARIABLE '[' encaps_var_offset ']'
+	| T_VARIABLE T_OBJECT_OPERATOR T_STRING
+	| T_DOLLAR_OPEN_CURLY_BRACES expr close_par
+	| T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME close_par
+	| T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME '[' expr ']' close_par
+	| T_CURLY_OPEN variable close_par
+;
+
+encaps_var_offset:
+		T_STRING
+	| T_NUM_STRING
+	| T_VARIABLE
 ;
 
 open_par:
