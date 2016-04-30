@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 	symbolsParser->printSymbolTables(); cout << "printSymbolTables\n";// log symbol table
 	errorRec.printErrQueue(); cout << "printErrQueue\n";
 
-	tree->type_checking(); cout << "TypeChecking Pass\n";
+	//tree->type_checking(); cout << "TypeChecking Pass\n";
 
 
 

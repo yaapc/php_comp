@@ -44,7 +44,7 @@ public:
 
 	static void write_functions();
 	
-
+	static string store_int					(int id,int value);
 	static string store_float				(float value);
 	static string store_string				(string value);
 	static string store_string_empty		();
@@ -52,7 +52,13 @@ public:
 	static void li							(string reg,int value);
 	static void f_li						(string reg,float value);
 
+	static void sw							(string dest_reg,string lable);	
+
+	static void sw							(string dest_reg,int offset,string reg_source);	
+
 	static void la							(string reg,string value);
+				
+	static void lw							(string dest_reg,int offsetof,string address);
 
 	static void add_label					(string label_name);
 
@@ -123,6 +129,7 @@ public:
 	static string int_to_asci_functoion_name;
 	static void int_to_asci	();
 
+	static string global_label;
 };
 
 

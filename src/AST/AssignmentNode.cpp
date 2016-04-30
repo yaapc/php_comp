@@ -3,9 +3,12 @@
 #include "AssignmentNode.hpp"
 #include "VariableNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
+#include "../Code Generator/AsmGenerator.h"
 
 
-AssignmentNode::AssignmentNode(Node *l, Node *r) : lhs(l), rhs(r) {}
+AssignmentNode::AssignmentNode(Node *l, Node *r) : lhs(l), rhs(r) {
+	nodeType = nullptr;
+}
 
 void AssignmentNode::print(ostream &os) {
     int self = int(this);
@@ -19,8 +22,25 @@ void AssignmentNode::print(ostream &os) {
   }
   
   
-  void AssignmentNode::generate_code(){
-  }
+void AssignmentNode::generate_code()
+{
+	AsmGenerator::comment("<Assignment Node");
+	string s0 = "s0";
+	string s1 = "s1";
+	AsmGenerator::comment("<Binary Operation Left node");
+	lhs->generate_code();
+	AsmGenerator::comment("Binary Operation Left node/>");
+
+	AsmGenerator::comment("<Binary Operation right node");
+	rhs->generate_code();
+	AsmGenerator::comment("Binary Operation right node/>");
+	 
+	AsmGenerator::pop(s1);
+	AsmGenerator::pop(s0);
+
+	AsmGenerator::sw(s1,0,s0);
+	AsmGenerator::comment("Assignment Node/>");
+}
 
   TypeExpression* AssignmentNode::getNodeType() {
 	  if (!this->nodeType)

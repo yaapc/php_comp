@@ -1,8 +1,11 @@
 #pragma once
 #include "DeclarationNode.hpp"
+#include "../Code Generator/AsmGenerator.h"
 #include "..\TypeSystem\TypesTable.h"
 
-DeclarationNode::DeclarationNode(Symbol *v) : variable(dynamic_cast<Variable*>(v)) {}
+DeclarationNode::DeclarationNode(Symbol *v) : variable(dynamic_cast<Variable*>(v)) {
+	nodeType = nullptr;
+}
 
 void DeclarationNode::print(ostream &os) {
     int self = int(this);
@@ -14,6 +17,11 @@ void DeclarationNode::print(ostream &os) {
 }
 
 void DeclarationNode::generate_code(){
+	AsmGenerator::comment("<Declaration Node");
+
+	AsmGenerator::store_int(this->variable->getId(),0);
+
+	AsmGenerator::comment("Declaration Node/>");
 }
 
 TypeExpression* DeclarationNode::getNodeType() {

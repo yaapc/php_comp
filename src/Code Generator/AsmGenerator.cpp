@@ -62,6 +62,18 @@ void AsmGenerator::write_functions()
 	assembly_code_file << functions_stream.str();
 }
 
+string AsmGenerator::store_int(int id,int value)
+{
+	string data_label = global_label+to_string(id);
+	string c="";
+	c+= data_label;
+	c+=": .word ";
+	c+=to_string(value);
+	AsmGenerator::add_data(c);
+
+	return data_label;
+}
+
 string AsmGenerator::store_float(float value)
 {
 	string data_label = "fp_"+to_string(floats_count++);
@@ -145,6 +157,27 @@ void AsmGenerator::la(string reg,string value)
 	c+=reg;
 	c+=", ";
 	c+=value;
+	AsmGenerator::add_instruction(c);
+}
+
+void AsmGenerator::sw(string source_reg,int offset,string dest_reg)	
+{
+	string c="sw $";
+	c+=source_reg;
+	c+=", ";
+	c+=to_string(offset);
+	c+="($";
+	c+=dest_reg;
+	c+=")";
+	AsmGenerator::add_instruction(c);
+}
+
+void AsmGenerator::sw(string dest_reg,string label)
+{
+	string c="sw $";
+	c+=dest_reg;
+	c+=", ";
+	c+=label;
 	AsmGenerator::add_instruction(c);
 }
 
@@ -645,7 +678,7 @@ int AsmGenerator::strings_count				= 0;
 int AsmGenerator::if_temp_label_count		= 0;
 int AsmGenerator::else_temp_label_count		= 0;
 
-string AsmGenerator::strcpy_functoion_name = "strcpy";
-string AsmGenerator::strlen_functoion_name = "strlen";
+string AsmGenerator::strcpy_functoion_name		= "strcpy";
+string AsmGenerator::strlen_functoion_name		= "strlen";
 string AsmGenerator::int_to_asci_functoion_name = "ItoA";
-
+string AsmGenerator::global_label				= "global_";
