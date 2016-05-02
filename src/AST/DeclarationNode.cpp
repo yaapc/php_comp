@@ -19,7 +19,17 @@ void DeclarationNode::print(ostream &os) {
 void DeclarationNode::generate_code(){
 	AsmGenerator::comment("<Declaration Node");
 
-	AsmGenerator::store_int(this->variable->getId(),0);
+	if (this->getNodeType()->getTypeId() == INTEGER_TYPE_ID || this->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
+		AsmGenerator::store_int(this->variable->getId(),0);
+	}
+
+	if (this->getNodeType()->getTypeId() == STRING_TYPE_ID){
+		AsmGenerator::store_string(this->variable->getId(),"");
+	}
+
+	if (this->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
+		AsmGenerator::store_float(this->variable->getId(),0.0f);
+	}
 
 	AsmGenerator::comment("Declaration Node/>");
 }
@@ -30,8 +40,29 @@ TypeExpression* DeclarationNode::getNodeType() {
 	return this->nodeType;
 }
 
-bool DeclarationNode::type_checking() {
-	//DeclarationNode is always type-true
-	this->nodeType = TypesTable::getInstance()->getType(VOID_TYPE_ID);
-	return true;
-}
+ bool DeclarationNode::type_checking() {
+	  if (strcmp(this->variable->getVariableType() ,"int")==0) {
+		  this->nodeType = TypesTable::getInstance()->getType(INTEGER_TYPE_ID);
+		  return true;
+	  }
+
+
+	  if (strcmp(this->variable->getVariableType() ,"bool")==0) {
+		  this->nodeType = TypesTable::getInstance()->getType(BOOLEAN_TYPE_ID);
+		  return true;
+	  }
+
+	  
+	  if (strcmp(this->variable->getVariableType() ,"float")==0) {
+		  this->nodeType = TypesTable::getInstance()->getType(FLOAT_TYPE_ID);
+		  return true;
+	  }
+
+	  if (strcmp(this->variable->getVariableType() ,"string")==0) {
+		  this->nodeType = TypesTable::getInstance()->getType(STRING_TYPE_ID);
+		  return true;
+	  }
+
+		this->nodeType = TypesTable::getInstance()->getType(ERROR_TYPE_ID);
+		 return true;
+  }
