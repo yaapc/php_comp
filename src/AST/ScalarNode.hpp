@@ -60,7 +60,6 @@ class ScalarNode : public Node {
 protected:
 	Values  value;
 
-
 public:
 
 	ScalarNode(int i);
@@ -69,13 +68,12 @@ public:
 	ScalarNode(char c);
 	ScalarNode(string s);
 
-
   virtual void print(ostream &os);
-  void generate_code();
+
+  virtual void generate_code();
 
   virtual bool type_checking();
 
-
-  TypeExpression* getNodeType();
+  virtual TypeExpression* getNodeType();
 
 };

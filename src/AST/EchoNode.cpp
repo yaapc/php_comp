@@ -1,5 +1,7 @@
 #pragma once
 #include "EchoNode.hpp"
+#include "ScalarNode.hpp"
+#include "VariableNode.hpp"
 #include "../Code Generator/AsmGenerator.h"
 #include "ListNode.hpp"
 
@@ -7,8 +9,15 @@ EchoNode::EchoNode(Node* node) : expression(node) {
 }
 
 bool EchoNode::type_checking() {
-        return true;
+	return this->expression->type_checking();
 }
+
+
+ TypeExpression* EchoNode::getNodeType() {
+	  if (!this->nodeType)
+		  this->type_checking();
+	  return this->nodeType;
+  }
 
 void EchoNode::print(ostream& os) {
         int self = int(this);
@@ -27,7 +36,7 @@ void EchoNode::generate_code(){
 							if (node == nullptr) continue;
 							
 							node->generate_code();
-							//int type = 3;
+
 							if (node->getNodeType()->getTypeId() == INTEGER_TYPE_ID) { //Integer
 								AsmGenerator::pop(t0);
 								AsmGenerator::print_reg(t0);

@@ -18,5 +18,5 @@ public:
 
   virtual void print(ostream& os);
 
-   void generate_code();
+  virtual void generate_code();
 };

@@ -17,7 +17,7 @@ public:
 
   virtual void generate_code();
 
-  TypeExpression* getType();
+  virtual TypeExpression* getType();
 
-  bool type_checking();
+  virtual bool type_checking();
 };

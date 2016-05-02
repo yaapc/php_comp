@@ -14,13 +14,11 @@ public:
 
   virtual void print(ostream &os);
 
+  virtual void generate_code();
 
-  
-  void generate_code();
+  virtual bool type_checking();
 
-  bool type_checking();
-
-  TypeExpression* getNodeType();
+  virtual TypeExpression* getNodeType();
   
   
    static IfNode* find_deepest_if(Node *root) {

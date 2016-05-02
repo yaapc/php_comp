@@ -10,8 +10,10 @@ public:
   DeclarationNode(Symbol *v);
 
   virtual void print(ostream &os);
+
   virtual void generate_code();
 
-  TypeExpression* getNodeType();
-  bool type_checking();
+  virtual TypeExpression* getNodeType();
+
+  virtual bool type_checking();
 };
