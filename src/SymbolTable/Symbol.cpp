@@ -127,7 +127,6 @@ Function::Function(char* name, char* returnType, int colNo, int lineNo, Scope* b
 	this->bodyScope = bodyScope;
 	this->params = nullptr;
 	this->id = -1;
-
 	this->id = functionCounter;
 	functionCounter++;
 	generateLabel();
@@ -208,12 +207,6 @@ string Function::getUniqueName() {
 	return uniqueName+to_string(id);
 }
 
-void Function::generateLabel() {
-	std::ostringstream os;
-	os << "func_" << getName() << "_" << this->id;
-	this->label = os.str();
-}
-
 string Function::getLabel() {
 	return this->label;
 }
@@ -238,7 +231,6 @@ string Function::generateFunctionSignature() {
 	return os.str();
 
 }
-
 /*
 ========================================
 CLASS:

@@ -112,16 +112,11 @@ public:
 
 	string toString();
 
-	string generateTypeExpression();
-
 	string generateFunctionSignature();
 
 	string getLabel();
 
 	static int functionCounter; // 
-
-	string generateTypeExpression();
-
 	string generateFunctionSignature();
 
 private:
