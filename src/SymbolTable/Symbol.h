@@ -116,6 +116,10 @@ public:
 
 	string generateFunctionSignature();
 
+	string getLabel();
+
+	static int functionCounter; // 
+
 private:
 	char* returnType;
 	Scope* bodyScope;
@@ -123,6 +127,9 @@ private:
 	Symbol* params;
 
 	int id;
+	string label;
+
+	void generateLabel();
 };
 
 /*

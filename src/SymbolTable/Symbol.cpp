@@ -120,11 +120,17 @@ FUNCTION:
 =========================================
 */
 
+int Function::functionCounter = 0;
+
 Function::Function(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope) : Symbol(name, FUNCTION, colNo, lineNo) {
 	this->returnType = returnType;
 	this->bodyScope = bodyScope;
 	this->params = nullptr;
 	this->id = -1;
+
+	this->id = functionCounter;
+	functionCounter++;
+	generateLabel();
 }
 
 string Function::toString(){
@@ -179,7 +185,7 @@ int Function::getId() {
 string Function::generateFunctionSignature() {
 
 	std::ostringstream os;
-	os << "(";
+	os << getLabel() << "(";
 	auto par = this->params;
 	bool firstParamFlag = true;
 	while (par) {
@@ -200,6 +206,12 @@ string Function::generateFunctionSignature() {
 string Function::getUniqueName() {
 	string uniqueName = this->getName();
 	return uniqueName+to_string(id);
+}
+
+void Function::generateLabel() {
+	std::ostringstream os;
+	os << "func_" << getName() << "_" << this->id;
+	this->label = os.str();
 }
 
 /*
