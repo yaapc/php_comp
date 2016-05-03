@@ -10,7 +10,6 @@ typedef struct Values
 	int		int_val;
 	float	float_val;
 	bool	bool_val;
-	char	char_val;
 	string  string_val;
 
 	void print(ostream &os){
@@ -24,9 +23,6 @@ typedef struct Values
 			break;
 		case 3:
 			os << bool_val;
-			break;
-		case 4:
-			os << char_val;
 			break;
 		case 5:
 			os << string_val;
@@ -45,9 +41,6 @@ typedef struct Values
 		case 3:
 			return std::to_string(bool_val);
 			break;
-		case 4:
-			return std::to_string(char_val);
-			break;
 		case 5:
 			return string_val;
 			break;
@@ -65,7 +58,6 @@ public:
 	ScalarNode(int i);
 	ScalarNode(float f);
 	ScalarNode(bool b);
-	ScalarNode(char c);
 	ScalarNode(string s);
 
   virtual void print(ostream &os);

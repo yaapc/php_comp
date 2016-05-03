@@ -10,7 +10,7 @@ ScalarNode::ScalarNode(int i) {
   }
 
  ScalarNode::ScalarNode(float f){
-	 this->nodeType = nullptr;
+	this->nodeType = nullptr;
 	value.type = 2;
 	value.float_val = f;
   }
@@ -19,12 +19,6 @@ ScalarNode::ScalarNode(bool b) {
 	this->nodeType = nullptr;
 	value.type = 3;
 	value.bool_val = b;
-  }
-
-ScalarNode::ScalarNode(char c) {
-	this->nodeType = nullptr;
-	value.type = 4;
-	value.char_val = c;
   }
 
 ScalarNode::ScalarNode(string s){
@@ -44,27 +38,25 @@ void ScalarNode::print(ostream &os) {
 
 void ScalarNode::generate_code(){
 	AsmGenerator::comment("<Scaler Node");
+	string s0 = "s0";
+	string f0 = "f0";
 	switch (value.type)
 		{
 		case 1:
-			AsmGenerator::li("t0",value.int_val);
-			AsmGenerator::push("t0");
+			AsmGenerator::li(s0,value.int_val);
+			AsmGenerator::push(s0);
 			break;
 		case 2:
-			AsmGenerator::f_li("f0",value.float_val);
-			AsmGenerator::f_push("f0");
+			AsmGenerator::f_li(f0,value.float_val);
+			AsmGenerator::f_push(f0);
 			break;
 		case 3:
-			AsmGenerator::li("t0",value.bool_val);
-			AsmGenerator::push("t0");
-			break;
-		case 4:
-			AsmGenerator::li("t0",value.char_val);
-			AsmGenerator::push("t0");
+			AsmGenerator::li(s0,value.bool_val);
+			AsmGenerator::push(s0);
 			break;
 		case 5:
-			AsmGenerator::la("t0",AsmGenerator::store_string(value.string_val));
-			AsmGenerator::push("t0");
+			AsmGenerator::la(s0,AsmGenerator::store_string_literal(value.string_val));
+			AsmGenerator::push(s0);
 			break;
 		}
 	AsmGenerator::comment("Scaler Node/>");
