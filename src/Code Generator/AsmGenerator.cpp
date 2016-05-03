@@ -20,7 +20,10 @@ void AsmGenerator::write_file()
 
 void AsmGenerator::initialize_data()
 {
-	data_stream << ".data\n";
+	data_stream		<< ".data\n";
+	data_stream		<< new_line_address	 << ": .asciiz \"\\n\" \n";
+	data_stream		<< empty_string_address << ": .asciiz \"\" \n";
+	data_stream		<< "\n"; 
 }
 
 void AsmGenerator::write_data()
@@ -56,37 +59,52 @@ void AsmGenerator::write_function()
 
 void AsmGenerator::write_functions()
 {
-	AsmGenerator::strcpy();
+	AsmGenerator::strconcat();
 	AsmGenerator::strlen();
 	AsmGenerator::int_to_asci();
+	AsmGenerator::strcpy();
 	assembly_code_file << functions_stream.str();
 }
 
-string AsmGenerator::store_int(int id,int value)
+string AsmGenerator::store_global_int(int id,int initial_value)
 {
-	string data_label = global_label+to_string(id);
+	string data_label = global_int+to_string(id);
 	string c="";
 	c+= data_label;
 	c+=": .word ";
-	c+=to_string(value);
+	c+=to_string(initial_value);
 	AsmGenerator::add_data(c);
 
 	return data_label;
 }
 
-string AsmGenerator::store_float(float value)
+string AsmGenerator::store_global_float(int id,float initial_value)
 {
-	string data_label = "fp_"+to_string(floats_count++);
+	string data_label = global_float+to_string(id);
 	string c="";
 	c+= data_label;
 	c+=": .float ";
-	c+=to_string(value);
+	c+=to_string(initial_value);
 	AsmGenerator::add_data(c);
 
 	return data_label;
 }
 
-string AsmGenerator::store_string(string value)
+string AsmGenerator::store_global_string(int id,int initial_value)
+{
+	string data_label = gloabl_string+to_string(id);
+	string c="";
+	c+= data_label;
+	c+=": .word ";
+	c+=to_string(initial_value);
+	AsmGenerator::add_data(c);
+
+	return data_label;
+}
+
+
+
+string AsmGenerator::store_string_literal(string value)
 {
 	string data_label;
 	if (strings_map.find(value) != strings_map.end()){
@@ -135,20 +153,26 @@ void AsmGenerator::li(string reg,int value)
 
 void AsmGenerator::f_li(string reg,float value)
 {
-	if (SIMULATOR ==1){
-		string float_data_name = AsmGenerator::store_float(value);
-		string c="l.s $";
-		c+=reg;
-		c+=", ";
-		c+=float_data_name;
-		AsmGenerator::add_instruction(c);
-	}else{
-		string c="li.s $";
-		c+=reg;
-		c+=",";
-		c+=to_string(value);
-		AsmGenerator::add_instruction(c);
-	}
+
+	string float_data_name = AsmGenerator::store_float_value(value);
+	string c="l.s $";
+	c+=reg;
+	c+=", ";
+	c+=float_data_name;
+	AsmGenerator::add_instruction(c);
+
+}
+
+string AsmGenerator::store_float_value(float value)
+{
+	string data_label = "fp_"+to_string(floats_count++);
+	string c="";
+	c+= data_label;
+	c+=": .float ";
+	c+=to_string(value);
+	AsmGenerator::add_data(c);
+
+	return data_label;
 }
 
 void AsmGenerator::la(string reg,string value)
@@ -157,6 +181,27 @@ void AsmGenerator::la(string reg,string value)
 	c+=reg;
 	c+=", ";
 	c+=value;
+	AsmGenerator::add_instruction(c);
+}
+
+void AsmGenerator::lw(string dest_reg,int offset,string source_reg)
+{
+	string c="lw $";
+	c+=dest_reg;
+	c+=", ";
+	c+=to_string(offset);
+	c+="($";
+	c+=source_reg;
+	c+=")";
+	AsmGenerator::add_instruction(c);
+}
+
+void AsmGenerator::lw(string dest_reg,string address)
+{
+	string c="lw $";
+	c+=dest_reg;
+	c+=", ";
+	c+=address;
 	AsmGenerator::add_instruction(c);
 }
 
@@ -172,7 +217,7 @@ void AsmGenerator::sw(string source_reg,int offset,string dest_reg)
 	AsmGenerator::add_instruction(c);
 }
 
-void AsmGenerator::sw(string dest_reg,string label)
+void AsmGenerator::sw(string label,string dest_reg)
 {
 	string c="sw $";
 	c+=dest_reg;
@@ -569,33 +614,37 @@ void AsmGenerator::f_move(string dest_reg,string source_reg)
 	AsmGenerator::add_instruction(c);
 }
 
-void AsmGenerator::strcpy()
+void AsmGenerator::strconcat()
 {
-	AsmGenerator::initialize_function(strcpy_functoion_name);
-		AsmGenerator::add_label("strcpy_copyFirst");
+	AsmGenerator::initialize_function(strconcat_functoion_name);
+		//arguments: $a0 address of first string
+		//			 $a1 address of second string
+		//			 $a2 address of third string to write the result on it
+		//return nothing
+		AsmGenerator::add_label("strconcat_copyFirst");
 		AsmGenerator::add_instruction("lb $t0 0($a0)");
-		AsmGenerator::add_instruction("beq  $t0 $0 strcpy_copySecond");
+		AsmGenerator::add_instruction("beq  $t0 $0 strconcat_copySecond");
 		AsmGenerator::add_instruction("sb   $t0 0($a2)");
 		AsmGenerator::add_instruction("addi $a0 $a0 1");
 		AsmGenerator::add_instruction("addi $a2 $a2 1");
-		AsmGenerator::add_instruction("b strcpy_copyFirst");
-		AsmGenerator::add_label("strcpy_copySecond");
+		AsmGenerator::add_instruction("b strconcat_copyFirst");
+		AsmGenerator::add_label("strconcat_copySecond");
 		AsmGenerator::add_instruction("lb   $t0 0($a1)");
 		AsmGenerator::add_instruction("beq  $t0 $0 exit_strcpy");
 		AsmGenerator::add_instruction("sb   $t0 0($a2)");
 		AsmGenerator::add_instruction("addi $a1 $a1 1");
 		AsmGenerator::add_instruction("addi $a2 $a2 1");
-		AsmGenerator::add_instruction("b strcpy_copySecond");
-		AsmGenerator::add_label("exit_strcpy");
+		AsmGenerator::add_instruction("b strconcat_copySecond");
+		AsmGenerator::add_label("exit_strconcat");
 		AsmGenerator::add_instruction("sb $0 0($a2)");
-
 	AsmGenerator::write_function();
 }
 
 void AsmGenerator::strlen()
 {
 	AsmGenerator::initialize_function(strlen_functoion_name);
-
+		//arguments: $a0 address of string
+		//return length of string in $v1
 		AsmGenerator::add_instruction("li $t0, 0");
 		AsmGenerator::add_label("strlen_loop");
 		AsmGenerator::add_instruction("lb $t1, 0($a0)");
@@ -664,6 +713,28 @@ void AsmGenerator::int_to_asci()
 	AsmGenerator::write_function();
 }
 
+void AsmGenerator::strcpy()
+{
+	AsmGenerator::initialize_function(strcpy_function_name);
+		//argument $a0 address of dest string
+		//		   $a1 address of source string
+		// return nothing
+		AsmGenerator::add_instruction("add  $t0, $zero, $zero");
+		AsmGenerator::add_label("strcpy_loop");
+		AsmGenerator::add_instruction("add  $t1, $a1, $t0");
+		AsmGenerator::add_instruction("lb   $t2, 0($t1)");
+		AsmGenerator::add_instruction("beq  $t2, $zero, exit_strcpy");
+		AsmGenerator::add_instruction("add  $t3, $a0, $t0");
+		AsmGenerator::add_instruction("sb   $t2, 0($t3)");
+		AsmGenerator::add_instruction("addi $t0, $t0, 1");
+		AsmGenerator::add_instruction("j strcpy_loop");
+		AsmGenerator::add_label("exit_strcpy");
+		AsmGenerator::add_instruction("add  $t3, $a0, $t0");
+		AsmGenerator::add_instruction("sb   $zero, 0($t3)");
+		AsmGenerator::add_instruction("");
+	AsmGenerator::write_function();
+}
+
 ofstream AsmGenerator::assembly_code_file;
 stringstream AsmGenerator::data_stream;
 stringstream AsmGenerator::main_stream;
@@ -678,7 +749,14 @@ int AsmGenerator::strings_count				= 0;
 int AsmGenerator::if_temp_label_count		= 0;
 int AsmGenerator::else_temp_label_count		= 0;
 
-string AsmGenerator::strcpy_functoion_name		= "strcpy";
-string AsmGenerator::strlen_functoion_name		= "strlen";
-string AsmGenerator::int_to_asci_functoion_name = "ItoA";
-string AsmGenerator::global_label				= "global_";
+string AsmGenerator::strconcat_functoion_name		= "strconcat";
+string AsmGenerator::strlen_functoion_name			= "strlen";
+string AsmGenerator::int_to_asci_functoion_name		= "ItoA";
+string AsmGenerator::strcpy_function_name			= "strcpy";
+
+string AsmGenerator::global_label					= "global_";
+string AsmGenerator::global_int						= global_label+"I_";
+string AsmGenerator::global_float					= global_label+"F_";
+string AsmGenerator::gloabl_string					= global_label+"S_";
+string AsmGenerator::new_line_address				= "new_line";
+string AsmGenerator::empty_string_address			= "empty_string";

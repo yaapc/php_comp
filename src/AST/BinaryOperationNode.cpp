@@ -217,7 +217,7 @@ void BinaryOperationNode::print(ostream &os) {
 			AsmGenerator::move	("a0",s0);
 			AsmGenerator::move	("a1",s1);
 			AsmGenerator::move	("a2",s2);
-			AsmGenerator::jal(AsmGenerator::strcpy_functoion_name);
+			AsmGenerator::jal(AsmGenerator::strconcat_functoion_name);
 			AsmGenerator::push(s2);
 		}
 

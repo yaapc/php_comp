@@ -12,7 +12,7 @@ public:
 
   virtual void generate_code();
 
-  bool type_checking();
+  virtual bool type_checking();
 
-  TypeExpression* getNodeType();
+  virtual TypeExpression* getNodeType();
 };

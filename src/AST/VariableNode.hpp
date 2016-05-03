@@ -10,5 +10,6 @@ public:
   VariableNode(Symbol *var);
   virtual void print(ostream &os);
   virtual void generate_code();
-  bool type_checking();
+  virtual bool type_checking();
+  virtual TypeExpression* getNodeType();
 };

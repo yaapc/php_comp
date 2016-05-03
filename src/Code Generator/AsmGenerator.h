@@ -25,6 +25,8 @@ private:
 	static int floats_count;
 	static int strings_count;
 
+	static string global_label;
+
 	static map<string,int> strings_map;
 
 	
@@ -44,21 +46,26 @@ public:
 
 	static void write_functions();
 	
-	static string store_int					(int id,int value);
-	static string store_float				(float value);
-	static string store_string				(string value);
+	static string store_global_int			(int id,int initial_value);
+	static string store_global_float		(int id,float initial_value);
+	static string store_global_string		(int id,int initial_address_value);
+
+	static string store_float_value			(float value);
+	static string store_string_literal		(string value);
 	static string store_string_empty		();
 
 	static void li							(string reg,int value);
 	static void f_li						(string reg,float value);
 
-	static void sw							(string dest_reg,string lable);	
+	static void sw							(string lable,string dest_reg);	
 
-	static void sw							(string dest_reg,int offset,string reg_source);	
+	static void sw							(string source_reg,int offset,string dest_reg);	
 
 	static void la							(string reg,string value);
 				
-	static void lw							(string dest_reg,int offsetof,string address);
+	static void lw							(string dest_reg,int offset,string source_reg);
+
+	static void lw							(string dest_reg,string address);
 
 	static void add_label					(string label_name);
 
@@ -120,16 +127,24 @@ public:
 
 	//pre defined functions
 
-	static string strcpy_functoion_name;
-	static void strcpy				();
+	static string strconcat_functoion_name;
+	static void strconcat				();
 
 	static string strlen_functoion_name;
 	static void strlen				();	
 
 	static string int_to_asci_functoion_name;
-	static void int_to_asci	();
+	static void int_to_asci			();
 
-	static string global_label;
+	static string strcpy_function_name;
+	static void   strcpy			();
+
+	
+	static string global_int;
+	static string global_float;
+	static string gloabl_string;
+	static string new_line_address;
+	static string empty_string_address;
 };
 
 
