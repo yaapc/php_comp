@@ -108,11 +108,21 @@ public:
 	void setParams(Symbol* params);
 	
 	string generateFunctionSignature();
+	string getLabel();
+
+	static int functionCounter; // 
+
+
 private:
 	char* returnType;
 	Scope* bodyScope;
 
 	Symbol* params;
+
+	int id;
+	string label;
+
+	void generateLabel();
 };
 
 /*
