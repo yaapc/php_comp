@@ -199,6 +199,10 @@ void Function::generateLabel() {
 	os << "func_" << getName() << "_" << this->id;
 	this->label = os.str();
 }
+
+string Function::getLabel() {
+	return this->label;
+}
 /*
 ========================================
 CLASS:
