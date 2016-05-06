@@ -2,7 +2,7 @@
 a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) and a SymbolTable and a simple TypeChecker.
 
 
-### MAIN TODOs: 
+## MAIN TODOs: 
   * AST.
   * Minor todo's scattered and labeled in the code.
   * :heavy_check_mark: SymbolTable doesn't support declarations of "const" and "static" variables. 
@@ -35,11 +35,15 @@ a php compiler contains for now the lexer (lex.l) and grammer parser (yacc.y) an
   * :heavy_check_mark: Link the paramters symbols to thier function symbol.
   * :heavy_check_mark: Link the data members and methods to thier class symbol.
 
-  
-### Error Recovery TODOs:
+## Error Recovery TODOs:
   * report an error for methods with no body and not declared as abstract.
 
-### SymbolTable And TypeChecker Class Diagram : 
+## Type System TODOs:
+  * Add Assignment Operation to flaot type. 
+
+## Code Generatoion TODOs: 
+
+## SymbolTable And TypeChecker Class Diagram : 
  ![Class Diagram](http://s4.postimg.org/94t0nclfh/Class_Diagram.png)
 
 ### TypeChecker :
@@ -47,7 +51,7 @@ what the type checker can do for now:
  * checkVariable() : checks if a variable is declared looking up the symbol table from the scope that the variable is declared in up to root scope.
  * checkDependency() : creates a dependency (inhertence) graph, looks for circular dependencies ,report circles and logs the graph.
 
-### Dependency Graph: 
+## Dependency Graph: 
  quoting from Wikipedia: a dependency graph is a directed graph representing dependencies of several objects towards each other.
  we use the dependency graph to represesnt inheretence dependency between classes.
  we create the directed graph then use Tarjan's strongly connected components algorithm to catch the circles and identify them.
