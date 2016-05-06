@@ -42,3 +42,14 @@ void ListNode::print(ostream& os) {
 		node->generate_code();
 	}
   }
+
+
+ ListNode* ListNode::joinNodeLists(Node* f, Node* s) {
+	 ListNode* fl = dynamic_cast<ListNode*>(f);
+	 ListNode* sl = dynamic_cast<ListNode*>(s);
+	 for (auto &node : sl->nodes) {
+		 if (node == nullptr) continue;
+		 fl->nodes.push_back(node);
+	 }
+	 return fl;
+ }

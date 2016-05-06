@@ -3,7 +3,7 @@
 #include "Node.hpp"
 #include "ListNode.hpp"
 #include "EchoNode.hpp"
-#include "FunctionNode.hpp"
+#include "FunctionDefineNode.hpp"
 #include "ReturnNode.hpp"
 #include "VariableNode.hpp"
 #include "BinaryOperationNode.hpp"
@@ -14,4 +14,5 @@
 #include "ElseNode.hpp"
 #include "WhileNode.hpp"
 #include "ForNode.hpp"
-
+#include "ParameterNode.hpp"
+#include "FunctionCallNode.hpp"

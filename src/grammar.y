@@ -431,7 +431,7 @@ statement:
 	| T_BREAK expr ';' {pl.log("break exp stmt");}
 	| T_CONTINUE ';'{pl.log("contintue stmt");}
 	| T_CONTINUE expr ';' {pl.log("contintue expr stmt");}
-	| T_RETURN ';' {pl.log("return stmt");}
+	| T_RETURN ';' {pl.log("return stmt"); $<r.node>$ = new ReturnNode(nullptr);}
 	| T_RETURN expr ';' { pl.log("return expr stmt"); $<r.node>$ = new ReturnNode($<r.node>2); }
 	| yield_expr ';' {pl.log("yield stmt");}
 	| global_variable_statement {pl.log("global variable stmt");}
@@ -483,7 +483,7 @@ optional_ellipsis:
 function_declaration_statement:
 		function_header inner_statement_list close_par {
 			pl.log("function:", 0); pl.log($<r.str>3);
-			$<r.node>$ = new FunctionNode($<r.symbol>1, $<r.node>2); }
+			$<r.node>$ = new FunctionDefineNode($<r.symbol>1, $<r.node>2, $<r.node>1); }
 ;
 
 function_header:
@@ -491,6 +491,8 @@ function_header:
 		{
 			pl.log("function header:", 0); pl.log($<r.str>3);
 			$<r.symbol>$ = symbolsParser->insertFunctionSymbol($<r.str>3, $<r.str>8, $<r.col_no>1, $<r.line_no>1, $<r.scope>9, $<r.symbol>5);
+			
+			$<r.node>$ = $<r.node>5; // pass parameter nodes
 		}
 	| T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':'	open_par
 		{
@@ -498,6 +500,8 @@ function_header:
 			/* ERROR RULE: function without returned type */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"expecting return type, functions must have return type","");
 			symbolsParser->insertFunctionSymbol($<r.str>3, "void", $<r.col_no>1, $<r.line_no>1, $<r.scope>8, $<r.symbol>5);// assume return type is void
+			
+			$<r.node>$ = $<r.node>5; // pass parameter nodes
 		}
 	| T_STATIC T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par
 		{
@@ -505,6 +509,8 @@ function_header:
 			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
 			symbolsParser->insertFunctionSymbol($<r.str>4, $<r.str>9, $<r.col_no>1, $<r.line_no>1, $<r.scope>10, $<r.symbol>6);
+
+			$<r.node>$ = $<r.node>6; // pass parameter nodes
 	}
 	|  member_modifier_without_static T_FUNCTION optional_ref T_STRING '(' parameter_list ')' ':' type open_par
 		{
@@ -512,6 +518,8 @@ function_header:
 			/* ERROR RULE: Global function with modifiers(public,private,protected,static,final,abstract) */
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Global funtion dosn't accept modifier","");
 			symbolsParser->insertFunctionSymbol($<r.str>4, $<r.str>9, $<r.col_no>1, $<r.line_no>1, $<r.scope>10, $<r.symbol>6);
+		
+			$<r.node>$ = $<r.node>6; // pass parameter nodes
 		}
 ;
 
@@ -841,38 +849,65 @@ foreach_variable:
 ;
 
 parameter_list:
-		non_empty_parameter_list {pl.log("non empty parameters list");}
+		non_empty_parameter_list 
+		{
+			pl.log("non empty parameters list");				
+		}
 	| non_empty_parameter_list ',' non_empty_default_parameter_list
 		{
 			pl.log("non empty mixed parameters list");
 			//joining the two lists of params
 			$<r.symbol>$ = SymbolsParser::joinSymbolsLists($<r.symbol>1,$<r.symbol>3);
+
+			$<r.node>$ = ListNode::joinNodeLists($<r.node>1, $<r.node>3);
 		}
-	| non_empty_default_parameter_list {pl.log("non empty default parameters list");}
+	| non_empty_default_parameter_list 
+	    {
+			pl.log("non empty default parameters list");
+		}
 	| /* empty */
 		{
 			pl.log("empty parameters list");
 			$<r.symbol>$ = nullptr;
+			$<r.node>$ = new ListNode(); // an empty list of parameter nodes
 		}
 ;
 
 non_empty_parameter_list:
-		parameter
+	  parameter {
+			ListNode* list = new ListNode();
+			list->add_node($<r.node>1);
+			$<r.node>$ = list;
+	  }
 	| non_empty_parameter_list ',' parameter
 		{
 			//**chain symbols in the list and pass it:
+			pl.log("non_empty_parameter_list with parameter");
 			$<r.symbol>3->node = $<r.symbol>1;
 			$<r.symbol>$ = $<r.symbol>3;
+
+			ListNode* list = dynamic_cast<ListNode*>($<r.node>1);
+			list->add_node($<r.node>3);
+			$<r.node>$ = list;
 		}
 ;
 
 non_empty_default_parameter_list:
-		default_parameter
+		default_parameter 
+		{
+			ListNode* list = new ListNode();
+			list->add_node($<r.node>1);
+			$<r.node>$ = list;
+		}
 	| non_empty_default_parameter_list ',' default_parameter
 		{
 			//**chain symbols in the list and pass it:
 			$<r.symbol>3->node = $<r.symbol>1;
 			$<r.symbol>$ = $<r.symbol>3;
+
+			ListNode* list = dynamic_cast<ListNode*>($<r.node>1);
+			list->add_node($<r.node>3);
+			$<r.node>$ = list;
 		}
 	| non_empty_default_parameter_list ',' parameter
 		{
@@ -881,6 +916,10 @@ non_empty_default_parameter_list:
 			//**chain symbols in the list and pass it:
 			$<r.symbol>3->node = $<r.symbol>1;
 			$<r.symbol>$ = $<r.symbol>3;
+
+			ListNode* list = dynamic_cast<ListNode*>($<r.node>1);
+			list->add_node($<r.node>3);
+			$<r.node>$ = list;
 		}
 ;
 
@@ -891,6 +930,9 @@ parameter:
 			Parameter* paramSymbol = new Parameter($<r.str>4, $<r.col_no>1, $<r.line_no>1, false); // we assume variable is initialized
 			paramSymbol->setVariableType($<r.str>1);// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
+
+			ParameterNode* parNode = new ParameterNode(paramSymbol, false);
+			$<r.node>$ = parNode;
 		}
 	| optional_ref optional_ellipsis T_VARIABLE
 		{
@@ -899,6 +941,9 @@ parameter:
 			Parameter* paramSymbol = new Parameter($<r.str>3, $<r.col_no>1, $<r.line_no>1, false); // we assume variable is initialized
 			paramSymbol->setVariableType("Object");// assume type is Object and continue // TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
+
+			ParameterNode* parNode = new ParameterNode(paramSymbol, false);
+			$<r.node>$ = parNode;
 		}
 ;
 
@@ -909,6 +954,9 @@ default_parameter:
 			Parameter* paramSymbol = new Parameter($<r.str>4, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized
 			paramSymbol->setVariableType($<r.str>1);// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
+
+			ParameterNode* parNode = new ParameterNode(paramSymbol, true);
+			$<r.node>$ = parNode;
 		}
 	| optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
 		{
@@ -917,6 +965,9 @@ default_parameter:
 			Parameter* paramSymbol = new Parameter($<r.str>3, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized
 			paramSymbol->setVariableType("Object"); // assume type is Object and continue// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
+
+			ParameterNode* parNode = new ParameterNode(paramSymbol, true);
+			$<r.node>$ = parNode;
 		}
 	| type optional_ref optional_ellipsis T_VARIABLE '='
 		{
@@ -925,6 +976,9 @@ default_parameter:
 			Parameter* paramSymbol = new Parameter($<r.str>4, $<r.col_no>1, $<r.line_no>1, true); // we assume variable is initialized
 			paramSymbol->setVariableType($<r.str>1); // assume type is Object and continue// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
+
+			ParameterNode* parNode = new ParameterNode(paramSymbol, true);
+			$<r.node>$ = parNode;
 		}
 ;
 
@@ -968,14 +1022,30 @@ optional_return_type:
 ;
 
 argument_list:
-		'(' ')'
+		'(' ')' 
+		{
+			$<r.node>$ = new ListNode(); // an empty list of argument nodes
+		}
 	| '(' non_empty_argument_list ')'
+		{
+			$<r.node>$ = $<r.node>2;
+		}
 	| '(' yield_expr ')'
 ;
 
 non_empty_argument_list:
-		argument
-	| non_empty_argument_list ',' argument
+		argument 
+		{
+			ListNode* argsList = new ListNode();
+			argsList->add_node($<r.node>1);
+			$<r.node>$ = argsList;
+		}
+	| non_empty_argument_list ',' argument 
+		{
+			dynamic_cast<ListNode*>($<r.node>1)
+						           ->add_node($<r.node>3);
+			$<r.node>$ = $<r.node>1;
+		}
 ;
 
 argument:
@@ -1267,7 +1337,7 @@ expr:
 		{
 			pl.log($<r.str>1,0);
 			typeChecker->checkVariable($<r.str>1,$<r.line_no>1,$<r.col_no>1);
-			$<r.node>$ = new VariableNode(symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1, $<r.line_no>1, $<r.col_no>1));
+			$<r.node>$ = $<r.node>1;
 		}
 	| '(' T_PRIMITIVE ')' expr
 	| list_expr '=' expr
@@ -1403,7 +1473,11 @@ lexical_var:
 ;
 
 function_call:
-		name argument_list {pl.log("function call");}
+		name argument_list 
+		{
+			pl.log("function call");
+			$<r.node>$ = new FunctionCallNode($<r.str>1, $<r.node>2);	
+		}
 	| class_name_or_var T_PAAMAYIM_NEKUDOTAYIM identifier argument_list {pl.log(":: function call");}
 	| class_name_or_var T_PAAMAYIM_NEKUDOTAYIM open_par expr close_par argument_list
 	| static_property argument_list
@@ -1560,7 +1634,7 @@ static_array_pair:
 variable:
 		object_access
 	| base_variable
-	| function_call
+	| function_call 
 	| new_expr_array_deref
 ;
 
