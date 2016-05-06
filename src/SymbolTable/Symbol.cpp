@@ -231,6 +231,10 @@ string Function::generateFunctionSignature() {
 	return os.str();
 
 }
+
+string Function::getLabel() {
+	return this->label;
+}
 /*
 ========================================
 CLASS:
