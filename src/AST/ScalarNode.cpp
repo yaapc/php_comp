@@ -73,9 +73,6 @@ bool ScalarNode::type_checking() {
 			case 3:
 				this->nodeType = TypesTable::getInstance()->getType(BOOLEAN_TYPE_ID);
 				break;
-			case 4:
-				this->nodeType = TypesTable::getInstance()->getType(CHARACTER_TYPE_ID);
-				break;
 			case 5:
 				this->nodeType = TypesTable::getInstance()->getType(STRING_TYPE_ID);
 				break;

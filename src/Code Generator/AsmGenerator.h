@@ -57,7 +57,7 @@ public:
 	static void li							(string reg,int value);
 	static void f_li						(string reg,float value);
 
-	static void sw							(string lable,string dest_reg);	
+	static void sw							(string address,string source_reg);	
 
 	static void sw							(string source_reg,int offset,string dest_reg);	
 
@@ -66,6 +66,14 @@ public:
 	static void lw							(string dest_reg,int offset,string source_reg);
 
 	static void lw							(string dest_reg,string address);
+
+	static void ls							(string dest_reg,string address);
+
+	static void ls							(string dest_reg,int offset,string source_reg);
+
+	static void ss							(string address,string source_reg);
+
+	static void ss							(string source_reg,int offset,string dest_reg);
 
 	static void add_label					(string label_name);
 

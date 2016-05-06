@@ -25,8 +25,7 @@ void AssignmentNode::print(ostream &os) {
 void AssignmentNode::generate_code()
 {
 	AsmGenerator::comment("<Assignment Node");
-	string s0 = "s0";
-	string s1 = "s1";
+
 	AsmGenerator::comment("<Binary Operation Left node");
 	lhs->generate_code();
 	AsmGenerator::comment("Binary Operation Left node/>");
@@ -34,18 +33,25 @@ void AssignmentNode::generate_code()
 	AsmGenerator::comment("<Binary Operation right node");
 	rhs->generate_code();
 	AsmGenerator::comment("Binary Operation right node/>");
-	 
-	AsmGenerator::pop(s1);
-	AsmGenerator::pop(s0);
+
 
 	if (this->getNodeType()->getTypeId() == INTEGER_TYPE_ID || this->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
+		// int numeric value are stored in data segment and variables values also stored in data segment so life is easy :-)
+
+		string s0 = "s0";
+		string s1 = "s1";			 
+		AsmGenerator::pop(s1);
+		AsmGenerator::pop(s0);
+		//s0 should contain the value of int variale we don't want value here we need address to write on it
+		//s1 should contain the int vlaue
+
 		if (VariableNode *variable = dynamic_cast<VariableNode*>(lhs)){
 
-			//Get memory address of variable because variable node with primitive type (int,bool) push its value on stack and only value 
-			//put when int variable appeare in lhs we need its address 
+			//Get memory address of variable because variable node with primitive type (int,bool,float) push its value on stack
+			//but when primitve variable appeare in lhs we need its address to write on it so we have to get the address 
 
-			string mem_label = AsmGenerator::global_int+to_string(variable->variable->getId());
-			AsmGenerator::la(s0,mem_label); // Store address in s0 (overwrite the value-reusing the s0 reg)
+			string variable_mem_address = AsmGenerator::global_int+to_string(variable->variable->getId());
+			AsmGenerator::la(s0,variable_mem_address); // Store address in s0 (overwrite the value-reusing the s0 reg)
 			AsmGenerator::sw(s1,0,s0);	   //  Store value from rhs in the addresss
 		}else{
 			throw std::invalid_argument("left hand side should be Variable node");
@@ -55,6 +61,10 @@ void AssignmentNode::generate_code()
 	if (this->getNodeType()->getTypeId() == STRING_TYPE_ID){
 		// String literals are stored in data and in variableNode we pushed the address of this literals
 
+		string s0 = "s0";
+		string s1 = "s1";			 
+		AsmGenerator::pop(s1);
+		AsmGenerator::pop(s0);
 		//s0 should contain the address of string variale
 		//s1 should contain the address of string literals
 
@@ -81,9 +91,27 @@ void AssignmentNode::generate_code()
 
 	}
 
-	if (this->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
-		// String literals are stored in data and in variableNode we pushed the address of this literals
+	if (true){//(this->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
+		// float numeric values are stored in data like strings but the value of float variable not in heap
+		// because it have fixed length not like strings
 
+		//f0 should contain the value of float variale
+		//f1 should contain the address of float value in data segment
+
+		string f0 = "f0";
+		string f1 = "f1";
+	
+
+		AsmGenerator::f_pop(f1);
+		AsmGenerator::f_pop(f0);
+		if (VariableNode *variable = dynamic_cast<VariableNode*>(lhs)){
+			string variable_mem_address = AsmGenerator::global_float+to_string(variable->variable->getId());
+
+			
+			AsmGenerator::ss(f1,variable_mem_address);
+		}else{
+			throw std::invalid_argument("left hand side should be Variable node");
+		}
 	}
 
 

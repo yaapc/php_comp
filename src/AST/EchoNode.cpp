@@ -47,7 +47,18 @@ void EchoNode::generate_code(){
 							}
 
 							if (node->getNodeType()->getTypeId() == FLOAT_TYPE_ID){ // float
+								//AsmGenerator::pop("t0");
+								//AsmGenerator::ls("f1",0,"t0");
+								//AsmGenerator::f_print_reg("f1");
+
 								AsmGenerator::f_pop("f0");
+								AsmGenerator::f_print_reg("f0");
+							}
+
+							if (node->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
+								AsmGenerator::pop(t0);
+								AsmGenerator::print_reg(t0);
+							
 							}
 					}
 					AsmGenerator::comment("List Node/>");

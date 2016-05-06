@@ -165,7 +165,7 @@ void AsmGenerator::f_li(string reg,float value)
 
 string AsmGenerator::store_float_value(float value)
 {
-	string data_label = "fp_"+to_string(floats_count++);
+	string data_label = "float_"+to_string(floats_count++);
 	string c="";
 	c+= data_label;
 	c+=": .float ";
@@ -217,12 +217,54 @@ void AsmGenerator::sw(string source_reg,int offset,string dest_reg)
 	AsmGenerator::add_instruction(c);
 }
 
-void AsmGenerator::sw(string label,string dest_reg)
+void AsmGenerator::sw(string address,string source_reg)
 {
 	string c="sw $";
+	c+=source_reg;
+	c+=", ";
+	c+=address;
+	AsmGenerator::add_instruction(c);
+}
+
+void AsmGenerator::ls(string dest_reg,string address)
+{
+	string c="l.s $";
 	c+=dest_reg;
 	c+=", ";
-	c+=label;
+	c+=address;
+	AsmGenerator::add_instruction(c);
+}
+
+void AsmGenerator::ls(string dest_reg,int offset,string source_reg)
+{
+	string c="l.s $";
+	c+=dest_reg;
+	c+=", ";
+	c+=to_string(offset);
+	c+="($";
+	c+=source_reg;
+	c+=")";
+	AsmGenerator::add_instruction(c);
+}
+
+void AsmGenerator::ss(string source_reg,string address)
+{
+	string c="s.s $";
+	c+=source_reg;
+	c+=", ";
+	c+=address;
+	AsmGenerator::add_instruction(c);
+}
+
+void AsmGenerator::ss(string source_reg,int offset,string dest_reg)	
+{
+	string c="s.s $";
+	c+=source_reg;
+	c+=", ";
+	c+=to_string(offset);
+	c+="($";
+	c+=dest_reg;
+	c+=")";
 	AsmGenerator::add_instruction(c);
 }
 
@@ -755,8 +797,8 @@ string AsmGenerator::int_to_asci_functoion_name		= "ItoA";
 string AsmGenerator::strcpy_function_name			= "strcpy";
 
 string AsmGenerator::global_label					= "global_";
-string AsmGenerator::global_int						= global_label+"I_";
-string AsmGenerator::global_float					= global_label+"F_";
-string AsmGenerator::gloabl_string					= global_label+"S_";
+string AsmGenerator::global_int						= global_label+"int_";
+string AsmGenerator::global_float					= global_label+"float_";
+string AsmGenerator::gloabl_string					= global_label+"string_";
 string AsmGenerator::new_line_address				= "new_line";
 string AsmGenerator::empty_string_address			= "empty_string";

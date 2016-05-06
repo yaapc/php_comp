@@ -58,7 +58,7 @@ void VariableNode::generate_code(){
 	// In primitive types we care about value so we have to load it
 	if (this->nodeType->getTypeId() == INTEGER_TYPE_ID	|| nodeType->getTypeId() == BOOLEAN_TYPE_ID){
 		string variable_mem_address = AsmGenerator::global_int+to_string(variable->getId());
-		AsmGenerator::lw(s0,variable_mem_address); 		//Get memory address and put in s0
+		AsmGenerator::lw(s0,variable_mem_address); 		//Get value from memory address and put the value in s0
 		AsmGenerator::push(s0);
 	}
 
@@ -71,8 +71,9 @@ void VariableNode::generate_code(){
 		
 	if (nodeType->getTypeId() == FLOAT_TYPE_ID){
 		string variable_mem_address = AsmGenerator::global_float+to_string(variable->getId());
-		AsmGenerator::la(s0,variable_mem_address); 	//Get memory address and put in s0
-		AsmGenerator::push(s0);
+		AsmGenerator::ls("f0",variable_mem_address);	//Get value from memory address and put the value in s0
+		//AsmGenerator::la(s0,variable_mem_address); 		
+		AsmGenerator::f_push("f0");
 	}
 	AsmGenerator::comment("Variable Node/>");
     
