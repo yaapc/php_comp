@@ -214,6 +214,10 @@ void Function::generateLabel() {
 	this->label = os.str();
 }
 
+string Function::getLabel() {
+	return this->label;
+}
+
 /*
 ========================================
 CLASS:
