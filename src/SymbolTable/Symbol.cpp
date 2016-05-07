@@ -107,6 +107,11 @@ void Variable::setId(int id) {
 int Variable::getId() {
 	return this->id;
 }
+
+string Variable::getUniqueName() {
+	string uniqueName = this->getName();
+	return uniqueName.erase(0,1)+to_string(id);
+}
 /*
 =========================================
 FUNCTION:

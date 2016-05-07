@@ -70,6 +70,8 @@ public:
 	void setId(int id);
 	int getId();
 
+	string getUniqueName();
+
 	string toString();
 private:
 	char* variableType;
