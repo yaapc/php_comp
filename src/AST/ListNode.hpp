@@ -18,8 +18,6 @@ public:
 
   virtual void print(ostream& os);
 
-  virtual void generate_code();
-
   static ListNode* joinNodeLists(Node* f, Node* s);
 
   virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);

@@ -931,7 +931,7 @@ parameter:
 			paramSymbol->setVariableType($<r.str>1);// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 
-			ParameterNode* parNode = new ParameterNode(paramSymbol, false);
+			ParameterNode* parNode = new ParameterNode(paramSymbol,nullptr,false);
 			$<r.node>$ = parNode;
 		}
 	| optional_ref optional_ellipsis T_VARIABLE
@@ -942,7 +942,7 @@ parameter:
 			paramSymbol->setVariableType("Object");// assume type is Object and continue // TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 
-			ParameterNode* parNode = new ParameterNode(paramSymbol, false);
+			ParameterNode* parNode = new ParameterNode(paramSymbol,nullptr,false);
 			$<r.node>$ = parNode;
 		}
 ;
@@ -955,7 +955,7 @@ default_parameter:
 			paramSymbol->setVariableType($<r.str>1);// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 
-			ParameterNode* parNode = new ParameterNode(paramSymbol, true);
+			ParameterNode* parNode = new ParameterNode(paramSymbol,$<r.node>6,true);
 			$<r.node>$ = parNode;
 		}
 	| optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
@@ -966,7 +966,7 @@ default_parameter:
 			paramSymbol->setVariableType("Object"); // assume type is Object and continue// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 
-			ParameterNode* parNode = new ParameterNode(paramSymbol, true);
+			ParameterNode* parNode = new ParameterNode(paramSymbol,$<r.node>5,true);
 			$<r.node>$ = parNode;
 		}
 	| type optional_ref optional_ellipsis T_VARIABLE '='
@@ -977,7 +977,7 @@ default_parameter:
 			paramSymbol->setVariableType($<r.str>1); // assume type is Object and continue// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 
-			ParameterNode* parNode = new ParameterNode(paramSymbol, true);
+			ParameterNode* parNode = new ParameterNode(paramSymbol,nullptr,true);
 			$<r.node>$ = parNode;
 		}
 ;

@@ -7,14 +7,16 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 
 
-ParameterNode::ParameterNode(Symbol* parSym, bool isDefault) {
+ParameterNode::ParameterNode(Symbol* parSym,Node *defaultValueNode,bool isDefault) {
 	this->nodeType = nullptr; // VS-2015
+	this->defaultValueNode = defaultValueNode;
 	this->isDefault = isDefault;
 	this->parSym = dynamic_cast<Parameter*>(parSym);
 }
 
 
 void ParameterNode::print(ostream &os) {
+	int self = int(this);
 	string parLabel = parSym ? parSym->getName() : "!!!";
 	if (isDefault)
 		parLabel = parLabel.append(" *");
@@ -23,6 +25,10 @@ void ParameterNode::print(ostream &os) {
 		<< parLabel
 		<< "\"]"
 		<< endl;
+	if (defaultValueNode){
+		defaultValueNode->print(os);
+		os << self << "->" << int(defaultValueNode) << endl;
+	}
 }
 
  void ParameterNode::generate_code(CodeGneratorVistor *codeGneratorVistor)

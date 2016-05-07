@@ -37,10 +37,6 @@ void ListNode::print(ostream& os) {
     }
   }
 
- void ListNode::generate_code(){
-  }
-
-
  ListNode* ListNode::joinNodeLists(Node* f, Node* s) {
 	 ListNode* fl = dynamic_cast<ListNode*>(f);
 	 ListNode* sl = dynamic_cast<ListNode*>(s);

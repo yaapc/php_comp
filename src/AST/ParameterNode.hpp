@@ -6,10 +6,14 @@
 
 class ParameterNode : public Node {
 public : 
+
+	Node *defaultValueNode;
+
 	bool isDefault;
+
 	Parameter* parSym; // parameter symbol
 
-	ParameterNode(Symbol* parSym, bool isDefault);
+	ParameterNode(Symbol* parSym,Node *defaultValueNode,bool isDefault);
 
 	bool type_checking();
 
