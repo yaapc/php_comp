@@ -50,11 +50,8 @@ typedef struct Values
 
 class ScalarNode : public Node {
 
-protected:
-	Values  value;
-
 public:
-
+	Values  value;
 	ScalarNode(int i);
 	ScalarNode(float f);
 	ScalarNode(bool b);
@@ -62,10 +59,9 @@ public:
 
   virtual void print(ostream &os);
 
-  virtual void generate_code();
-
   virtual bool type_checking();
 
   virtual TypeExpression* getNodeType();
 
+  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 };

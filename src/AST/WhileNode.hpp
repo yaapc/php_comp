@@ -11,4 +11,6 @@ public:
   WhileNode(Node *condition, Node *body);
 
   virtual void print(ostream &os);
+
+  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 };

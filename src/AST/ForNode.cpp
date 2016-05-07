@@ -1,5 +1,6 @@
 #pragma once 
 #include "ForNode.hpp"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 
 
  ForNode::ForNode(Node *initializer, Node *condition, Node *post_statement, Node *body) :
@@ -22,3 +23,8 @@
     os << self << "->" << int(post_statement) << endl;
     os << self << "->" << int(body) << endl;
   }
+
+void ForNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
+}

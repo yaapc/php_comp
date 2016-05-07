@@ -2,6 +2,7 @@
 
 #include "FunctionCallNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 
 FunctionCallNode::FunctionCallNode(string name, Node* argsList) {
 	this->nodeType = nullptr;
@@ -25,6 +26,7 @@ bool FunctionCallNode::type_checking() {
 	return false;
 }
 
-void FunctionCallNode::generate_code() {
-	//TODO:
+void FunctionCallNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
 }

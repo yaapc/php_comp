@@ -2,6 +2,7 @@
 #include "ScalarNode.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/AsmGenerator.h"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 
 ScalarNode::ScalarNode(int i) {
 	this->nodeType = nullptr;
@@ -36,32 +37,6 @@ void ScalarNode::print(ostream &os) {
        << endl;
   }
 
-void ScalarNode::generate_code(){
-	AsmGenerator::comment("<Scaler Node");
-	string s0 = "s0";
-	string f0 = "f0";
-	switch (value.type)
-		{
-		case 1:
-			AsmGenerator::li(s0,value.int_val);
-			AsmGenerator::push(s0);
-			break;
-		case 2:
-			AsmGenerator::f_li(f0,value.float_val);
-			AsmGenerator::f_push(f0);
-			break;
-		case 3:
-			AsmGenerator::li(s0,value.bool_val);
-			AsmGenerator::push(s0);
-			break;
-		case 5:
-			AsmGenerator::la(s0,AsmGenerator::store_string_literal(value.string_val));
-			AsmGenerator::push(s0);
-			break;
-		}
-	AsmGenerator::comment("Scaler Node/>");
-	}
-
 bool ScalarNode::type_checking() {
 	  switch (value.type){
 			case 1:
@@ -88,4 +63,9 @@ TypeExpression* ScalarNode::getNodeType() {
 		  this->type_checking();
 	  return this->nodeType;
       
+}
+
+void ScalarNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
 }

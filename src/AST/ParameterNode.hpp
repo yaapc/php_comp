@@ -12,7 +12,9 @@ public :
 	ParameterNode(Symbol* parSym, bool isDefault);
 
 	bool type_checking();
-	void generate_code();
+
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+
 	void print(ostream &os);
 
 

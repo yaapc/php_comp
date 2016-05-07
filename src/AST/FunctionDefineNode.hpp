@@ -20,7 +20,7 @@ public:
   virtual void print(ostream &os);
   bool type_checking();
 
-  void generate_code();
+  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 private:
 	TypeExpression* createReturnType(); // create a TypeExpression represents the return type.
 };

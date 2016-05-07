@@ -11,7 +11,7 @@ public:
 
   virtual void print(ostream &os);
 
-  virtual void generate_code();
+  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
   virtual TypeExpression* getNodeType();
 

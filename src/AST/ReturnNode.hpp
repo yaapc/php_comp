@@ -6,7 +6,10 @@
 class ReturnNode : public Node {
 public:
   Node* returnend_expression;
+
   ReturnNode(Node *exp);
 
   virtual void print(ostream &os);
+
+  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 };

@@ -7,9 +7,14 @@
 class VariableNode : public Node {
 public:
   Variable *variable;
+
   VariableNode(Symbol *var);
+
   virtual void print(ostream &os);
-  virtual void generate_code();
+
+  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+
   virtual bool type_checking();
+
   virtual TypeExpression* getNodeType();
 };

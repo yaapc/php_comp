@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IfNode.hpp"
-#include "../Code Generator/AsmGenerator.h"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../TypeSystem/TypeError.hpp"
 
@@ -21,38 +21,9 @@ IfNode::IfNode(Node *cond, Node *bod, Node *el) : condition(cond), body(bod), el
   }
 
 
-  
-  void IfNode::generate_code(){
-	AsmGenerator::comment("<If Statment");
-
-
-	string t0 = "t0";
-	string else_label	= "else_label_" + to_string(AsmGenerator::if_temp_label_count);
-	string finish		= "finish_if_"  + to_string(AsmGenerator::if_temp_label_count);
+  void IfNode::generate_code(CodeGneratorVistor *codeGneratorVistor){
+	  codeGneratorVistor->visit(this);
 	
-	AsmGenerator::comment("<If Statment Condition Node");
-	condition->generate_code();
-	AsmGenerator::comment("<If Statment Condition Node/>");
-
-	AsmGenerator::pop(t0);
-	AsmGenerator::beq(t0,"0",else_label); // if t0 (condition) equal 0 ==> control go to else node
-
-	if (body != NULL)					// else t0 (condition) equal 1 ==> control got to body node
-	{
-		AsmGenerator::comment("<If Statment Body Node");
-		body->generate_code();
-		AsmGenerator::comment("If Statment Body Node/>");
-	}
-	AsmGenerator::jump_label(finish);	 // body completed got to finish label
-	AsmGenerator::add_label(else_label);
-	if (else_node != NULL){
-		AsmGenerator::comment("<If Statment Else Node");
-		else_node->generate_code();
-		AsmGenerator::comment("If Statment Else Node/>");
-	}
-	AsmGenerator::add_label(finish);
-	AsmGenerator::if_temp_label_count++;
-	AsmGenerator::comment("If Statment.");
   }
 
 

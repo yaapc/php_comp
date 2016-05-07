@@ -2,9 +2,6 @@
 #include "Node.hpp"
 #include "../TypeSystem/TypesTable.h"
 
-void Node::generate_code(){
-	}
-
 void Node::print(ostream& os) {
 	os << int(this) << "[label = \"Node\"]" << endl;
 	}
@@ -19,4 +16,8 @@ void Node::print(ostream& os) {
 	  if (!this->nodeType)
 		  this->type_checking();
 	  return this->nodeType;
+  }
+
+  void Node::generate_code(CodeGneratorVistor *codeGneratorVistor){
+
   }

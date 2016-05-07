@@ -1,4 +1,4 @@
-%output = "src/grammar.cpp"
+%output = "grammar.cpp"
 %{
 	#include <iostream>
 	#include <fstream>

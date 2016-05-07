@@ -10,7 +10,9 @@ public:
 	FunctionCallNode(string name, Node* argsList);
 
 	void print(ostream &os);
+
 	bool type_checking();
-	void generate_code();
+
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 };

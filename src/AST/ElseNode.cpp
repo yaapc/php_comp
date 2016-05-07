@@ -1,6 +1,6 @@
 #pragma once 
 #include "ElseNode.hpp"
-#include "../Code Generator/AsmGenerator.h"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 
 ElseNode::ElseNode(Node *node){
 	this->body = node;
@@ -15,8 +15,7 @@ ElseNode::ElseNode(Node *node){
     os << self << "->" << int(body) << endl;
   }
 
- void ElseNode::generate_code(){
-	AsmGenerator::comment("<Else Node");
-	body->generate_code();
-	AsmGenerator::comment("Else Node/>");
-  }
+void ElseNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
+}

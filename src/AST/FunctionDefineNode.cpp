@@ -2,6 +2,7 @@
 #include "FunctionDefineNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 
 
 FunctionDefineNode::FunctionDefineNode(Symbol* func, Node* bod, Node* paramsList) {
@@ -44,6 +45,7 @@ TypeExpression* FunctionDefineNode::createReturnType() {
 	return nullptr;
 }
 
-void FunctionDefineNode::generate_code() {
-	//TODO:
+void FunctionDefineNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
 }

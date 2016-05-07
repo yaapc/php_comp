@@ -1,6 +1,6 @@
 #pragma once
 #include "VariableNode.hpp"
-#include "../Code Generator/AsmGenerator.h"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../TypeSystem/TypesTable.h"
 
 VariableNode::VariableNode(Symbol *var) {
@@ -51,30 +51,7 @@ void VariableNode::print(ostream &os) {
   }
 
 
-void VariableNode::generate_code(){
-	AsmGenerator::comment("<Variable Node");
-	string s0 = "s0";
-
-	// In primitive types we care about value so we have to load it
-	if (this->nodeType->getTypeId() == INTEGER_TYPE_ID	|| nodeType->getTypeId() == BOOLEAN_TYPE_ID){
-		string variable_mem_address = AsmGenerator::global_int+to_string(variable->getId());
-		AsmGenerator::lw(s0,variable_mem_address); 		//Get value from memory address and put the value in s0
-		AsmGenerator::push(s0);
-	}
-
-	// String and float literals are stored in data so we only load the address of those literals
-	if (nodeType->getTypeId()== STRING_TYPE_ID){
-		string variable_mem_address = AsmGenerator::gloabl_string+to_string(variable->getId());
-		AsmGenerator::la(s0,variable_mem_address); 		//Get memory address and put in s0
-		AsmGenerator::push(s0);
-	}
-		
-	if (nodeType->getTypeId() == FLOAT_TYPE_ID){
-		string variable_mem_address = AsmGenerator::global_float+to_string(variable->getId());
-		AsmGenerator::ls("f0",variable_mem_address);	//Get value from memory address and put the value in s0
-		//AsmGenerator::la(s0,variable_mem_address); 		
-		AsmGenerator::f_push("f0");
-	}
-	AsmGenerator::comment("Variable Node/>");
-    
+void VariableNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
 }

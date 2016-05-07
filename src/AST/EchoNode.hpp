@@ -8,10 +8,15 @@ using namespace std;
 class EchoNode : public Node {
 public:
 	Node* expression;
+
 	EchoNode(Node* node);
+
 	virtual bool type_checking();
+
 	virtual void print(ostream& os);
-	virtual void generate_code();
+
 	virtual TypeExpression* getNodeType();
+
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 };

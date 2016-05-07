@@ -4,6 +4,7 @@
 #include "TypeChecker.h"
 #include "AST\ListNode.hpp"
 #include "Code Generator/AsmGenerator.h"
+#include "Code Generator\CodeGeneratorVistor.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -53,10 +54,10 @@ int main(int argc, char** argv) {
 	tree->type_checking(); cout << "TypeChecking Pass\n";
 
 
+	CodeGneratorVistor codeGeneratorVistor;
 
-	AsmGenerator::initialize_file();
-	tree->generate_code();
-	AsmGenerator::write_file();
+	codeGeneratorVistor.generate(tree);
+
 
 	if (SIMULATOR == 1){
 		system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");

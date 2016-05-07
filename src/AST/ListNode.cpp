@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ListNode.hpp"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 
 #include "../Code Generator/AsmGenerator.h"
 ListNode* ListNode::add_node(Node* node) {
@@ -37,10 +38,6 @@ void ListNode::print(ostream& os) {
   }
 
  void ListNode::generate_code(){
-	for (auto &node : nodes) {
-		if (node == nullptr) continue;
-		node->generate_code();
-	}
   }
 
 
@@ -53,3 +50,8 @@ void ListNode::print(ostream& os) {
 	 }
 	 return fl;
  }
+
+ void ListNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
+}

@@ -1,5 +1,6 @@
 #pragma once
 #include "WhileNode.hpp"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 
 
 WhileNode::WhileNode(Node *condition, Node *body) : condition(condition), body(body) {}
@@ -14,3 +15,8 @@ WhileNode::WhileNode(Node *condition, Node *body) : condition(condition), body(b
     os << self << "->" << int(condition) << endl;
     os << self << "->" << int(body) << endl;
   }
+
+ void WhileNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
+}

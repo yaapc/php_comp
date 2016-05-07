@@ -4,6 +4,7 @@
 
 #include "ParameterNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 
 
 ParameterNode::ParameterNode(Symbol* parSym, bool isDefault) {
@@ -24,9 +25,9 @@ void ParameterNode::print(ostream &os) {
 		<< endl;
 }
 
-void ParameterNode::generate_code() {
-	//TODO:
-	return; 
+ void ParameterNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
 }
 
 bool ParameterNode::type_checking() {
