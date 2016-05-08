@@ -40,8 +40,10 @@ void AsmGenerator::initialize_main()
 
 void AsmGenerator::write_main()
 {
-	AsmGenerator::system_call(10); 
+	AsmGenerator::system_call(10);
+	AsmGenerator::add_instruction("\n\n\n\n");
 	assembly_code_file << main_stream.str();
+	
 }
 
 void AsmGenerator::initialize_function(string function_name)
@@ -59,50 +61,45 @@ void AsmGenerator::write_function()
 
 void AsmGenerator::write_functions()
 {
-	AsmGenerator::strconcat();
-	AsmGenerator::strlen();
-	AsmGenerator::int_to_asci();
-	AsmGenerator::strcpy();
+	//AsmGenerator::strconcat();
+	//AsmGenerator::strlen();
+	//AsmGenerator::int_to_asci();
+	//AsmGenerator::strcpy();
 	assembly_code_file << functions_stream.str();
 }
 
-string AsmGenerator::store_global_int(int id,int initial_value)
+string AsmGenerator::store_global_int(string variable_name,int initial_value)
 {
-	string data_label = global_int+to_string(id);
 	string c="";
-	c+= data_label;
+	c+= variable_name;
 	c+=": .word ";
 	c+=to_string(initial_value);
 	AsmGenerator::add_data(c);
 
-	return data_label;
+	return variable_name;
 }
 
-string AsmGenerator::store_global_float(int id,float initial_value)
+string AsmGenerator::store_global_float(string variable_name,float initial_value)
 {
-	string data_label = global_float+to_string(id);
 	string c="";
-	c+= data_label;
+	c+= variable_name;
 	c+=": .float ";
 	c+=to_string(initial_value);
 	AsmGenerator::add_data(c);
 
-	return data_label;
+	return variable_name;
 }
 
-string AsmGenerator::store_global_string(int id,int initial_value)
+string AsmGenerator::store_global_string(string variable_name,int initial_value)
 {
-	string data_label = gloabl_string+to_string(id);
 	string c="";
-	c+= data_label;
+	c+= variable_name;
 	c+=": .word ";
 	c+=to_string(initial_value);
 	AsmGenerator::add_data(c);
 
-	return data_label;
+	return variable_name;
 }
-
-
 
 string AsmGenerator::store_string_literal(string value)
 {
@@ -184,18 +181,9 @@ void AsmGenerator::la(string reg,string value)
 	AsmGenerator::add_instruction(c);
 }
 
-void AsmGenerator::lw(string dest_reg,int offset,string source_reg)
-{
-	string c="lw $";
-	c+=dest_reg;
-	c+=", ";
-	c+=to_string(offset);
-	c+="($";
-	c+=source_reg;
-	c+=")";
-	AsmGenerator::add_instruction(c);
-}
-
+/*
+*	address may be label and may be offset and register exp -12($sp)
+*/
 void AsmGenerator::lw(string dest_reg,string address)
 {
 	string c="lw $";
@@ -205,19 +193,10 @@ void AsmGenerator::lw(string dest_reg,string address)
 	AsmGenerator::add_instruction(c);
 }
 
-void AsmGenerator::sw(string source_reg,int offset,string dest_reg)	
-{
-	string c="sw $";
-	c+=source_reg;
-	c+=", ";
-	c+=to_string(offset);
-	c+="($";
-	c+=dest_reg;
-	c+=")";
-	AsmGenerator::add_instruction(c);
-}
-
-void AsmGenerator::sw(string address,string source_reg)
+/*
+*	address may be label and may be offset and register exp -12($sp)
+*/
+void AsmGenerator::sw(string source_reg,string address)
 {
 	string c="sw $";
 	c+=source_reg;
@@ -311,8 +290,8 @@ void AsmGenerator::pop(string destination_register)
 	string c = "lw $";
 	c += destination_register;
 	c += ", 0($sp)";
-	AsmGenerator::add_instruction(c);
-	AsmGenerator::add_instruction("add $sp,$sp,4");
+	AsmGenerator::add_instruction("\t"+c);
+	AsmGenerator::add_instruction("\tadd $sp,$sp,4");
 }
 
 void AsmGenerator::f_push(string source_register)
@@ -656,6 +635,37 @@ void AsmGenerator::f_move(string dest_reg,string source_reg)
 	AsmGenerator::add_instruction(c);
 }
 
+/*
+*	save $fp
+*	save $ra
+*	reserve space for local variables
+*/
+void AsmGenerator::function_prologue (int frame_size)
+{
+	AsmGenerator::comment("Callee Prologue:");
+	AsmGenerator::add_instruction("\tsubu $sp, $sp, 8");
+	AsmGenerator::add_instruction("\tsw $fp, 0($sp)");
+	AsmGenerator::add_instruction("\tsw $ra, 4($sp)");
+	AsmGenerator::add_instruction("\taddi $fp, $sp, 8");
+	if (frame_size > 0 ) {
+		AsmGenerator::comment("# Reserve space (" +  to_string(frame_size) + "b) for function local vars.");
+		AsmGenerator::add_instruction("\tsubu $sp, $sp, " + to_string(frame_size));
+	}
+	AsmGenerator::add_instruction("");
+}
+
+void AsmGenerator::function_epilogue(int frame_size)
+{
+	AsmGenerator::comment("Callee Epilogue:");
+	if (frame_size > 0) {
+		AsmGenerator::add_instruction("\taddu $fp, $sp, "+to_string(frame_size));
+	}
+	AsmGenerator::add_instruction("\tlw $ra, 4($sp)");
+	AsmGenerator::add_instruction("\tlw $fp, 0($sp)");
+	AsmGenerator::add_instruction("\taddu $sp, $sp, 8" );
+	AsmGenerator::add_instruction("");
+}
+
 void AsmGenerator::strconcat()
 {
 	AsmGenerator::initialize_function(strconcat_functoion_name);
@@ -797,8 +807,5 @@ string AsmGenerator::int_to_asci_functoion_name		= "ItoA";
 string AsmGenerator::strcpy_function_name			= "strcpy";
 
 string AsmGenerator::global_label					= "global_";
-string AsmGenerator::global_int						= global_label+"int_";
-string AsmGenerator::global_float					= global_label+"float_";
-string AsmGenerator::gloabl_string					= global_label+"string_";
 string AsmGenerator::new_line_address				= "new_line";
 string AsmGenerator::empty_string_address			= "empty_string";

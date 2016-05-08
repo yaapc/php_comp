@@ -3,10 +3,12 @@
 #include "AsmGenerator.h"
 #include "../AST/ListNode.hpp"
 #include "../AST/all.hpp"
+#include "FunctionFrame.hpp"
 
 
 void CodeGneratorVistor::generate(ListNode *ast)
 {
+	currentFrame = new GlobalFrame();
 	AsmGenerator::initialize_file();
 	ast->generate_code(this);
 	AsmGenerator::write_file();
@@ -14,15 +16,15 @@ void CodeGneratorVistor::generate(ListNode *ast)
 
 void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 {
-AsmGenerator::comment("<Assignment Node");
+	AsmGenerator::comment("<Assignment Node");
 
-	AsmGenerator::comment("<Binary Operation Left node");
+	//AsmGenerator::comment("<Binary Operation Left node");
 	assignmentNode->lhs->generate_code(this);
-	AsmGenerator::comment("Binary Operation Left node/>");
+	//AsmGenerator::comment("Binary Operation Left node/>");
 
-	AsmGenerator::comment("<Binary Operation right node");
+	//AsmGenerator::comment("<Binary Operation right node");
 	assignmentNode->rhs->generate_code(this);
-	AsmGenerator::comment("Binary Operation right node/>");
+	//AsmGenerator::comment("Binary Operation right node/>");
 
 
 	if (assignmentNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID || assignmentNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
@@ -40,9 +42,8 @@ AsmGenerator::comment("<Assignment Node");
 			//Get memory address of variable because variable node with primitive type (int,bool,float) push its value on stack
 			//but when primitve variable appeare in lhs we need its address to write on it so we have to get the address 
 
-			string variable_mem_address = AsmGenerator::global_int+to_string(variable->variable->getId());
-			AsmGenerator::la(s0,variable_mem_address); // Store address in s0 (overwrite the value-reusing the s0 reg)
-			AsmGenerator::sw(s1,0,s0);	   //  Store value from rhs in the addresss
+			string variableAddress = currentFrame->getAddress(variable);
+			AsmGenerator::sw(s1,variableAddress);	   //  Store value from rhs in the addresss
 		}else{
 			throw std::invalid_argument("left hand side should be Variable node");
 		}
@@ -72,7 +73,7 @@ AsmGenerator::comment("<Assignment Node");
 		AsmGenerator::add_instruction("addi $t0,$v1,1"); 
 		AsmGenerator::sbrk(t0,t0);						// allcoate memory and store the address of newley crated memory in t0
 
-		AsmGenerator::sw(t0,0,s0);						// store the addrees in variable address
+		AsmGenerator::sw(t0,"0($s0)");						// store the addrees in variable address
 
 		AsmGenerator::move("a0",s0); // put the address of newly created memoty in a0 (the parameter of strcpy function)
 		AsmGenerator::move("a1",s1); // put the address of string literal in a1 (the second parameter of strcpy function)
@@ -81,7 +82,7 @@ AsmGenerator::comment("<Assignment Node");
 
 	}
 
-	if (true){//(this->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
+	if (assignmentNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
 		// float numeric values are stored in data like strings but the value of float variable not in heap
 		// because it have fixed length not like strings
 
@@ -90,15 +91,13 @@ AsmGenerator::comment("<Assignment Node");
 
 		string f0 = "f0";
 		string f1 = "f1";
-	
 
 		AsmGenerator::f_pop(f1);
 		AsmGenerator::f_pop(f0);
 		if (VariableNode *variable = dynamic_cast<VariableNode*>(assignmentNode->lhs)){
-			string variable_mem_address = AsmGenerator::global_float+to_string(variable->variable->getId());
+			string variableAddress = currentFrame->getAddress(variable);
 
-			
-			AsmGenerator::ss(f1,variable_mem_address);
+			AsmGenerator::ss(f1,variableAddress);
 		}else{
 			throw std::invalid_argument("left hand side should be Variable node");
 		}
@@ -116,13 +115,13 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 	string t1 = "t1";
 	string t2 = "t2";
 
-	AsmGenerator::comment("<Binary Operation Left node");
+	//AsmGenerator::comment("<Binary Operation Left node");
 	binaryOperationNode->left->generate_code(this);
-	AsmGenerator::comment("Binary Operation Left node/>");
+	//AsmGenerator::comment("Binary Operation Left node/>");
 
-	AsmGenerator::comment("<Binary Operation right node");
+	//AsmGenerator::comment("<Binary Operation right node");
 	binaryOperationNode->right->generate_code(this);
-	AsmGenerator::comment("Binary Operation right node/>");
+	//AsmGenerator::comment("Binary Operation right node/>");
 
 
 	AsmGenerator::comment("<Binary Operation Calculation");
@@ -396,29 +395,8 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 void CodeGneratorVistor::visit(DeclarationNode *declarationNode)
 {
 	AsmGenerator::comment("<Declaration Node");
-
-	if (declarationNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID || declarationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
-		AsmGenerator::store_global_int(declarationNode->variable->getId(),0);
-	}
-
-	// String variables are allocated in heap but the address is stored in data
-	// the address is stored as int with .word type 
-	if (declarationNode->getNodeType()->getTypeId() == STRING_TYPE_ID){
-		string variable_mem_address = AsmGenerator::store_global_string(declarationNode->variable->getId(),NULL);
-
-		//string variable should be initialize to "" 
-		//I stored "" in .data with a name empty_string and all string variables use it
-
-		string s0 = "s0";
-		// load the address of empty string in s0
-		AsmGenerator::la(s0,AsmGenerator::empty_string_address);
-		// store the address of empty string in variable address
-		AsmGenerator::sw(variable_mem_address,s0);
-	}
-
-	if (declarationNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
-		AsmGenerator::store_global_float(declarationNode->variable->getId(),0.0f);
-	}
+	
+	currentFrame->addVariable(declarationNode);
 
 	AsmGenerator::comment("Declaration Node/>");
 }
@@ -516,7 +494,7 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 	AsmGenerator::comment("If Statment.");
 }
 
-void CodeGneratorVistor::visit( ListNode *listNode)
+void CodeGneratorVistor::visit(ListNode *listNode)
 {
 	for (auto &node : listNode->nodes) {
 		if (node == nullptr) continue;
@@ -524,12 +502,7 @@ void CodeGneratorVistor::visit( ListNode *listNode)
 	}
 }
 
-void CodeGneratorVistor::visit( ReturnNode *returnNode)
-{
-	cout << "ReturnNode" << endl;
-}
-
-void CodeGneratorVistor::visit( ScalarNode *scalarNode)
+void CodeGneratorVistor::visit(ScalarNode *scalarNode)
 {
 	AsmGenerator::comment("<Scaler Node");
 	string s0 = "s0";
@@ -561,28 +534,29 @@ void CodeGneratorVistor::visit(VariableNode *variableNode)
 	AsmGenerator::comment("<Variable Node");
 	string s0 = "s0";
 
-	// In primitive types we care about value so we have to load it
+	string variableAddress = currentFrame->getAddress(variableNode);
+
 	if (variableNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID	|| variableNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
-		string variable_mem_address = AsmGenerator::global_int+to_string(variableNode->variable->getId());
-		AsmGenerator::lw(s0,variable_mem_address); 		//Get value from memory address and put the value in s0
+		// In primitive types we care about value so we have to load it
+		AsmGenerator::lw(s0,variableAddress); 		//Get value from memory address and put the value in s0
 		AsmGenerator::push(s0);
 	}
 
-	// String and float literals are stored in data so we only load the address of those literals
 	if (variableNode->getNodeType()->getTypeId()== STRING_TYPE_ID){
-		string variable_mem_address = AsmGenerator::gloabl_string+to_string(variableNode->variable->getId());
-		AsmGenerator::la(s0,variable_mem_address); 		//Get memory address and put in s0
+		// String and float literals are stored in data so we only load the address of those literals
+		AsmGenerator::la(s0,variableAddress); 		//Get memory address and put in s0
 		AsmGenerator::push(s0);
+
 	}
 		
 	if (variableNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
-		string variable_mem_address = AsmGenerator::global_float+to_string(variableNode->variable->getId());
-		AsmGenerator::ls("f0",variable_mem_address);	//Get value from memory address and put the value in s0
+		// String and float literals are stored in data so we only load the address of those literals
+		AsmGenerator::ls("f0",variableAddress);	//Get value from memory address and put the value in s0
 		//AsmGenerator::la(s0,variable_mem_address); 		
 		AsmGenerator::f_push("f0");
 	}
+
 	AsmGenerator::comment("Variable Node/>");
-    
 }
 
 void CodeGneratorVistor::visit(WhileNode *whileNode)
@@ -592,15 +566,99 @@ void CodeGneratorVistor::visit(WhileNode *whileNode)
 
 void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 {
-	cout << "WhileNode" << endl;
+	AsmGenerator::comment("<FunctionCallNode");
+
+	AsmGenerator::comment("<ArgumentList");
+	functionCallNode->argumentsList->generate_code(this);
+	AsmGenerator::comment("ArgumentList/>");
+
+	//TODO replace this with unique name of function
+	string functionName = functionCallNode->name;
+
+	AsmGenerator::jal(functionName);
+
+	if (functionCallNode->argumentsList){
+		AsmGenerator::comment("<Clear Arguments");
+		int argumentsSize = 0; // in bytes 
+		for(auto &node : functionCallNode->argumentsList->nodes){
+			//TODO replace fixed size with size from type System
+			int argSize = 4;
+			argumentsSize+= argSize;
+		}
+		AsmGenerator::add_instruction("addi $sp, $sp, " + to_string(argumentsSize));
+		AsmGenerator::comment("Clear Arguments/>");
+	}
+
+	
+	if (functionCallNode->getNodeType()->getTypeId() != VOID_TYPE_ID){
+		if (functionCallNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID)
+			AsmGenerator::f_push("v1");
+		else
+			AsmGenerator::push("v1");
+	}
+
+	AsmGenerator::comment("FunctionCallNode/>");
 }
 
 void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 {
-	cout << "WhileNode" << endl;
+	Function *functionSymbol = functionDefineNode->functionSym;
+	AsmGenerator::comment("<FunctionDefineNode");
+
+
+	//TODO get unique name indstat of get name
+	string functionName = functionSymbol->getName();
+	funcRetLabel = functionName+"_ret";
+
+	AsmGenerator::comment("Look below to see function "+functionName);
+
+	AsmGenerator::initialize_function(functionName); 
+
+	currentFrame = new FunctionFrame(currentFrame,functionDefineNode);
+
+	AsmGenerator::function_prologue(currentFrame->stackSize);
+
+	for(auto &node : functionDefineNode->paramsList->nodes)
+	{
+		ParameterNode* paramterNode = dynamic_cast<ParameterNode*>(node);
+		if (paramterNode == nullptr)
+			throw std::invalid_argument("DAMN this shoudn't happen");
+
+		if (paramterNode->isDefault)
+			paramterNode->generate_code(this);
+	}
+
+	functionDefineNode->bodySts->generate_code(this);
+
+	AsmGenerator::add_label(funcRetLabel);
+
+	if (functionDefineNode->getNodeType()->getTypeId() != VOID_TYPE_ID) {
+		AsmGenerator::comment("Returning Value");
+		if (functionDefineNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID)
+			AsmGenerator::f_pop("v1");
+		else
+			AsmGenerator::pop("v1");
+	}
+	AsmGenerator::function_epilogue(currentFrame->stackSize);
+	AsmGenerator::write_function();
+	AsmGenerator::comment("FunctionDefineNode/>");
+
+	currentFrame = currentFrame->parentFunctionFrame;
 }
 
 void CodeGneratorVistor::visit(ParameterNode *parameterNode)
 {
-	cout << "WhileNode" << endl;
+	AsmGenerator::comment("<ParameterNode");
+
+	AsmGenerator::comment("ParameterNode/>");
+}
+
+void CodeGneratorVistor::visit(ReturnNode *returnNode)
+{
+	AsmGenerator::comment("<ReturnNode");
+	if (returnNode->returnend_expression){
+		returnNode->returnend_expression->generate_code(this);
+	}
+	AsmGenerator::add_instruction("b "+funcRetLabel);
+	AsmGenerator::comment("ReturnNode/>");
 }

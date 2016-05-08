@@ -46,9 +46,9 @@ public:
 
 	static void write_functions();
 	
-	static string store_global_int			(int id,int initial_value);
-	static string store_global_float		(int id,float initial_value);
-	static string store_global_string		(int id,int initial_address_value);
+	static string store_global_int			(string variable_name,int initial_value);
+	static string store_global_float		(string variable_name,float initial_value);
+	static string store_global_string		(string variable_name,int initial_address_value);
 
 	static string store_float_value			(float value);
 	static string store_string_literal		(string value);
@@ -59,12 +59,8 @@ public:
 
 	static void sw							(string address,string source_reg);	
 
-	static void sw							(string source_reg,int offset,string dest_reg);	
-
 	static void la							(string reg,string value);
 				
-	static void lw							(string dest_reg,int offset,string source_reg);
-
 	static void lw							(string dest_reg,string address);
 
 	static void ls							(string dest_reg,string address);
@@ -129,6 +125,9 @@ public:
 	static void move						(string dest_reg ,string source_reg);
 	static void f_move						(string dest_reg ,string source_reg);
 		
+
+	static void function_prologue			(int frame_size);
+	static void function_epilogue			(int frame_size);
 	
 	static int if_temp_label_count;
 	static int else_temp_label_count;
@@ -147,10 +146,6 @@ public:
 	static string strcpy_function_name;
 	static void   strcpy			();
 
-	
-	static string global_int;
-	static string global_float;
-	static string gloabl_string;
 	static string new_line_address;
 	static string empty_string_address;
 };

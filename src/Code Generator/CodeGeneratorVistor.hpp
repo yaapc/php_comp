@@ -1,11 +1,15 @@
 #pragma once
 #include <iostream>
 #include "../AST/ASTVisitor.h"
+#include "FunctionFrame.hpp"
 using namespace std;
 
 class CodeGneratorVistor : public ASTVisitor
 {
 public:
+
+	string funcRetLabel;
+	FunctionFrame *currentFrame;
 	virtual void generate(ListNode *ast);
 public:
 	virtual void visit(AssignmentNode *assignmentNode);
