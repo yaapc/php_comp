@@ -1596,7 +1596,9 @@ static_operation:
 	| static_scalar '?' static_scalar ':' static_scalar
 	| static_scalar '?' ':' static_scalar
 	| static_scalar '[' static_scalar ']'
-	| '(' static_scalar ')'
+	| '(' static_scalar ')' {
+		$<r.node>$ = $<r.node>2;
+	}
 ;
 
 constant:
