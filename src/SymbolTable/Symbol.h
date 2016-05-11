@@ -221,7 +221,7 @@ private:
 	int accessModifier;
 	int storageModifier;
 };
-#endif
+
 
 /*
 =========================
@@ -256,3 +256,4 @@ public:
 
 	int errorId;
 };
+#endif
