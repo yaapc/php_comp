@@ -32,7 +32,7 @@ void GlobalFrame::addVariable(DeclarationNode *declarationNode)
 		// load the address of empty string in s0
 		AsmGenerator::la(s0,AsmGenerator::empty_string_address);
 		// store the address of empty string in variable address
-		AsmGenerator::sw(variableAddress,s0);
+		AsmGenerator::sw(s0,variableAddress);
 		AsmGenerator::comment("Store ("+variableAddress+") in data segment");
 	}
 }

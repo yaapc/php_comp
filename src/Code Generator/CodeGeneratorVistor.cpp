@@ -109,7 +109,7 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 
 void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 {
-	AsmGenerator::comment("<Binary Operation");
+	AsmGenerator::comment("<Binary Operation ");
 
 	string t0 = "t0";
 	string t1 = "t1";
@@ -156,7 +156,26 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 			AsmGenerator::push(t0); //push t0 (the result) into stack
 		}
 
-		if (strcmp(binaryOperationNode->op_type, "==") == 0){
+		
+	}
+
+	if (binaryOperationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){ //Boolean
+
+		AsmGenerator::pop(t1); //get the result of right and put it in reg t1
+		AsmGenerator::pop(t0); //get the result of left and put it in reg t0
+
+		if(strcmp(binaryOperationNode->op_type, "&&") == 0){
+			AsmGenerator::binary_operation(t0, t0, t1, 6); //perform and operation and put the result in t0
+			AsmGenerator::push(t0); //push t0 (the result) into stack
+		}
+
+		if (strcmp(binaryOperationNode->op_type, "||") == 0){
+			AsmGenerator::binary_operation(t0, t0, t1, 7); // perform in operation and put the result in t0
+			AsmGenerator::push(t0); //push t0 (the result) into stack
+		}
+
+
+	if (strcmp(binaryOperationNode->op_type, "==") == 0){
 			AsmGenerator::equal_operation(t2,t0,t1,false); //perform bne and put the result in t2 (true 1 or false 0)
 			AsmGenerator::push(t2); //push t2 (the result) into stack
 		}
@@ -169,13 +188,12 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 		if (strcmp(binaryOperationNode->op_type, "<") == 0){
 			AsmGenerator::less_than_operation(t2, t0, t1);  //perform slt and put the result in t2 (true 1 or false 0)
 			AsmGenerator::push(t2);						//push t2 (the result) into stack
-			AsmGenerator::print_reg(t2);
+
 		}
 
 		if (strcmp(binaryOperationNode->op_type, ">") == 0){
 			AsmGenerator::less_than_operation(t2, t1, t0); //perform slt and put the result in t2 (true 1 or false 0)
 			AsmGenerator::push(t2);						//push t2 (the result) into stack
-			AsmGenerator::print_reg(t2);
 		}
 
 		if (strcmp(binaryOperationNode->op_type, ">=") == 0){
@@ -187,21 +205,7 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 			AsmGenerator::greater_or_equal_operation(t2, t1, t0); //perform slt and put the result in t2
 			AsmGenerator::push(t2);						//push t2 (the result) into stack
 		}
-	}
-
-	if (binaryOperationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){ //Boolean
-
-		AsmGenerator::pop(t1); //get the result of right and put it in reg t1
-		AsmGenerator::pop(t0); //get the result of left and put it in reg t0
-
-		if(strcmp(binaryOperationNode->op_type, "&&") == 0){
-			AsmGenerator::binary_operation(t0, t0, t1, 6); //perform and operation and put the result in t0
-		}
-
-		if (strcmp(binaryOperationNode->op_type, "||") == 0){
-			AsmGenerator::binary_operation(t0, t0, t1, 7); // perform in operation and put the result in t0
-		}
-		AsmGenerator::push(t0); //push t0 (the result) into stack
+	
 	}
 
 	if (binaryOperationNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){ //Float
@@ -244,25 +248,21 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 		if (strcmp(binaryOperationNode->op_type, "<") == 0){
 			AsmGenerator::f_less_than_operation(t2, f0, f1);
 			AsmGenerator::push(t2);
-			AsmGenerator::print_reg(t2);
 		}
 
 		if (strcmp(binaryOperationNode->op_type, ">") == 0){
 			AsmGenerator::f_greater_than_operation(t2, f0, f1);
 			AsmGenerator::push(t2);
-			AsmGenerator::print_reg(t2);
 		}
 
 		if (strcmp(binaryOperationNode->op_type, ">=") == 0){
 			AsmGenerator::f_greater_or_equal_operation(t2, f0, f1);
 			AsmGenerator::push(t2);
-			AsmGenerator::print_reg(t2);
 		}
 
 		if (strcmp(binaryOperationNode->op_type, "<=") == 0){
 			AsmGenerator::f_less_or_equal_operation(t2, f0, f1);
 			AsmGenerator::push(t2);
-			AsmGenerator::print_reg(t2);
 		}
 	}
 
@@ -491,7 +491,7 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 	}
 	AsmGenerator::add_label(finish);
 	AsmGenerator::if_temp_label_count++;
-	AsmGenerator::comment("If Statment.");
+	AsmGenerator::comment("If Statment/>");
 }
 
 void CodeGneratorVistor::visit(ListNode *listNode)
@@ -632,13 +632,13 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 	AsmGenerator::add_label(funcRetLabel);
 
-	if (functionDefineNode->getNodeType()->getTypeId() != VOID_TYPE_ID) {
+	/*if (functionDefineNode->getNodeType()->getTypeId() != VOID_TYPE_ID) {
 		AsmGenerator::comment("Returning Value");
 		if (functionDefineNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID)
 			AsmGenerator::f_pop("v1");
 		else
 			AsmGenerator::pop("v1");
-	}
+	}*/
 	AsmGenerator::function_epilogue(currentFrame->stackSize);
 	AsmGenerator::write_function();
 	AsmGenerator::comment("FunctionDefineNode/>");
