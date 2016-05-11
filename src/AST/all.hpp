@@ -16,3 +16,6 @@
 #include "ForNode.hpp"
 #include "ParameterNode.hpp"
 #include "FunctionCallNode.hpp"
+#include "ClassDefineNode.hpp"
+#include "ClassMemNode.hpp"
+#include "ClassMethodNode.hpp"

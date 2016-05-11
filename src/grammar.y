@@ -529,6 +529,7 @@ class_declaration_statement:
 			pl.log("class_declaration_statement");
 			symbolsParser->finishClassInsertion($<r.str>2, dynamic_cast<Class*>($<r.symbol>1), $<r.scope>4);
 			$<r.symbol>$ = symbolsParser->getCurrentClassSym();
+			$<r.node>$ = new ClassDefineNode($<r.symbol>$, $<r.node>5);
 			symbolsParser->popFromClassesStack();
 		}
 	| T_INTERFACE T_STRING interface_extends_list open_par class_statement_list close_par {pl.log("interface:", 0); pl.log($<r.str>2);}
@@ -538,6 +539,7 @@ class_declaration_statement:
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'{\', expecting identifier (T_STRING)","");
 			//symbolsParser->finishClassInsertion("ERR_C_NO_NAME", $<r.str>2, dynamic_cast<Class*>($<r.symbol>1), $<r.scope>4);
 			$<r.symbol>$ = symbolsParser->getCurrentClassSym();
+			$<r.node>$ = new ClassDefineNode($<r.symbol>$, $<r.node>5);
 			symbolsParser->popFromClassesStack();
 		}
 ;
@@ -649,6 +651,162 @@ extends_from:
 			$<r.str>$ = nullptr;
 		}
 ;
+
+class_statement_list:
+	class_statement_list class_statement 
+	{	
+		pl.log("class stmt");
+		dynamic_cast<ListNode*>($<r.node>1) -> add_node($<r.node>2);	
+	}
+	| error
+	| /* empty */ 
+	{
+		$<r.node>$ = new ListNode();
+	}
+;
+
+class_statement:
+	  member_modifiers type property_declaration_list ';' 
+	    {
+			pl.log("property declaration list");
+			$<r.symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<r.symbol>3), modifiersTags, arrCounter, $<r.str>2);
+			arrCounter = 0;
+			$<r.node>$ = new ClassMemNode($<r.symbol>$);
+		}
+	| member_modifiers T_CONST type class_const_list ';' 
+	    {
+			pl.log("constant list");
+			$<r.symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<r.symbol>4), modifiersTags, arrCounter, $<r.str>3);
+			arrCounter = 0;
+			$<r.node>$ = new ClassMemNode($<r.symbol>$);
+		}
+	| method_header	method_body	close_par {	/* optional return type in case of constructor */
+			pl.log("method");
+			$<r.symbol>$ = $<r.symbol>1;
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$);
+		}
+	| method_header_abstract ';' 
+	    {
+			$<r.symbol>$ = $<r.symbol>1;
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$);	
+		}
+	| member_modifiers property_declaration_list ';' 
+	    {
+			/* ERROR RULE: variable without type */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
+			$<r.symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<r.symbol>2), modifiersTags, arrCounter, "Object"); // assume type OBJECT
+			arrCounter = 0;
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$);
+		}
+	|	method_header_without_name method_body close_par 
+	    {
+			/* ERROR RULE: method without name */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
+			pl.log("error method-no id");
+			$<r.symbol>$ = $<r.symbol>1;
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$);
+		}
+	| method_header_without_name_abstract ';' 
+	    {
+			/* ERROR RULE: method without name */
+			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
+			$<r.symbol>$ = $<r.symbol>1;
+			pl.log("error method-no id");
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$);	
+		}
+	| class_declaration_statement 
+	    {
+			pl.log("inner class decalaration");
+			dynamic_cast<Class*>($<r.symbol>1)->setOuterClass(symbolsParser->getCurrentClassSym());
+			$<r.node>$ = $<r.node>1; // TODO: needs thinking, this is just a work around for now
+		}
+;
+
+
+method_header:
+	member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type open_par
+	{
+		//we insert the method symbol
+		$<r.symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4,$<r.col_no>1,$<r.line_no>1,modifiersTags, arrCounter, $<r.str>8, $<r.scope>9, $<r.symbol>6);
+		arrCounter = 0;
+	}
+;
+
+method_header_abstract:
+	T_ABSTRACT member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type
+	{
+		$<r.symbol>$ = symbolsParser->insertMethodSymbol($<r.str>5, $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>9, nullptr, $<r.symbol>7);	//abstract
+		symbolsParser->getCurrentClassSym()->isAbstract = true;
+		arrCounter = 0;
+	}
+;
+
+method_header_without_name :
+	member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type open_par
+	{
+		//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
+		$<r.symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>7, $<r.scope>8, $<r.symbol>5);
+		arrCounter = 0;
+	}
+;
+
+method_header_without_name_abstract :
+	T_ABSTRACT member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type
+	{
+		//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
+		$<r.symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>8, nullptr, $<r.symbol>6);	//abstract
+		symbolsParser->getCurrentClassSym()->isAbstract = true;
+		arrCounter = 0;
+	}
+;
+method_body:
+		inner_statement_list {pl.log("method body");}
+;
+
+member_modifiers : /* empty */
+	|  member_modifier_list
+;
+
+member_modifier_list : member_modifier
+	| member_modifier_list member_modifier
+;
+
+member_modifier:
+	  T_PUBLIC {
+			$<r.m>$ = PUBLIC_ACCESS;
+			if(arrCounter < 25)
+				modifiersTags[arrCounter++] = PUBLIC_ACCESS;
+		}
+	| T_PROTECTED {
+			$<r.m>$ = PROTECTED_ACCESS;
+			if(arrCounter < 25)
+				modifiersTags[arrCounter++] = PROTECTED_ACCESS;
+		}
+	| T_PRIVATE {
+			$<r.m>$ = PRIVATE_ACCESS;
+			if(arrCounter < 25)
+				modifiersTags[arrCounter++] = PRIVATE_ACCESS;
+		}
+	| T_STATIC {
+			$<r.m>$ = STATIC_STORAGE;
+			if(arrCounter < 25)
+				modifiersTags[arrCounter++] = STATIC_STORAGE;
+		}
+	| T_FINAL {
+			$<r.m>$ = FINAL_STORAGE;
+			if(arrCounter < 25)
+				modifiersTags[arrCounter++] = FINAL_STORAGE;
+		}
+;
+
+member_modifier_without_static: T_PUBLIC
+	| T_PROTECTED
+	| T_PRIVATE
+	| T_ABSTRACT
+	| T_FINAL
+;
+
+
 
 interface_extends_list:
 		/* empty */
@@ -1132,135 +1290,6 @@ static_var:
 		}
 ;
 
-class_statement_list:
-	  class_statement_list class_statement {pl.log("class stmt");}
-	| error
-	| /* empty */
-;
-
-class_statement:
-	  member_modifiers type property_declaration_list ';' {
-			pl.log("property declaration list");
-			$<r.symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<r.symbol>3), modifiersTags, arrCounter, $<r.str>2);
-			arrCounter = 0;
-		}
-	| member_modifiers T_CONST type class_const_list ';' {
-			pl.log("constant list");
-			$<r.symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<r.symbol>4), modifiersTags, arrCounter, $<r.str>3);
-			arrCounter = 0;
-		}
-	| method_header	method_body	close_par {	/* optional return type in case of constructor */
-			pl.log("method");
-			$<r.symbol>$ = $<r.symbol>1;
-		}
-	| method_header_abstract ';' {$<r.symbol>$ = $<r.symbol>1;}
-	| member_modifiers property_declaration_list ';' {
-			/* ERROR RULE: variable without type */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
-			$<r.symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<r.symbol>2), modifiersTags, arrCounter, "Object"); // assume type OBJECT
-			arrCounter = 0;
-		}
-	|	method_header_without_name method_body close_par {
-			/* ERROR RULE: method without name */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
-			pl.log("error method-no id");
-			$<r.symbol>$ = $<r.symbol>1;
-		}
-	| method_header_without_name_abstract ';' {
-			/* ERROR RULE: method without name */
-			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
-			$<r.symbol>$ = $<r.symbol>1;
-			pl.log("error method-no id");
-		}
-	| class_declaration_statement {
-			pl.log("inner class decalaration");
-			dynamic_cast<Class*>($<r.symbol>1)->setOuterClass(symbolsParser->getCurrentClassSym());
-		}
-;
-
-
-method_header:
-	member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type open_par
-	{
-		//we insert the method symbol
-		$<r.symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4,$<r.col_no>1,$<r.line_no>1,modifiersTags, arrCounter, $<r.str>8, $<r.scope>9, $<r.symbol>6);
-		arrCounter = 0;
-	}
-;
-
-method_header_abstract:
-	T_ABSTRACT member_modifiers T_FUNCTION optional_ref identifier '(' parameter_list ')' optional_return_type
-	{
-		$<r.symbol>$ = symbolsParser->insertMethodSymbol($<r.str>5, $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>9, nullptr, $<r.symbol>7);	//abstract
-		symbolsParser->getCurrentClassSym()->isAbstract = true;
-		arrCounter = 0;
-	}
-;
-
-method_header_without_name :
-	member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type open_par
-	{
-		//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
-		$<r.symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>7, $<r.scope>8, $<r.symbol>5);
-		arrCounter = 0;
-	}
-;
-
-method_header_without_name_abstract :
-	T_ABSTRACT member_modifiers T_FUNCTION optional_ref '(' parameter_list ')' optional_return_type
-	{
-		//we insert the method symbol with a PREDEFIND NAME , TODO : use a mechanism for unique naming of method.
-		$<r.symbol>$ = symbolsParser->insertMethodSymbol("ERR_METHOD", $<r.col_no>1,$<r.line_no>1, modifiersTags, arrCounter, $<r.str>8, nullptr, $<r.symbol>6);	//abstract
-		symbolsParser->getCurrentClassSym()->isAbstract = true;
-		arrCounter = 0;
-	}
-;
-method_body:
-		inner_statement_list {pl.log("method body");}
-;
-
-member_modifiers : /* empty */
-	|  member_modifier_list
-;
-
-member_modifier_list : member_modifier
-	| member_modifier_list member_modifier
-;
-
-member_modifier:
-	  T_PUBLIC {
-			$<r.m>$ = PUBLIC_ACCESS;
-			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = PUBLIC_ACCESS;
-		}
-	| T_PROTECTED {
-			$<r.m>$ = PROTECTED_ACCESS;
-			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = PROTECTED_ACCESS;
-		}
-	| T_PRIVATE {
-			$<r.m>$ = PRIVATE_ACCESS;
-			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = PRIVATE_ACCESS;
-		}
-	| T_STATIC {
-			$<r.m>$ = STATIC_STORAGE;
-			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = STATIC_STORAGE;
-		}
-	| T_FINAL {
-			$<r.m>$ = FINAL_STORAGE;
-			if(arrCounter < 25)
-				modifiersTags[arrCounter++] = FINAL_STORAGE;
-		}
-;
-
-member_modifier_without_static: T_PUBLIC
-	| T_PROTECTED
-	| T_PRIVATE
-	| T_ABSTRACT
-	| T_FINAL
-;
 
 property_declaration_list:
 		property_declaration {$<r.symbol>$ = $<r.symbol>1;}
