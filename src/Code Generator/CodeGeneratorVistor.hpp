@@ -27,4 +27,8 @@ public:
 	virtual void visit(FunctionCallNode *functionCallNode);
 	virtual void visit(FunctionDefineNode *functionDefineNode);
 	virtual void visit(ParameterNode *parameterNode);
+
+	virtual void visit(ClassDefineNode	*classDefineNode);
+	virtual void visit(ClassMemNode		*classMemNode);
+	virtual void visit(ClassMethodNode	*classMethodNode);
 };

@@ -662,3 +662,18 @@ void CodeGneratorVistor::visit(ReturnNode *returnNode)
 	AsmGenerator::add_instruction("b "+funcRetLabel);
 	AsmGenerator::comment("ReturnNode/>");
 }
+
+void CodeGneratorVistor::visit(ClassDefineNode	*classDefineNode)
+{
+	cout << "classDefineNode" << endl;
+}
+
+void CodeGneratorVistor::visit(ClassMemNode	*classMemNode)
+{
+	cout << "ClassMemNode" << endl;
+}
+
+void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
+{
+	cout << "ClassMethodNode" << endl;
+}
