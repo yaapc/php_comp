@@ -175,7 +175,7 @@ int Function::getId() {
 
 string Function::getUniqueName() {
 	string uniqueName = this->getName();
-	return uniqueName.erase(0,1)+to_string(id);
+	return uniqueName+to_string(id);
 }
 /*
 ========================================
