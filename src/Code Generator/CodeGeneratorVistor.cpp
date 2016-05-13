@@ -613,7 +613,7 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 
 
-	string functionName = functionSymbol->getUniqueName();
+	string functionName = functionSymbol->getName();
 	funcRetLabel = functionName+"_ret";
 
 	AsmGenerator::comment("Look below to see function "+functionName);
@@ -648,7 +648,7 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 	AsmGenerator::write_function();
 	AsmGenerator::comment("FunctionDefineNode/>");
 
-	currentFrame = currentFrame->parentFunctionFrame;
+	currentFrame = currentFrame->parentFrame;
 }
 
 void CodeGneratorVistor::visit(ParameterNode *parameterNode)

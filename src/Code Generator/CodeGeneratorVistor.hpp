@@ -9,7 +9,7 @@ class CodeGneratorVistor : public ASTVisitor
 public:
 	int symbolIDS; //used to set id for varibles (global and local) and parameters and function and methods and class member
 	string funcRetLabel;
-	FunctionFrame *currentFrame;
+	GlobalFrame *currentFrame;
 	virtual void generate(ListNode *ast);
 public:
 	virtual void visit(AssignmentNode *assignmentNode);

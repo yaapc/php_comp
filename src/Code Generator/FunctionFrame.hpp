@@ -14,34 +14,7 @@ struct VariableComparer
     }
 };
 
-class FunctionFrame
-{
-public:
-	FunctionFrame();
-
-	FunctionFrame(FunctionFrame *,FunctionDefineNode *);
-
-	virtual void addVariable(DeclarationNode *);
-
-	virtual void addParameter(ParameterNode *);
-
-	virtual string getAddress(VariableNode *);
-
-	FunctionFrame *parentFunctionFrame;
-
-	/* Maps an argument symbol to its offset (positive) from the frame pointer. */
-	map<Variable*, int,VariableComparer> arguments;
-
-	/* Maps a local symbol to its offset (negative and stored so) from the frame pointer.  */
-	map<Variable*, int,VariableComparer> locals;
-
-	int paramtersOffset;
-	int initialFrameSize;
-	int stackSize;   
-};
-
-
-class GlobalFrame :public FunctionFrame
+class GlobalFrame 
 {
 public:
 
@@ -52,5 +25,37 @@ public:
 	virtual string getAddress(VariableNode *);
 
 	virtual void addParameter(ParameterNode *);
+
+	/* Maps a local symbol to its offset (negative and stored so) from the frame pointer.  */
+	map<Variable*, int,VariableComparer> locals;
+
+	GlobalFrame *parentFrame;
+
+	int paramtersOffset;
+	int initialFrameSize;
+	int stackSize;   
 };
+
+
+
+class FunctionFrame :public GlobalFrame
+{
+public:
+	FunctionFrame();
+
+	FunctionFrame(GlobalFrame *,FunctionDefineNode *);
+
+	virtual void addVariable(DeclarationNode *);
+
+	virtual void addParameter(ParameterNode *);
+
+	virtual string getAddress(VariableNode *);
+
+
+	/* Maps an argument symbol to its offset (positive) from the frame pointer. */
+	map<Variable*, int,VariableComparer> arguments;
+
+
+};
+
 

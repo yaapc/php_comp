@@ -2,7 +2,13 @@
 #include "../SymbolTable/Symbol.h"
 #include "AsmGenerator.h"
 
-
+GlobalFrame::GlobalFrame()
+{
+	paramtersOffset			= 0;
+	stackSize				= 0;
+	initialFrameSize		= 2*4;	// 4 for $fp and 4 for $ra
+	parentFrame				= nullptr;
+}
 
 void GlobalFrame::addVariable(DeclarationNode *declarationNode)
 {
@@ -56,14 +62,15 @@ FunctionFrame::FunctionFrame()
 	paramtersOffset			= 0;
 	stackSize				= 0;
 	initialFrameSize		= 2*4;	// 4 for $fp and 4 for $ra
+	parentFrame				= nullptr;
 }
 
-FunctionFrame::FunctionFrame(FunctionFrame *parent,FunctionDefineNode *fdn)
+FunctionFrame::FunctionFrame(GlobalFrame *parent,FunctionDefineNode *fdn)
 {
 	this->paramtersOffset		= 0;
 	this->stackSize				= 0;
 	this->initialFrameSize		= 2*4; // 4 for $fp and 4 for $ra
-	this->parentFunctionFrame	= parent;
+	this->parentFrame			= parent;
 	for(auto &node : fdn->paramsList->nodes)
 	{
 		ParameterNode* paramterNode = dynamic_cast<ParameterNode*>(node);
@@ -101,11 +108,10 @@ string FunctionFrame::getAddress(VariableNode *variableNode)
         return to_string(offset)+"($fp)";
     } 
 		
-	if (parentFunctionFrame) {
-		return parentFunctionFrame->getAddress(variableNode);
+	if (parentFrame) {
+		return parentFrame->getAddress(variableNode);
     }
 
 	throw std::invalid_argument("This error should not be possible here, can not find symbol you're looking for.");
 }
 
-GlobalFrame::GlobalFrame():FunctionFrame(){}
