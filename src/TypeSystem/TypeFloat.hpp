@@ -39,11 +39,12 @@ public:
 	//overriding virtual method
 	int getTypeId();
 
-
 protected:
 	static TypeFloat* mInstance;
 
-	TypeFloat() {}
+	TypeFloat() {
+		this->size = 4;
+	}
 };
 
 #endif

@@ -21,7 +21,9 @@ public:
 private:
 	static TypeString* mInstance;
 
-	TypeString() {}
+	TypeString() {
+		this->size = 4;
+	}
 
 };
 

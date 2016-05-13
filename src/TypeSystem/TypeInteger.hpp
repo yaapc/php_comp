@@ -44,7 +44,9 @@ public:
 protected:
   static TypeInteger* mInstance;
 
-  TypeInteger(){}
+  TypeInteger(){
+	  this->size = 4;
+  }
 };
 
 #endif
