@@ -8,7 +8,8 @@
 
 void CodeGneratorVistor::generate(ListNode *ast)
 {
-	currentFrame = new GlobalFrame();
+	currentFrame	= new GlobalFrame();
+	symbolIDS		= 0;
 	AsmGenerator::initialize_file();
 	ast->generate_code(this);
 	AsmGenerator::write_file();
@@ -394,8 +395,10 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 
 void CodeGneratorVistor::visit(DeclarationNode *declarationNode)
 {
-	AsmGenerator::comment("<Declaration Node");
 	
+	AsmGenerator::comment("<Declaration Node");
+
+	declarationNode->variable->setId(symbolIDS++);
 	currentFrame->addVariable(declarationNode);
 
 	AsmGenerator::comment("Declaration Node/>");
@@ -603,11 +606,14 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 {
 	Function *functionSymbol = functionDefineNode->functionSym;
+
+	functionSymbol->setId(symbolIDS++);
+
 	AsmGenerator::comment("<FunctionDefineNode");
 
 
-	//TODO get unique name indstat of get name
-	string functionName = functionSymbol->getName();
+
+	string functionName = functionSymbol->getUniqueName();
 	funcRetLabel = functionName+"_ret";
 
 	AsmGenerator::comment("Look below to see function "+functionName);
@@ -624,8 +630,7 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 		if (paramterNode == nullptr)
 			throw std::invalid_argument("DAMN this shoudn't happen");
 
-		if (paramterNode->isDefault)
-			paramterNode->generate_code(this);
+		paramterNode->generate_code(this);
 	}
 
 	functionDefineNode->bodySts->generate_code(this);
@@ -648,6 +653,7 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 void CodeGneratorVistor::visit(ParameterNode *parameterNode)
 {
+	parameterNode->parSym->setId(symbolIDS++);
 	AsmGenerator::comment("<ParameterNode");
 
 	AsmGenerator::comment("ParameterNode/>");
