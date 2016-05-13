@@ -102,16 +102,22 @@ public:
 	Scope* getBodyScope();
 	void setBodyScope(Scope* scope);
 
-	string toString();
-
 	vector<Parameter*> parameters();
 	void setParams(Symbol* params);
 	
+	void setId(int id);
+	int getId();
+
+	string getUniqueName();
+
+	string toString();
 private:
 	char* returnType;
 	Scope* bodyScope;
 
 	Symbol* params;
+
+	int id;
 };
 
 /*

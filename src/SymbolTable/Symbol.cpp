@@ -122,6 +122,7 @@ Function::Function(char* name, char* returnType, int colNo, int lineNo, Scope* b
 	this->returnType = returnType;
 	this->bodyScope = bodyScope;
 	this->params = nullptr;
+	this->id = -1;
 }
 
 string Function::toString(){
@@ -163,6 +164,18 @@ vector<Parameter*> Function::parameters() {
 		par = par->node;
 	}
 	return res;
+}
+void Function::setId(int id) {
+	this->id = id;
+}
+
+int Function::getId() {
+	return this->id;
+}
+
+string Function::getUniqueName() {
+	string uniqueName = this->getName();
+	return uniqueName.erase(0,1)+to_string(id);
 }
 /*
 ========================================
