@@ -27,7 +27,7 @@ public:
 		return "";
 	}
 
-    /* here are all the operators that can be applied to a type in our language
+    /* here are all the operations that can be applied to a type in our language
      * the naming convention of the methods is: op[Operation Name]
 	 */
 
@@ -62,6 +62,10 @@ public:
 	//Type Equivelance
 	virtual bool equivelantTo(int secondTypeId);
 
+	virtual int getSize();
+protected:
+	//the size of the type
+	int size;
 };
 
 

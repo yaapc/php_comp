@@ -1,6 +1,11 @@
 #include "TypeExpression.hpp"
 #include "TypeError.hpp"
 
+
+TypeExpression::TypeExpression() {
+	this->size = 0;
+}
+
 TypeExpression* TypeExpression::opDot() {
 	return new TypeError(TypeSystemHelper::getTypeName(this->getTypeId()) + " Type doesn't support . operation");
 }
@@ -64,4 +69,8 @@ TypeExpression* TypeExpression::opSqrBrackets(int secondTypeId) {
 
 bool TypeExpression::equivelantTo(int secondTypeId) {
 	return false;
+}
+
+int TypeExpression::getSize() {
+	this->size;
 }
