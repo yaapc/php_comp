@@ -8,8 +8,10 @@ public:
 
 	ClassMethodNode(Symbol* methodSym);
 
-	void print(ostream &os);
-	bool type_checking();
-	void generate_code();
+	virtual void print(ostream &os);
+
+	virtual bool type_checking();
+
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 };

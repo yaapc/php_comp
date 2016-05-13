@@ -2,6 +2,7 @@
 
 #include "ClassMemNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 
 ClassMemNode::ClassMemNode(Symbol* memberSym) {
 	this->memberSym = dynamic_cast<DataMember*>(memberSym);
@@ -15,8 +16,9 @@ bool ClassMemNode::type_checking() {
 	return false;
 }
 
-void ClassMemNode::generate_code() {
-	//TODO
+void ClassMemNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
 }
 
 void ClassMemNode::print(ostream &os) {
