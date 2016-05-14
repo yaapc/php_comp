@@ -2,6 +2,8 @@
 #include "VariableNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../TypeSystem/TypesTable.h"
+#include "../TypeSystem/TypeError.hpp"
+
 
 VariableNode::VariableNode(Symbol *var) {
     variable = dynamic_cast<Variable*>(var);
@@ -39,9 +41,17 @@ void VariableNode::print(ostream &os) {
 		  this->nodeType = TypesTable::getInstance()->getType(STRING_TYPE_ID);
 		  return true;
 	  }
+	  	  
+	  //check if a class is available:
+	  string type = this->variable->getVariableType(); // converting char* to string
+	  this->nodeType = TypesTable::getInstance()->getClassType(type);
 
-		this->nodeType = TypesTable::getInstance()->getType(ERROR_TYPE_ID);
-		 return true;
+	  if (this->nodeType == nullptr) { // no type found
+		  this->nodeType = new TypeError("Undefined");
+		  return false;
+	  }
+
+	  return true;
   }
 
     TypeExpression* VariableNode::getNodeType() {

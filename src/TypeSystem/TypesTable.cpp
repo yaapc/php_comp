@@ -4,6 +4,7 @@
 #include "TypeString.hpp"
 #include "TypeVoid.hpp"
 #include "TypeBoolean.hpp"
+#include "TypeClass.hpp"
 
 //static definition
 TypesTable* TypesTable::mTypesTable;
@@ -35,3 +36,12 @@ TypeExpression* TypesTable::getType(int typeId) {
 	}
 
 }
+
+TypeExpression* TypesTable::getClassType(string name) {
+	return TypeClass::getInstance(name);
+}
+
+TypeExpression* TypesTable::buildClassType(ClassDefineNode* classNode, Class* classSymbol) {
+	return TypeClass::buildClass(classNode, classSymbol);
+}
+

@@ -2,6 +2,7 @@
 
 #include "AssignmentNode.hpp"
 #include "VariableNode.hpp"
+#include "ClassCallNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 
@@ -24,7 +25,7 @@ void AssignmentNode::print(ostream &os) {
   
 void AssignmentNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
-	codeGneratorVistor->visit(this);
+	//sleep for now : codeGneratorVistor->visit(this);
 }
 
   TypeExpression* AssignmentNode::getNodeType() {
@@ -35,21 +36,33 @@ void AssignmentNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 
 
   bool AssignmentNode::type_checking() {
-	  if (dynamic_cast<VariableNode*>(lhs)->variable->isConst) {
-		  this->nodeType = new TypeError("lvalue is not modifiable.");
-		  return false;
-	  }
-	  else {
-		  //TODO: should be implemented with coercion, not equivelantTo !!
-		  if (lhs->getNodeType()->equivelantTo(rhs->getNodeType()->getTypeId())) {
-			  this->nodeType = lhs->getNodeType();
-			  return true;
-		  }
-		  else {
-			  this->nodeType = new TypeError("no suitable conversion exists between " + 
-				  TypeSystemHelper::getTypeName(lhs->getNodeType()->getTypeId()) + " and " + 
-					  TypeSystemHelper::getTypeName(rhs->getNodeType()->getTypeId()));
+	  VariableNode* leftVar = dynamic_cast<VariableNode*>(lhs);
+	  if(leftVar != nullptr){
+		  if (leftVar->variable->isConst) {
+			  this->nodeType = new TypeError("lvalue is not modifiable.");
 			  return false;
 		  }
+	  }
+	  else {
+		  ClassCallNode* leftObj = dynamic_cast<ClassCallNode*>(lhs);
+		  //double check
+		  if (leftObj != nullptr) {
+			  if (leftObj->isMethodCall) {
+				  this->nodeType = new TypeError("lvalue is not modifiable.");
+				  return false;
+			  }
+		  }
+	  }
+	  
+	  //TODO: should be implemented with coercion, not equivelantTo !!
+	  if (lhs->getNodeType()->equivelantTo(rhs->getNodeType()->getTypeId())) {
+		  this->nodeType = lhs->getNodeType();
+		  return true;
+	  }
+	  else {
+		  this->nodeType = new TypeError("no suitable conversion exists between " + 
+			  TypeSystemHelper::getTypeName(lhs->getNodeType()->getTypeId()) + " and " + 
+				  TypeSystemHelper::getTypeName(rhs->getNodeType()->getTypeId()));
+		  return false;
 	  }
   }

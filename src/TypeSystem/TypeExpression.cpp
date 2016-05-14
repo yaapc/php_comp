@@ -6,8 +6,8 @@ TypeExpression::TypeExpression() {
 	this->size = 0;
 }
 
-TypeExpression* TypeExpression::opDot() {
-	return new TypeError(TypeSystemHelper::getTypeName(this->getTypeId()) + " Type doesn't support . operation");
+TypeExpression* TypeExpression::opDot(string propertyStr) {
+	return new TypeError(TypeSystemHelper::getTypeName(this->getTypeId()) + " Type doesn't support -> operation");
 }
 
 TypeExpression* TypeExpression::opPlus(int secondTypeId) {
@@ -72,5 +72,5 @@ bool TypeExpression::equivelantTo(int secondTypeId) {
 }
 
 int TypeExpression::getSize() {
-	this->size;
+	return this->size;
 }

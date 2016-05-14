@@ -19,3 +19,4 @@
 #include "ClassDefineNode.hpp"
 #include "ClassMemNode.hpp"
 #include "ClassMethodNode.hpp"
+#include "ClassCallNode.hpp"

@@ -2,6 +2,7 @@
 #include "DeclarationNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "..\TypeSystem\TypesTable.h"
+#include "../TypeSystem/TypeError.hpp"
 
 DeclarationNode::DeclarationNode(Symbol *v) : variable(dynamic_cast<Variable*>(v)) {
 	nodeType = nullptr;
@@ -50,6 +51,14 @@ TypeExpression* DeclarationNode::getNodeType() {
 		return true;
 	}
 
-	this->nodeType = TypesTable::getInstance()->getType(ERROR_TYPE_ID);
+	//check if a class is available:
+	string type = this->variable->getVariableType(); // converting char* to string
+	this->nodeType = TypesTable::getInstance()->getClassType(type);
+
+	if (this->nodeType == nullptr) { // no type found
+		this->nodeType = new TypeError("Undefined");
+		return false;
+	}
+
 	return true;
   }

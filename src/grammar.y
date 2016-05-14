@@ -1663,7 +1663,7 @@ static_array_pair:
 ;
 
 variable:
-		object_access
+	  object_access
 	| base_variable
 	| function_call 
 	| new_expr_array_deref
@@ -1676,7 +1676,10 @@ new_expr_array_deref:
 ;
 
 object_access:
-		variable_or_new_expr T_OBJECT_OPERATOR object_property %prec low_prec
+	  variable_or_new_expr T_OBJECT_OPERATOR object_property %prec low_prec 
+	    {
+			$<r.node>$ = new ClassCallNode($<r.node>1, $<r.str>3);
+		}
 	| variable_or_new_expr T_OBJECT_OPERATOR object_property argument_list
 	| object_access argument_list
 	| object_access '[' dim_offset ']'

@@ -9,8 +9,8 @@
 class ClassDefineNode : public Node {
 public:
 	ListNode* body;
-	vector<TypeExpression*>*  classMemTE;		 // class' members Type Expressions
-	vector<ClassMemNode*>*    classMemNodes;     // class' members Nodes
+	vector<TypeExpression*>  classMemTE;		 // class' members Type Expressions
+	vector<ClassMemNode*>    classMemNodes;     // class' members Nodes
 	vector<ClassMethodNode*>* classMethodsNodes; // class' methods Nodes
 	vector<TypeExpression*>* classMethodsTE;     // class' methods Type Expressions
 	Class* classSymbol;

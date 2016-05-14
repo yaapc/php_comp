@@ -2,13 +2,12 @@
 
 #include "ClassDefineNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
-
+#include "../TypeSystem/TypesTable.h"
 
 ClassDefineNode::ClassDefineNode(Symbol* classSym, Node* classBody) {
 	this->classSymbol = dynamic_cast<Class*>(classSym);
 	this->body = dynamic_cast<ListNode*>(classBody);	
 	this->nodeType = nullptr;
-	this->classMemNodes = nullptr;
 	this->classMethodsNodes = nullptr;
 	//now extract info
 	this->extractInfo();
@@ -19,12 +18,22 @@ ClassDefineNode::ClassDefineNode(Symbol* classSym, Node* classBody) {
  */
 void ClassDefineNode::extractInfo() {
 	//TODO
+	//for now let's extract members types and nodes
+
+	for (auto node : this->body->nodes) {
+		ClassMemNode* memNode = dynamic_cast<ClassMemNode*>(node);
+		if (node != nullptr)
+			this->classMemNodes.push_back(memNode);
+	}
+
+	for (auto memberNode : this->classMemNodes) {
+		this->classMemTE.push_back(memberNode->getNodeType());
+	}
 }
 
 bool ClassDefineNode::type_checking() {
-	//TODO
-	this->nodeType = new TypeError("Not Implmeneted, yet");
-	return false;
+	this->nodeType = TypesTable::getInstance()->buildClassType(this, this->classSymbol);
+	return true;
 }
 
 void ClassDefineNode::generate_code() {

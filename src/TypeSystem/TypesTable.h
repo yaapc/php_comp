@@ -3,6 +3,9 @@
 #define TYPESYSTEM_HPP
 
 #include "TypeExpression.hpp"
+#include "../AST/ClassDefineNode.hpp"
+#include "../SymbolTable/Symbol.h"
+
 #include <string>
 
 /*
@@ -30,6 +33,9 @@ public:
 	 */
 	TypeExpression* getType(int typeId);
 
+	TypeExpression* getClassType(string name);
+
+	TypeExpression* buildClassType(ClassDefineNode* classNode, Class* classSymbol);
 };
 
 

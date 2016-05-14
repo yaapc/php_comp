@@ -18,8 +18,8 @@ using namespace std;
 class TypeExpression {
 public:
 
-	TypeExpression() {
-	}
+	TypeExpression();
+	
 
 	virtual int getTypeId() = 0;
 
@@ -31,7 +31,7 @@ public:
      * the naming convention of the methods is: op[Operation Name]
 	 */
 
-	virtual TypeExpression* opDot();
+	virtual TypeExpression* opDot(string propertyStr);
 
 	virtual TypeExpression* opPlus(int secondTypeId);
 
