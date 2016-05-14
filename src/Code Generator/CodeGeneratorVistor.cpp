@@ -399,7 +399,7 @@ void CodeGneratorVistor::visit(DeclarationNode *declarationNode)
 	AsmGenerator::comment("<Declaration Node");
 
 	declarationNode->variable->setId(symbolIDS++);
-	currentFrame->addVariable(declarationNode);
+	currentFrame->addLocal(declarationNode);
 
 	AsmGenerator::comment("Declaration Node/>");
 }
@@ -622,7 +622,9 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 	currentFrame = new FunctionFrame(currentFrame,functionDefineNode);
 
-	AsmGenerator::function_prologue(currentFrame->stackSize);
+	FunctionFrame* functionFrame = dynamic_cast<FunctionFrame*>(currentFrame);
+
+	AsmGenerator::function_prologue(functionFrame->stackSize);
 
 	for(auto &node : functionDefineNode->paramsList->nodes)
 	{
@@ -644,11 +646,11 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 		else
 			AsmGenerator::pop("v1");
 	}*/
-	AsmGenerator::function_epilogue(currentFrame->stackSize);
+	AsmGenerator::function_epilogue(functionFrame->stackSize);
 	AsmGenerator::write_function();
 	AsmGenerator::comment("FunctionDefineNode/>");
 
-	currentFrame = currentFrame->parentFrame;
+	currentFrame = functionFrame->parentFrame;
 }
 
 void CodeGneratorVistor::visit(ParameterNode *parameterNode)
@@ -671,12 +673,28 @@ void CodeGneratorVistor::visit(ReturnNode *returnNode)
 
 void CodeGneratorVistor::visit(ClassDefineNode	*classDefineNode)
 {
-	cout << "classDefineNode" << endl;
+	AsmGenerator::comment("<ClassDefineNode");
+	currentFrame = new ObjectFrame(currentFrame,classDefineNode);
+
+	ObjectFrame* objectFrame = dynamic_cast<ObjectFrame*>(currentFrame);
+
+	classDefineNode->body->generate_code(this);
+
+
+	AsmGenerator::comment("ClassDefineNode/>");
+
+	cout << objectFrame->objectSize << endl;
+	currentFrame = objectFrame->parentFrame;
 }
 
 void CodeGneratorVistor::visit(ClassMemNode	*classMemNode)
 {
-	cout << "ClassMemNode" << endl;
+	ObjectFrame* objectFrame = dynamic_cast<ObjectFrame*>(currentFrame);
+	if (objectFrame != nullptr){
+		objectFrame->addLocal(classMemNode);
+	}else{
+		cout << "CurrentFrame Should be objectFrame" << endl;
+	}
 }
 
 void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)

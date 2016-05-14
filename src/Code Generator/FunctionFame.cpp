@@ -4,26 +4,25 @@
 
 GlobalFrame::GlobalFrame()
 {
-	paramtersOffset			= 0;
-	stackSize				= 0;
-	initialFrameSize		= 2*4;	// 4 for $fp and 4 for $ra
 	parentFrame				= nullptr;
 }
 
-void GlobalFrame::addVariable(DeclarationNode *declarationNode)
+void GlobalFrame::addLocal(Node *node)
 {
+	DeclarationNode* declarationNode = dynamic_cast<DeclarationNode*>(node);
+
 	Variable* variableSymbol = declarationNode->variable;
 
 	if (declarationNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID || declarationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
 		string variableAddress = variableSymbol->getUniqueName();
-		AsmGenerator::store_global_int(variableAddress,0);
 		AsmGenerator::comment("Store ("+variableAddress+") in data segment");
+		AsmGenerator::store_global_int(variableAddress,0);
 	}
 
 	if (declarationNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
 		string variableAddress = variableSymbol->getUniqueName();
-		AsmGenerator::store_global_float(variableAddress,0.0f);
 		AsmGenerator::comment("Store ("+variableAddress+") in data segment");
+		AsmGenerator::store_global_float(variableAddress,0.0f);
 	}
 
 	if (declarationNode->getNodeType()->getTypeId() == STRING_TYPE_ID){
@@ -38,13 +37,15 @@ void GlobalFrame::addVariable(DeclarationNode *declarationNode)
 		// load the address of empty string in s0
 		AsmGenerator::la(s0,AsmGenerator::empty_string_address);
 		// store the address of empty string in variable address
-		AsmGenerator::sw(s0,variableAddress);
 		AsmGenerator::comment("Store ("+variableAddress+") in data segment");
+		AsmGenerator::sw(s0,variableAddress);
+		
 	}
 }
 
-string GlobalFrame::getAddress(VariableNode *variableNode)
+string GlobalFrame::getAddress(Node *node)
 {
+	VariableNode* variableNode = dynamic_cast<VariableNode*>(node);
 	string variableUniqeName = variableNode->variable->getUniqueName();
 	AsmGenerator::comment("load ("+variableUniqeName + ") from data segment");
 	//Global Variable address are only its unique name
@@ -52,24 +53,17 @@ string GlobalFrame::getAddress(VariableNode *variableNode)
 
 }
 
-void GlobalFrame::addParameter(ParameterNode *parameterNode)
-{
-	throw std::invalid_argument("DAMN this shoudn't happen");
-}
-
 FunctionFrame::FunctionFrame()
 {
+	GlobalFrame();
 	paramtersOffset			= 0;
 	stackSize				= 0;
 	initialFrameSize		= 2*4;	// 4 for $fp and 4 for $ra
-	parentFrame				= nullptr;
 }
 
 FunctionFrame::FunctionFrame(GlobalFrame *parent,FunctionDefineNode *fdn)
 {
-	this->paramtersOffset		= 0;
-	this->stackSize				= 0;
-	this->initialFrameSize		= 2*4; // 4 for $fp and 4 for $ra
+	FunctionFrame();
 	this->parentFrame			= parent;
 	for(auto &node : fdn->paramsList->nodes)
 	{
@@ -86,8 +80,9 @@ void FunctionFrame::addParameter(ParameterNode *parameterNode)
 	paramtersOffset += parameterSize;
 }
 
-void FunctionFrame::addVariable(DeclarationNode *variableDeclarationNode)
+void FunctionFrame::addLocal(Node *node)
 {
+	DeclarationNode* variableDeclarationNode = dynamic_cast<DeclarationNode*>(node);
 	//ToDo get the size of variable in Bytes
     int varSize = 4;
     stackSize += varSize;
@@ -96,8 +91,9 @@ void FunctionFrame::addVariable(DeclarationNode *variableDeclarationNode)
 	AsmGenerator::comment(variableDeclarationNode->variable->getUniqueName() + " in function scoop address "+to_string(variableOffset)+" from fp");
 }
 
-string FunctionFrame::getAddress(VariableNode *variableNode)
+string FunctionFrame::getAddress(Node *node)
 {
+	VariableNode* variableNode = dynamic_cast<VariableNode*>(node);
 	if (locals.find(variableNode->variable) != locals.end()) {
     	int offset = locals[variableNode->variable];
 		return to_string(offset)+"($fp)";
@@ -115,3 +111,36 @@ string FunctionFrame::getAddress(VariableNode *variableNode)
 	throw std::invalid_argument("This error should not be possible here, can not find symbol you're looking for.");
 }
 
+ObjectFrame::ObjectFrame()
+{
+	GlobalFrame();
+	objectSize = 0;
+}
+
+ObjectFrame::ObjectFrame(GlobalFrame *parent,ClassDefineNode *cdn)
+{
+	GlobalFrame();
+	this->parentFrame			= parent;
+	objectSize = 0;
+
+}
+
+void ObjectFrame::addLocal(Node *node)
+{
+	ClassMemNode* classMemNode = dynamic_cast<ClassMemNode*>(node);
+	Variable* variable = classMemNode->memberSym;
+	//ToDo get the size of paramter in Bytes
+	int classMemSize = 4;
+	locals[variable] = classMemSize;
+	objectSize += classMemSize;
+}
+
+string ObjectFrame::getAddress(Node *node)
+{
+	VariableNode* variableNode = dynamic_cast<VariableNode*>(node);
+	if (locals.find(variableNode->variable) != locals.end()) {
+    	int offset = locals[variableNode->variable];
+		return to_string(offset)+"($fp)";
+    } 
+
+}

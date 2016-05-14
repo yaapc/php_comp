@@ -3,6 +3,7 @@
 #include "../AST/DeclarationNode.hpp"
 #include "../AST/VariableNode.hpp"
 #include "../AST/ParameterNode.hpp"
+#include "../AST/ClassDefineNode.hpp"
 #include "../SymbolTable/Symbol.h"
 #include "../AST/FunctionDefineNode.hpp"
 
@@ -20,23 +21,17 @@ public:
 
 	GlobalFrame();
 
-	virtual void addVariable(DeclarationNode *);
+	virtual void addLocal(Node *);
 
-	virtual string getAddress(VariableNode *);
-
-	virtual void addParameter(ParameterNode *);
+	virtual string getAddress(Node *);
 
 	/* Maps a local symbol to its offset (negative and stored so) from the frame pointer.  */
 	map<Variable*, int,VariableComparer> locals;
 
 	GlobalFrame *parentFrame;
 
-	int paramtersOffset;
-	int initialFrameSize;
-	int stackSize;   
+
 };
-
-
 
 class FunctionFrame :public GlobalFrame
 {
@@ -45,17 +40,33 @@ public:
 
 	FunctionFrame(GlobalFrame *,FunctionDefineNode *);
 
-	virtual void addVariable(DeclarationNode *);
-
 	virtual void addParameter(ParameterNode *);
 
-	virtual string getAddress(VariableNode *);
+	virtual void addLocal(Node *);
+
+	virtual string getAddress(Node *);
 
 
 	/* Maps an argument symbol to its offset (positive) from the frame pointer. */
 	map<Variable*, int,VariableComparer> arguments;
 
+	int paramtersOffset;
+	int initialFrameSize;
+	int stackSize;   
+};
 
+class ObjectFrame : public GlobalFrame
+{
+public:
+	ObjectFrame();
+
+	ObjectFrame(GlobalFrame *,ClassDefineNode *);
+
+	virtual void addLocal(Node *);
+
+	virtual string getAddress(Node *);
+
+	int objectSize;
 };
 
 
