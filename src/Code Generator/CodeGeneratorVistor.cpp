@@ -677,7 +677,7 @@ void CodeGneratorVistor::visit(ClassDefineNode	*classDefineNode)
 
 	AsmGenerator::comment("ClassDefineNode/>");
 
-	cout << objectFrame->objectSize << endl;
+	cout << objectFrame->membersOffset << endl;
 	currentFrame = objectFrame->parentFrame;
 }
 

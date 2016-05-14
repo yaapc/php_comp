@@ -118,14 +118,14 @@ string FunctionFrame::getAddress(string name)
 ObjectFrame::ObjectFrame()
 {
 	GlobalFrame();
-	objectSize = 0;
+	membersOffset = 0;
 }
 
 ObjectFrame::ObjectFrame(GlobalFrame *parent,ClassDefineNode *cdn)
 {
 	GlobalFrame();
 	this->parentFrame			= parent;
-	objectSize = 0;
+	membersOffset = 0;
 
 }
 
