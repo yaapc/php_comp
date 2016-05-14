@@ -7,14 +7,6 @@
 #include "../SymbolTable/Symbol.h"
 #include "../AST/FunctionDefineNode.hpp"
 
-struct VariableComparer
-{
-    bool operator()(Variable *first ,Variable* second) const
-    {
-		return first->getId() < second->getId();
-    }
-};
-
 class GlobalFrame 
 {
 public:
@@ -23,14 +15,13 @@ public:
 
 	virtual void addLocal(Node *);
 
-	virtual string getAddress(Node *);
+	virtual string getAddress(string);
 
-	/* Maps a local symbol to its offset (negative and stored so) from the frame pointer.  */
-	map<Variable*, int,VariableComparer> locals;
+	map<string, int> locals;
 
 	GlobalFrame *parentFrame;
 
-
+	int globalSize;
 };
 
 class FunctionFrame :public GlobalFrame
@@ -44,11 +35,9 @@ public:
 
 	virtual void addLocal(Node *);
 
-	virtual string getAddress(Node *);
+	virtual string getAddress(string);
 
-
-	/* Maps an argument symbol to its offset (positive) from the frame pointer. */
-	map<Variable*, int,VariableComparer> arguments;
+	map<string, int> arguments;
 
 	int paramtersOffset;
 	int initialFrameSize;
@@ -64,9 +53,13 @@ public:
 
 	virtual void addLocal(Node *);
 
-	virtual string getAddress(Node *);
+	virtual void addFunction(Node *);
 
-	int objectSize;
+	virtual string getAddress(string);
+
+	map<string, int> functions;
+
+	int membersOffset;
 };
 
 
