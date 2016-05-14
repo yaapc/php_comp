@@ -70,7 +70,7 @@ public:
 	void setId(int id);
 	int getId();
 
-	string getUniqueName();
+	string getNameWithout();
 
 	string toString();
 private:
