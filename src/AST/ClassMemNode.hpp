@@ -6,11 +6,11 @@ class ClassMemNode : public Node {
 public:
 	ClassMemNode(Symbol* memSym);
 
-	void print(ostream &os);
-	
-	bool type_checking();
+	virtual void print(ostream &os);
 
-	void generate_code();
+	virtual bool type_checking();
+
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	//Symbol interfacing methods:
 	bool isStatic();

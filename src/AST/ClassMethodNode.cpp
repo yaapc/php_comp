@@ -1,7 +1,7 @@
 #pragma once
 #include "ClassMethodNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
-
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 
 ClassMethodNode::ClassMethodNode(Symbol* methodSym) {
 	this->nodeType = nullptr;
@@ -15,8 +15,9 @@ bool ClassMethodNode::type_checking() {
 }
 
 
-void ClassMethodNode::generate_code() {
-	//TODO
+void ClassMethodNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
 }
 
 void ClassMethodNode::print(ostream &os) {

@@ -61,10 +61,10 @@ void AsmGenerator::write_function()
 
 void AsmGenerator::write_functions()
 {
-	//AsmGenerator::strconcat();
-	//AsmGenerator::strlen();
-	//AsmGenerator::int_to_asci();
-	//AsmGenerator::strcpy();
+	AsmGenerator::strconcat();
+	AsmGenerator::strlen();
+	AsmGenerator::int_to_asci();
+	AsmGenerator::strcpy();
 	assembly_code_file << functions_stream.str();
 }
 
@@ -105,9 +105,9 @@ string AsmGenerator::store_string_literal(string value)
 {
 	string data_label;
 	if (strings_map.find(value) != strings_map.end()){
-		data_label = "string_" + to_string(strings_map[value]);
+		data_label = "str_literal_" + to_string(strings_map[value]);
 	}else{
-		data_label = "string_" + to_string(strings_count);
+		data_label = "str_literal_" + to_string(strings_count);
 		strings_map[value] = strings_count++;
 		string c="";
 		c+= data_label;

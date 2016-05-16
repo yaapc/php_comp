@@ -8,7 +8,8 @@
 
 void CodeGneratorVistor::generate(ListNode *ast)
 {
-	currentFrame = new GlobalFrame();
+	currentFrame	= new GlobalFrame();
+	symbolIDS		= 0;
 	AsmGenerator::initialize_file();
 	ast->generate_code(this);
 	AsmGenerator::write_file();
@@ -37,26 +38,23 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 		//s0 should contain the value of int variale we don't want value here we need address to write on it
 		//s1 should contain the int vlaue
 
-		if (VariableNode *variable = dynamic_cast<VariableNode*>(assignmentNode->lhs)){
-
+		if (VariableNode *variableNode = dynamic_cast<VariableNode*>(assignmentNode->lhs)){
 			//Get memory address of variable because variable node with primitive type (int,bool,float) push its value on stack
 			//but when primitve variable appeare in lhs we need its address to write on it so we have to get the address 
-
-			string variableAddress = currentFrame->getAddress(variable);
+			string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
 			AsmGenerator::sw(s1,variableAddress);	   //  Store value from rhs in the addresss
 		}else{
-			throw std::invalid_argument("left hand side should be Variable node");
+			cout << "left hand side should be Variable node" << endl;
 		}
 	}
 
 	if (assignmentNode->getNodeType()->getTypeId() == STRING_TYPE_ID){
 		// String literals are stored in data and in variableNode we pushed the address of this literals
-
 		string s0 = "s0";
 		string s1 = "s1";			 
 		AsmGenerator::pop(s1);
 		AsmGenerator::pop(s0);
-		//s0 should contain the address of string variale
+		//s0 should contain the address of string variable
 		//s1 should contain the address of string literals
 
 		//To store rhs string literal in lhs string variable we should do:
@@ -69,17 +67,21 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 		string t0 = "t0";
 		AsmGenerator::move("a0",s1); // copy address of string literal into a0
 		AsmGenerator::jal(AsmGenerator::strlen_functoion_name); // calculate length of string the result will be in $v1
-
-		AsmGenerator::add_instruction("addi $t0,$v1,1"); 
+		AsmGenerator::add_instruction("addi $t0,$v1,1"); // length++;
 		AsmGenerator::sbrk(t0,t0);						// allcoate memory and store the address of newley crated memory in t0
 
-		AsmGenerator::sw(t0,"0($s0)");						// store the addrees in variable address
 
-		AsmGenerator::move("a0",s0); // put the address of newly created memoty in a0 (the parameter of strcpy function)
+
+		if (VariableNode *variableNode = dynamic_cast<VariableNode*>(assignmentNode->lhs)){
+			string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
+			AsmGenerator::sw(t0,variableAddress);	   // store the addrees in variable address
+		}else{
+			cout << "left hand side should be Variable node" << endl;
+		}
+		AsmGenerator::move("a0",t0); // put the address of newly created memoty in a0 (the parameter of strcpy function)
 		AsmGenerator::move("a1",s1); // put the address of string literal in a1 (the second parameter of strcpy function)
 		AsmGenerator::jal(AsmGenerator::strcpy_function_name);
 		
-
 	}
 
 	if (assignmentNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
@@ -94,22 +96,20 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 
 		AsmGenerator::f_pop(f1);
 		AsmGenerator::f_pop(f0);
-		if (VariableNode *variable = dynamic_cast<VariableNode*>(assignmentNode->lhs)){
-			string variableAddress = currentFrame->getAddress(variable);
+		if (VariableNode *variableNode = dynamic_cast<VariableNode*>(assignmentNode->lhs)){
+			string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
 
 			AsmGenerator::ss(f1,variableAddress);
 		}else{
-			throw std::invalid_argument("left hand side should be Variable node");
+			cout << "left hand side should be Variable node" << endl;
 		}
 	}
-
-
 	AsmGenerator::comment("Assignment Node/>");
 }
 
 void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 {
-	AsmGenerator::comment("<Binary Operation");
+	AsmGenerator::comment("<Binary Operation ");
 
 	string t0 = "t0";
 	string t1 = "t1";
@@ -156,7 +156,26 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 			AsmGenerator::push(t0); //push t0 (the result) into stack
 		}
 
-		if (strcmp(binaryOperationNode->op_type, "==") == 0){
+		
+	}
+
+	if (binaryOperationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){ //Boolean
+
+		AsmGenerator::pop(t1); //get the result of right and put it in reg t1
+		AsmGenerator::pop(t0); //get the result of left and put it in reg t0
+
+		if(strcmp(binaryOperationNode->op_type, "&&") == 0){
+			AsmGenerator::binary_operation(t0, t0, t1, 6); //perform and operation and put the result in t0
+			AsmGenerator::push(t0); //push t0 (the result) into stack
+		}
+
+		if (strcmp(binaryOperationNode->op_type, "||") == 0){
+			AsmGenerator::binary_operation(t0, t0, t1, 7); // perform in operation and put the result in t0
+			AsmGenerator::push(t0); //push t0 (the result) into stack
+		}
+
+
+	if (strcmp(binaryOperationNode->op_type, "==") == 0){
 			AsmGenerator::equal_operation(t2,t0,t1,false); //perform bne and put the result in t2 (true 1 or false 0)
 			AsmGenerator::push(t2); //push t2 (the result) into stack
 		}
@@ -169,13 +188,12 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 		if (strcmp(binaryOperationNode->op_type, "<") == 0){
 			AsmGenerator::less_than_operation(t2, t0, t1);  //perform slt and put the result in t2 (true 1 or false 0)
 			AsmGenerator::push(t2);						//push t2 (the result) into stack
-			AsmGenerator::print_reg(t2);
+
 		}
 
 		if (strcmp(binaryOperationNode->op_type, ">") == 0){
 			AsmGenerator::less_than_operation(t2, t1, t0); //perform slt and put the result in t2 (true 1 or false 0)
 			AsmGenerator::push(t2);						//push t2 (the result) into stack
-			AsmGenerator::print_reg(t2);
 		}
 
 		if (strcmp(binaryOperationNode->op_type, ">=") == 0){
@@ -187,21 +205,7 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 			AsmGenerator::greater_or_equal_operation(t2, t1, t0); //perform slt and put the result in t2
 			AsmGenerator::push(t2);						//push t2 (the result) into stack
 		}
-	}
-
-	if (binaryOperationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){ //Boolean
-
-		AsmGenerator::pop(t1); //get the result of right and put it in reg t1
-		AsmGenerator::pop(t0); //get the result of left and put it in reg t0
-
-		if(strcmp(binaryOperationNode->op_type, "&&") == 0){
-			AsmGenerator::binary_operation(t0, t0, t1, 6); //perform and operation and put the result in t0
-		}
-
-		if (strcmp(binaryOperationNode->op_type, "||") == 0){
-			AsmGenerator::binary_operation(t0, t0, t1, 7); // perform in operation and put the result in t0
-		}
-		AsmGenerator::push(t0); //push t0 (the result) into stack
+	
 	}
 
 	if (binaryOperationNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){ //Float
@@ -244,25 +248,21 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 		if (strcmp(binaryOperationNode->op_type, "<") == 0){
 			AsmGenerator::f_less_than_operation(t2, f0, f1);
 			AsmGenerator::push(t2);
-			AsmGenerator::print_reg(t2);
 		}
 
 		if (strcmp(binaryOperationNode->op_type, ">") == 0){
 			AsmGenerator::f_greater_than_operation(t2, f0, f1);
 			AsmGenerator::push(t2);
-			AsmGenerator::print_reg(t2);
 		}
 
 		if (strcmp(binaryOperationNode->op_type, ">=") == 0){
 			AsmGenerator::f_greater_or_equal_operation(t2, f0, f1);
 			AsmGenerator::push(t2);
-			AsmGenerator::print_reg(t2);
 		}
 
 		if (strcmp(binaryOperationNode->op_type, "<=") == 0){
 			AsmGenerator::f_less_or_equal_operation(t2, f0, f1);
 			AsmGenerator::push(t2);
-			AsmGenerator::print_reg(t2);
 		}
 	}
 
@@ -394,11 +394,38 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 
 void CodeGneratorVistor::visit(DeclarationNode *declarationNode)
 {
-	AsmGenerator::comment("<Declaration Node");
 	
-	currentFrame->addVariable(declarationNode);
-
+	AsmGenerator::comment("<Declaration Node");
+	currentFrame->addLocal(declarationNode);
 	AsmGenerator::comment("Declaration Node/>");
+}
+
+void CodeGneratorVistor::visit(VariableNode *variableNode)
+{
+	AsmGenerator::comment("<Variable Node");
+	string s0 = "s0";
+
+	string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
+
+	if (variableNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID	|| variableNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
+		// In primitive types we care about value so we have to load it
+		AsmGenerator::lw(s0,variableAddress); 		//Get value from memory address and put the value in s0
+		AsmGenerator::push(s0);
+	}
+
+	if (variableNode->getNodeType()->getTypeId()== STRING_TYPE_ID){
+		AsmGenerator::lw(s0,variableAddress); 		//Get memory address and put in s0
+		AsmGenerator::push(s0);
+
+	}
+		
+	if (variableNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
+		//float literals are stored in data so we only load the address of those literals
+		AsmGenerator::ls("f0",variableAddress);	//Get value from memory address and put the value in s0	
+		AsmGenerator::f_push("f0");
+	}
+
+	AsmGenerator::comment("Variable Node/>");
 }
 
 void CodeGneratorVistor::visit(EchoNode *echoNode)
@@ -491,7 +518,7 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 	}
 	AsmGenerator::add_label(finish);
 	AsmGenerator::if_temp_label_count++;
-	AsmGenerator::comment("If Statment.");
+	AsmGenerator::comment("If Statment/>");
 }
 
 void CodeGneratorVistor::visit(ListNode *listNode)
@@ -527,36 +554,6 @@ void CodeGneratorVistor::visit(ScalarNode *scalarNode)
 			break;
 		}
 	AsmGenerator::comment("Scaler Node/>");
-}
-
-void CodeGneratorVistor::visit(VariableNode *variableNode)
-{
-	AsmGenerator::comment("<Variable Node");
-	string s0 = "s0";
-
-	string variableAddress = currentFrame->getAddress(variableNode);
-
-	if (variableNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID	|| variableNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
-		// In primitive types we care about value so we have to load it
-		AsmGenerator::lw(s0,variableAddress); 		//Get value from memory address and put the value in s0
-		AsmGenerator::push(s0);
-	}
-
-	if (variableNode->getNodeType()->getTypeId()== STRING_TYPE_ID){
-		// String and float literals are stored in data so we only load the address of those literals
-		AsmGenerator::la(s0,variableAddress); 		//Get memory address and put in s0
-		AsmGenerator::push(s0);
-
-	}
-		
-	if (variableNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
-		// String and float literals are stored in data so we only load the address of those literals
-		AsmGenerator::ls("f0",variableAddress);	//Get value from memory address and put the value in s0
-		//AsmGenerator::la(s0,variable_mem_address); 		
-		AsmGenerator::f_push("f0");
-	}
-
-	AsmGenerator::comment("Variable Node/>");
 }
 
 void CodeGneratorVistor::visit(WhileNode *whileNode)
@@ -603,10 +600,13 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 {
 	Function *functionSymbol = functionDefineNode->functionSym;
+
+	functionSymbol->setId(symbolIDS++);
+
 	AsmGenerator::comment("<FunctionDefineNode");
 
 
-	//TODO get unique name indstat of get name
+
 	string functionName = functionSymbol->getName();
 	funcRetLabel = functionName+"_ret";
 
@@ -616,7 +616,9 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 	currentFrame = new FunctionFrame(currentFrame,functionDefineNode);
 
-	AsmGenerator::function_prologue(currentFrame->stackSize);
+	FunctionFrame* functionFrame = dynamic_cast<FunctionFrame*>(currentFrame);
+
+	AsmGenerator::function_prologue(functionFrame->stackSize);
 
 	for(auto &node : functionDefineNode->paramsList->nodes)
 	{
@@ -624,30 +626,30 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 		if (paramterNode == nullptr)
 			throw std::invalid_argument("DAMN this shoudn't happen");
 
-		if (paramterNode->isDefault)
-			paramterNode->generate_code(this);
+		paramterNode->generate_code(this);
 	}
 
 	functionDefineNode->bodySts->generate_code(this);
 
 	AsmGenerator::add_label(funcRetLabel);
 
-	if (functionDefineNode->getNodeType()->getTypeId() != VOID_TYPE_ID) {
+	/*if (functionDefineNode->getNodeType()->getTypeId() != VOID_TYPE_ID) {
 		AsmGenerator::comment("Returning Value");
 		if (functionDefineNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID)
 			AsmGenerator::f_pop("v1");
 		else
 			AsmGenerator::pop("v1");
-	}
-	AsmGenerator::function_epilogue(currentFrame->stackSize);
+	}*/
+	AsmGenerator::function_epilogue(functionFrame->stackSize);
 	AsmGenerator::write_function();
 	AsmGenerator::comment("FunctionDefineNode/>");
 
-	currentFrame = currentFrame->parentFunctionFrame;
+	currentFrame = functionFrame->parentFrame;
 }
 
 void CodeGneratorVistor::visit(ParameterNode *parameterNode)
 {
+	parameterNode->parSym->setId(symbolIDS++);
 	AsmGenerator::comment("<ParameterNode");
 
 	AsmGenerator::comment("ParameterNode/>");
@@ -661,4 +663,41 @@ void CodeGneratorVistor::visit(ReturnNode *returnNode)
 	}
 	AsmGenerator::add_instruction("b "+funcRetLabel);
 	AsmGenerator::comment("ReturnNode/>");
+}
+
+void CodeGneratorVistor::visit(ClassDefineNode	*classDefineNode)
+{
+	AsmGenerator::comment("<ClassDefineNode");
+	currentFrame = new ObjectFrame(currentFrame,classDefineNode);
+
+	ObjectFrame* objectFrame = dynamic_cast<ObjectFrame*>(currentFrame);
+
+	classDefineNode->body->generate_code(this);
+
+
+	AsmGenerator::comment("ClassDefineNode/>");
+
+	cout << objectFrame->membersOffset << endl;
+	currentFrame = objectFrame->parentFrame;
+}
+
+void CodeGneratorVistor::visit(ClassMemNode	*classMemNode)
+{
+	ObjectFrame* objectFrame = dynamic_cast<ObjectFrame*>(currentFrame);
+	if (objectFrame != nullptr)
+	{
+		objectFrame->addLocal(classMemNode);
+	}else{
+		cout << "CurrentFrame Should be objectFrame" << endl;
+	}
+}
+
+void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
+{
+	ObjectFrame* objectFrame = dynamic_cast<ObjectFrame*>(currentFrame);
+	if (objectFrame != nullptr){
+		objectFrame->addFunction(classMethodNode);
+	}else{
+		cout << "CurrentFrame Should be objectFrame" << endl;
+	}
 }

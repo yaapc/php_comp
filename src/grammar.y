@@ -1400,6 +1400,7 @@ expr:
 	| expr '&' expr
 	| expr '^' expr
 	| expr '+' expr { $<r.node>$ = new BinaryOperationNode("+", $<r.node>1, $<r.node>3); }
+	| expr '.' expr { $<r.node>$ = new BinaryOperationNode("+", $<r.node>1, $<r.node>3); }
 	| expr '-' expr	{ $<r.node>$ = new BinaryOperationNode("-", $<r.node>1, $<r.node>3); }
 	| expr '*' expr { $<r.node>$ = new BinaryOperationNode("*", $<r.node>1, $<r.node>3); }
 	| expr '/' expr { $<r.node>$ = new BinaryOperationNode("/", $<r.node>1, $<r.node>3); }

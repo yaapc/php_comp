@@ -2,29 +2,34 @@
 #include "../SymbolTable/Symbol.h"
 #include "AsmGenerator.h"
 
-
-
-void GlobalFrame::addVariable(DeclarationNode *declarationNode)
+GlobalFrame::GlobalFrame()
 {
+	parentFrame				= nullptr;
+	globalSize				= 0;
+}
+
+void GlobalFrame::addLocal(Node *node)
+{
+	DeclarationNode* declarationNode = dynamic_cast<DeclarationNode*>(node);
 	Variable* variableSymbol = declarationNode->variable;
 
-	if (declarationNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID || declarationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
-		string variableAddress = variableSymbol->getUniqueName();
-		AsmGenerator::store_global_int(variableAddress,0);
-		AsmGenerator::comment("Store ("+variableAddress+") in data segment");
-	}
 
-	if (declarationNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
-		string variableAddress = variableSymbol->getUniqueName();
-		AsmGenerator::store_global_float(variableAddress,0.0f);
-		AsmGenerator::comment("Store ("+variableAddress+") in data segment");
+	//ToDo get the size of variable in Bytes
+    int varSize = 4;
+	locals[declarationNode->variable->getNameWithout()] = globalSize;
+	
+	AsmGenerator::comment(declarationNode->variable->getNameWithout() + " in global scoop address "+to_string(globalSize)+" from gp");
+
+	if (declarationNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID 
+			|| declarationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID
+			|| declarationNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
+		// int inital value = 0 , boolean inital value is false
+		AsmGenerator::sw("0",to_string(globalSize)+"($gp)");
 	}
 
 	if (declarationNode->getNodeType()->getTypeId() == STRING_TYPE_ID){
 		// String variables are allocated in heap but the address is stored in data
 		// the address is stored as int with .word type 
-		string variableAddress = AsmGenerator::store_global_string(variableSymbol->getUniqueName(),NULL);
-
 		//string variable should be initialize to "" 
 		//I stored "" in .data with a name empty_string and all string variables use it
 
@@ -32,38 +37,38 @@ void GlobalFrame::addVariable(DeclarationNode *declarationNode)
 		// load the address of empty string in s0
 		AsmGenerator::la(s0,AsmGenerator::empty_string_address);
 		// store the address of empty string in variable address
-		AsmGenerator::sw(variableAddress,s0);
-		AsmGenerator::comment("Store ("+variableAddress+") in data segment");
+		AsmGenerator::sw(s0,to_string(globalSize)+"($gp)");
+		
 	}
+
+	// Move Global Pointer
+	globalSize += varSize;
 }
 
-string GlobalFrame::getAddress(VariableNode *variableNode)
+string GlobalFrame::getAddress(string name)
 {
-	string variableUniqeName = variableNode->variable->getUniqueName();
-	AsmGenerator::comment("load ("+variableUniqeName + ") from data segment");
-	//Global Variable address are only its unique name
-	return variableUniqeName;
-
-}
-
-void GlobalFrame::addParameter(ParameterNode *parameterNode)
-{
-	throw std::invalid_argument("DAMN this shoudn't happen");
+	if (locals.find(name) != locals.end()) {
+    	int offset = locals[name];
+		return to_string(offset)+"($gp)";
+	}else{
+		cout << "This error should not be possible here, can not find symbol you're looking for." << endl;
+	}
 }
 
 FunctionFrame::FunctionFrame()
 {
+	GlobalFrame();
 	paramtersOffset			= 0;
 	stackSize				= 0;
 	initialFrameSize		= 2*4;	// 4 for $fp and 4 for $ra
 }
 
-FunctionFrame::FunctionFrame(FunctionFrame *parent,FunctionDefineNode *fdn)
+FunctionFrame::FunctionFrame(GlobalFrame *parent,FunctionDefineNode *fdn)
 {
-	this->paramtersOffset		= 0;
-	this->stackSize				= 0;
-	this->initialFrameSize		= 2*4; // 4 for $fp and 4 for $ra
-	this->parentFunctionFrame	= parent;
+	paramtersOffset			= 0;
+	stackSize				= 0;
+	initialFrameSize		= 2*4;	// 4 for $fp and 4 for $ra
+	this->parentFrame			= parent;
 	for(auto &node : fdn->paramsList->nodes)
 	{
 		ParameterNode* paramterNode = dynamic_cast<ParameterNode*>(node);
@@ -75,37 +80,84 @@ void FunctionFrame::addParameter(ParameterNode *parameterNode)
 {
 	//ToDo get the size of paramter in Bytes
 	int parameterSize = 4;
-	arguments[parameterNode->parSym] = paramtersOffset;
+	arguments[parameterNode->parSym->getNameWithout()] = paramtersOffset;
 	paramtersOffset += parameterSize;
 }
 
-void FunctionFrame::addVariable(DeclarationNode *variableDeclarationNode)
+void FunctionFrame::addLocal(Node *node)
 {
+	DeclarationNode* variableDeclarationNode = dynamic_cast<DeclarationNode*>(node);
 	//ToDo get the size of variable in Bytes
     int varSize = 4;
     stackSize += varSize;
 	int variableOffset = -stackSize - initialFrameSize; // offset from frame pointer
-    locals[variableDeclarationNode->variable] = variableOffset;
-	AsmGenerator::comment(variableDeclarationNode->variable->getUniqueName() + " in function scoop address "+to_string(variableOffset)+" from fp");
+	locals[variableDeclarationNode->variable->getNameWithout()] = variableOffset;
+	AsmGenerator::comment(variableDeclarationNode->variable->getNameWithout() + " in function scoop address "+to_string(variableOffset)+" from fp");
 }
 
-string FunctionFrame::getAddress(VariableNode *variableNode)
+string FunctionFrame::getAddress(string name)
 {
-	if (locals.find(variableNode->variable) != locals.end()) {
-    	int offset = locals[variableNode->variable];
+
+	if (locals.find(name) != locals.end()) {
+    	int offset = locals[name];
 		return to_string(offset)+"($fp)";
     } 
 
-	if (arguments.find(variableNode->variable) != arguments.end()) {
-		int offset = arguments[variableNode->variable];
+	if (arguments.find(name) != arguments.end()) {
+		int offset = arguments[name];
         return to_string(offset)+"($fp)";
     } 
 		
-	if (parentFunctionFrame) {
-		return parentFunctionFrame->getAddress(variableNode);
+	if (parentFrame) {
+		return parentFrame->getAddress(name);
     }
 
-	throw std::invalid_argument("This error should not be possible here, can not find symbol you're looking for.");
+	cout << "This error should not be possible here, can not find symbol you're looking for." << endl;
 }
 
-GlobalFrame::GlobalFrame():FunctionFrame(){}
+ObjectFrame::ObjectFrame()
+{
+	GlobalFrame();
+	membersOffset = 0;
+}
+
+ObjectFrame::ObjectFrame(GlobalFrame *parent,ClassDefineNode *cdn)
+{
+	GlobalFrame();
+	this->parentFrame			= parent;
+	membersOffset = 0;
+
+}
+
+void ObjectFrame::addLocal(Node *node)
+{
+	ClassMemNode* classMemNode = dynamic_cast<ClassMemNode*>(node);
+	Variable* variable = classMemNode->memberSym;
+	//ToDo get the size of paramter in Bytes
+	int classMemSize = 4;
+	locals[variable->getNameWithout()] = membersOffset;
+	membersOffset += classMemSize;
+}
+
+string ObjectFrame::getAddress(string name)
+{
+
+	if (locals.find(name) != locals.end()) {
+		int offset = locals[name];
+		return to_string(offset);
+	} 
+
+	if (functions.find(name) != functions.end()) {
+		int offset = functions[name];
+		return to_string(offset);
+	}
+	
+}
+
+void ObjectFrame::addFunction(Node *node)
+{
+	ClassMethodNode* classMethodNode = dynamic_cast<ClassMethodNode*>(node);
+	Function* function = classMethodNode->methodSym;
+	functions[function->getName()] = membersOffset;
+	membersOffset += 4;
+}

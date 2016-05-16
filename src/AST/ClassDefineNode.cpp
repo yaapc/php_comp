@@ -3,6 +3,7 @@
 #include "ClassDefineNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 
 ClassDefineNode::ClassDefineNode(Symbol* classSym, Node* classBody) {
 	this->classSymbol = dynamic_cast<Class*>(classSym);
@@ -36,9 +37,11 @@ bool ClassDefineNode::type_checking() {
 	return true;
 }
 
-void ClassDefineNode::generate_code() {
-	//TODO
+void ClassDefineNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
 }
+
 
 
 void ClassDefineNode::print(ostream &os) {

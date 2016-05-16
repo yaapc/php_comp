@@ -66,9 +66,6 @@ public :
 	int getStaticsCounter();
 	int addToStaticsCounter();
 
-	//sets a variable counter id
-	void setVariableId(Variable* var, Scope* scope);
-
 private :
 	ErrorRecovery *errRecovery;
 	Scope * currScope;

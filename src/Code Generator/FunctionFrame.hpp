@@ -3,54 +3,63 @@
 #include "../AST/DeclarationNode.hpp"
 #include "../AST/VariableNode.hpp"
 #include "../AST/ParameterNode.hpp"
+#include "../AST/ClassDefineNode.hpp"
 #include "../SymbolTable/Symbol.h"
 #include "../AST/FunctionDefineNode.hpp"
 
-struct VariableComparer
+class GlobalFrame 
 {
-    bool operator()(Variable *first ,Variable* second) const
-    {
-		return first->getId() < second->getId();
-    }
+public:
+
+	GlobalFrame();
+
+	virtual void addLocal(Node *);
+
+	virtual string getAddress(string);
+
+	map<string, int> locals;
+
+	GlobalFrame *parentFrame;
+
+	int globalSize;
 };
 
-class FunctionFrame
+class FunctionFrame :public GlobalFrame
 {
 public:
 	FunctionFrame();
 
-	FunctionFrame(FunctionFrame *,FunctionDefineNode *);
-
-	virtual void addVariable(DeclarationNode *);
+	FunctionFrame(GlobalFrame *,FunctionDefineNode *);
 
 	virtual void addParameter(ParameterNode *);
 
-	virtual string getAddress(VariableNode *);
+	virtual void addLocal(Node *);
 
-	FunctionFrame *parentFunctionFrame;
+	virtual string getAddress(string);
 
-	/* Maps an argument symbol to its offset (positive) from the frame pointer. */
-	map<Variable*, int,VariableComparer> arguments;
-
-	/* Maps a local symbol to its offset (negative and stored so) from the frame pointer.  */
-	map<Variable*, int,VariableComparer> locals;
+	map<string, int> arguments;
 
 	int paramtersOffset;
 	int initialFrameSize;
 	int stackSize;   
 };
 
-
-class GlobalFrame :public FunctionFrame
+class ObjectFrame : public GlobalFrame
 {
 public:
+	ObjectFrame();
 
-	GlobalFrame();
+	ObjectFrame(GlobalFrame *,ClassDefineNode *);
 
-	virtual void addVariable(DeclarationNode *);
+	virtual void addLocal(Node *);
 
-	virtual string getAddress(VariableNode *);
+	virtual void addFunction(Node *);
 
-	virtual void addParameter(ParameterNode *);
+	virtual string getAddress(string);
+
+	map<string, int> functions;
+
+	int membersOffset;
 };
+
 

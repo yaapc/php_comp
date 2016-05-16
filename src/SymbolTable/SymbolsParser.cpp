@@ -48,9 +48,6 @@ Symbol* SymbolsParser::insertSymbol(Symbol* symbol){
 		insertedSym = this->currScope->getSymbolTable()->insert(symbol); // reinsert it.
 	}
 	
-	//if the symbol is a Variable then, 
-	//add an Id for it.
-	this->setVariableId(dynamic_cast<Variable*>(insertedSym), this->currScope);  
 	return insertedSym;
 }
 
@@ -64,9 +61,6 @@ Symbol* SymbolsParser::insertSymbol(Symbol* symbol, Scope* scope){
 		insertedSym = scope->getSymbolTable()->insert(symbol); // reinsert it.
 	}
 
-	//if the symbol is a Variable then, 
-	//add an Id for it.
-	this->setVariableId(dynamic_cast<Variable*>(insertedSym), scope);
 	return insertedSym;
 }
 /*
@@ -453,14 +447,4 @@ int SymbolsParser::getStaticsCounter() {
 
 int SymbolsParser::addToStaticsCounter() {
 	return this->getRootScope()->addToStaticsCounter();
-}
-
-void SymbolsParser::setVariableId(Variable* var, Scope* scope) {
-	//** Variables Counters
-	if (var) {
-		if (var->isStatic)
-			var->setId(scope->addToStaticsCounter());
-		else
-			var->setId(scope->addToVarCounter());
-	}
 }
