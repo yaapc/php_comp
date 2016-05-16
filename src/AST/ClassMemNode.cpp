@@ -10,7 +10,6 @@ ClassMemNode::ClassMemNode(Symbol* memberSym) {
 	this->nodeType = nullptr;
 }
 
-
 bool ClassMemNode::type_checking() {
 	
 	if (strcmp(this->memberSym->getVariableType(), "int") == 0) {
@@ -42,7 +41,6 @@ bool ClassMemNode::type_checking() {
 		this->nodeType = new TypeError("Undefined");
 		return false;
 	}
-
 	return true;
 }
 
@@ -60,4 +58,24 @@ void ClassMemNode::print(ostream &os) {
 		<< memLabel
 		<< "\"]"
 		<< endl;
+}
+
+bool ClassMemNode::isInited() {
+	return this->memberSym->isInit();
+}
+
+bool ClassMemNode::isStatic() {
+	return this->memberSym->isStatic;
+}
+
+bool ClassMemNode::isConst() {
+	return this->memberSym->isConst;
+}
+
+string ClassMemNode::getName() {
+	return this->memberSym->getName();
+}
+
+DataMember* ClassMemNode::getMemSymbol() {
+	return this->memberSym;
 }

@@ -24,7 +24,7 @@ TypeClass* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSymbol)
 	for (int i = 0; i < classNode->classMemNodes.size(); i++) {
 		typeClass->addToMembers(
 			new MemberHolder(classNode->classMemNodes.at(i)->getNodeType(),
-							 classNode->classMemNodes.at(i)->memberSym)
+							 classNode->classMemNodes.at(i)->getMemSymbol())
 			);
 	}
 	
