@@ -1490,7 +1490,7 @@ anonymous_class:
 ;
 
 new_expr:
-		T_NEW class_name_reference ctor_arguments
+		T_NEW class_name_reference ctor_arguments { $<r.node>$ = new NewNode($<r.node>3, $<r.str>2); } 
 	| T_NEW anonymous_class
 ;
 
