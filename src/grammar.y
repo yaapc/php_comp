@@ -448,7 +448,11 @@ statement:
 	| T_THROW expr ';' {pl.log("throw stmt");}
 	| T_GOTO T_STRING ';' {pl.log("goto stmt");}
 	| T_STRING ':' {pl.log("label stmt");}
-	| error {pl.log("ERROR");}
+	| error 
+	  {
+		pl.log("ERROR");
+		$<r.node>$ = new Node();
+	  }
 ;
 
 catches:
@@ -658,7 +662,9 @@ class_statement_list:
 		pl.log("class stmt");
 		dynamic_cast<ListNode*>($<r.node>1) -> add_node($<r.node>2);	
 	}
-	| error
+	| error {
+		$<r.node>$ = new ListNode();
+	}
 	| /* empty */ 
 	{
 		$<r.node>$ = new ListNode();
