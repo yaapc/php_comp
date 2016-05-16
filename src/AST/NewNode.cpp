@@ -37,7 +37,7 @@ bool NewNode::type_checking() {
 
 void NewNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
-	//codeGneratorVistor->visit(this);
+	codeGneratorVistor->visit(this);
 }
 
  TypeExpression* NewNode::getNodeType() {

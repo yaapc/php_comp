@@ -707,3 +707,9 @@ void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 
 	cout << objectsFrames["Test"]->membersOffset <<  endl;
 }
+
+
+void CodeGneratorVistor::visit(NewNode *newNode)
+{
+	cout << "FFF" << endl;
+}

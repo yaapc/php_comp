@@ -21,6 +21,7 @@ class ClassMethodNode;
 class ClassMemNode;
 class ClassDefineNode;
 class ClassCallNode;
+class NewNode;
 class ASTVisitor {
 public:
 	virtual void visit(AssignmentNode *)		= 0;
@@ -42,4 +43,5 @@ public:
 	virtual void visit(ClassMemNode*)			= 0;
 	virtual void visit(ClassDefineNode*)		= 0;
 	virtual void visit(ClassCallNode*)			= 0;
+	virtual void visit(NewNode*)				= 0;
 };
