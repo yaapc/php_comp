@@ -2,6 +2,7 @@
 #include <iostream>
 #include "../AST/ASTVisitor.h"
 #include "FunctionFrame.hpp"
+#include <map>
 using namespace std;
 
 class CodeGneratorVistor : public ASTVisitor
@@ -11,6 +12,7 @@ public:
 	string funcRetLabel;
 	GlobalFrame *currentFrame;
 	virtual void generate(ListNode *ast);
+	map<string,ObjectFrame*> objectsFrames;
 public:
 	virtual void visit(AssignmentNode *assignmentNode);
 	virtual void visit(BinaryOperationNode *binaryOperationNode);

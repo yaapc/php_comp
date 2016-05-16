@@ -671,13 +671,12 @@ void CodeGneratorVistor::visit(ClassDefineNode	*classDefineNode)
 	currentFrame = new ObjectFrame(currentFrame,classDefineNode);
 
 	ObjectFrame* objectFrame = dynamic_cast<ObjectFrame*>(currentFrame);
-
+	objectsFrames[classDefineNode->classSymbol->getName()] = objectFrame;
 	classDefineNode->body->generate_code(this);
 
 
 	AsmGenerator::comment("ClassDefineNode/>");
 
-	cout << objectFrame->membersOffset << endl;
 	currentFrame = objectFrame->parentFrame;
 }
 
@@ -705,5 +704,6 @@ void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 {
 
-	cout << "fuck" << endl;
+
+	cout << objectsFrames["Test"]->membersOffset <<  endl;
 }
