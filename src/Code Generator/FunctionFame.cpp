@@ -132,7 +132,7 @@ ObjectFrame::ObjectFrame(GlobalFrame *parent,ClassDefineNode *cdn)
 void ObjectFrame::addLocal(Node *node)
 {
 	ClassMemNode* classMemNode = dynamic_cast<ClassMemNode*>(node);
-	Variable* variable = classMemNode->memberSym;
+	Variable* variable = classMemNode->getMemSymbol();
 	//ToDo get the size of paramter in Bytes
 	int classMemSize = 4;
 	locals[variable->getNameWithout()] = membersOffset;
