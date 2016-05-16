@@ -3,7 +3,7 @@
 #include "ClassCallNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
-
+#include "../Code Generator/CodeGeneratorVistor.hpp"
 ClassCallNode::ClassCallNode(Node* objectNode, string propertyString) {
 	this->object = dynamic_cast<VariableNode*>(objectNode);
 	this->propertyString = propertyString;
@@ -14,7 +14,7 @@ ClassCallNode::ClassCallNode(Node* objectNode, string propertyString) {
 
 
 void ClassCallNode::generate_code(CodeGneratorVistor *codeGneratorVistor) {
-	//TODO:
+	codeGneratorVistor->visit(this);
 }
 
 bool ClassCallNode::type_checking() {

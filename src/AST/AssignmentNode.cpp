@@ -25,7 +25,7 @@ void AssignmentNode::print(ostream &os) {
   
 void AssignmentNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
-	//sleep for now : codeGneratorVistor->visit(this);
+	codeGneratorVistor->visit(this);
 }
 
   TypeExpression* AssignmentNode::getNodeType() {

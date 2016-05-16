@@ -31,4 +31,5 @@ public:
 	virtual void visit(ClassDefineNode	*classDefineNode);
 	virtual void visit(ClassMemNode		*classMemNode);
 	virtual void visit(ClassMethodNode	*classMethodNode);
+	virtual void visit(ClassCallNode	*classCallNode);
 };

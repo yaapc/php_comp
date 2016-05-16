@@ -701,3 +701,9 @@ void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 		cout << "CurrentFrame Should be objectFrame" << endl;
 	}
 }
+
+void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
+{
+
+	cout << "fuck" << endl;
+}
