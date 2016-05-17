@@ -79,7 +79,7 @@ TypeExpression* TypeClass::opDot(string propertyStr) {
 }
 
 int TypeClass::getSize() {
-	return this->size;
+	return this->size; 
 }
 
 int TypeClass::getTypeId() {
@@ -110,4 +110,11 @@ void TypeClass::makeSize() {
 		size += mem->type->getSize();
 	}
 	this->size = size;
+}
+
+bool TypeClass::equivelantTo(int secondTypeId){
+	//TODO
+	if(this->getTypeId() == secondTypeId)
+		return true;
+	return false;	
 }

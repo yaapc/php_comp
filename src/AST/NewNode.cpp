@@ -30,9 +30,14 @@ void NewNode::print(ostream &os) {
  }
 
 bool NewNode::type_checking() {	
-	//TODO:
-	this->nodeType = new TypeError("Not implemented yet.");
-	return false;
+	//check if a class is available:
+	this->nodeType = TypesTable::getInstance()->getClassType(className);
+
+	if (this->nodeType == nullptr) { // no type found
+		this->nodeType = new TypeError("Undefined");
+		return false;
+	}
+	return true;
 }
 
 void NewNode::generate_code(CodeGneratorVistor *codeGneratorVistor)

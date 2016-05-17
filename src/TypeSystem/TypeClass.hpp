@@ -52,6 +52,8 @@ public:
 
 	string getName();
 
+	bool equivelantTo(int secondTypeId);
+
 private:
 	
 	vector<MemberHolder*> members;
