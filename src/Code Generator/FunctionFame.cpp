@@ -54,9 +54,13 @@ string GlobalFrame::getAddress(string name)
 	if (locals.find(name) != locals.end()) {
     	int offset = locals[name];
 		return to_string(offset)+"($gp)";
-	}else{
-		cout << "This error should not be possible here, can not find symbol you're looking for." << endl;
 	}
+
+	if (parentFrame){
+		return parentFrame->getAddress(name);
+	}
+	cout << "This error should not be possible here, can not find symbol you're looking for." << endl;
+
 }
 
 FunctionFrame::FunctionFrame()
@@ -67,16 +71,18 @@ FunctionFrame::FunctionFrame()
 	initialFrameSize		= 2*4;	// 4 for $fp and 4 for $ra
 }
 
-FunctionFrame::FunctionFrame(GlobalFrame *parent,FunctionDefineNode *fdn)
+FunctionFrame::FunctionFrame(GlobalFrame *parent,ListNode *parametersNodes)
 {
 	paramtersOffset			= 0;
 	stackSize				= 0;
 	initialFrameSize		= 2*4;	// 4 for $fp and 4 for $ra
 	this->parentFrame			= parent;
-	for(auto &node : fdn->paramsList->nodes)
-	{
-		ParameterNode* paramterNode = dynamic_cast<ParameterNode*>(node);
-		addParameter(paramterNode);
+	if (parametersNodes){
+		for(auto &node : parametersNodes->nodes)
+		{
+			ParameterNode* paramterNode = dynamic_cast<ParameterNode*>(node);
+			addParameter(paramterNode);
+		}
 	}
 }
 
@@ -152,6 +158,13 @@ string ObjectFrame::getAddress(string name)
 		int offset = functions[name];
 		return to_string(offset);
 	}
+
+	if (parentFrame) {
+		return parentFrame->getAddress(name);
+    }
+
+	cout << "This error should not be possible here, can not find symbol you're looking for." << endl;
+
 	
 }
 

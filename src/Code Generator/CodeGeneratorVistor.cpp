@@ -650,13 +650,13 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 
 	string functionName = functionSymbol->getName();
-	funcRetLabel = functionName+"_ret";
+	returnLabel = functionName+"_ret";
 
 	AsmGenerator::comment("Look below to see function "+functionName);
 
 	AsmGenerator::initialize_function(functionName); 
 
-	currentFrame = new FunctionFrame(currentFrame,functionDefineNode);
+	currentFrame = new FunctionFrame(currentFrame,functionDefineNode->paramsList);
 
 	FunctionFrame* functionFrame = dynamic_cast<FunctionFrame*>(currentFrame);
 
@@ -666,14 +666,14 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 	{
 		ParameterNode* paramterNode = dynamic_cast<ParameterNode*>(node);
 		if (paramterNode == nullptr)
-			throw std::invalid_argument("DAMN this shoudn't happen");
+			cout << "DAMN this shoudn't happen" << endl;
 
 		paramterNode->generate_code(this);
 	}
 
 	functionDefineNode->bodySts->generate_code(this);
 
-	AsmGenerator::add_label(funcRetLabel);
+	AsmGenerator::add_label(returnLabel);
 
 	/*if (functionDefineNode->getNodeType()->getTypeId() != VOID_TYPE_ID) {
 		AsmGenerator::comment("Returning Value");
@@ -703,7 +703,7 @@ void CodeGneratorVistor::visit(ReturnNode *returnNode)
 	if (returnNode->returnend_expression){
 		returnNode->returnend_expression->generate_code(this);
 	}
-	AsmGenerator::add_instruction("b "+funcRetLabel);
+	AsmGenerator::add_instruction("b "+returnLabel);
 	AsmGenerator::comment("ReturnNode/>");
 }
 
@@ -741,10 +741,39 @@ void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 	ObjectFrame* objectFrame = dynamic_cast<ObjectFrame*>(currentFrame);
 	if (objectFrame != nullptr){
 		objectFrame->addFunction(classMethodNode);
+
+		Method *methodSymbol = classMethodNode->methodSym;
+
+		string methodName = methodSymbol->getName();
+		returnLabel = methodName+"_ret";
+
+		AsmGenerator::comment("Look below to see method "+methodName);
+
+		AsmGenerator::initialize_function(methodName); 
+
+		currentFrame = new FunctionFrame(currentFrame,nullptr);
+
+		FunctionFrame* functionFrame = dynamic_cast<FunctionFrame*>(currentFrame);
+
+		AsmGenerator::function_prologue(functionFrame->stackSize);
+		
+		//TODO
+		/*for(auto &node : )
+		{
+			ParameterNode* paramterNode = dynamic_cast<ParameterNode*>(node);
+			if (paramterNode == nullptr)
+				cout << "DAMN this shoudn't happen" << endl;
+
+			paramterNode->generate_code(this);
+		}*/
+
+
+
+
 	}else{
 		cout << "CurrentFrame Should be objectFrame" << endl;
 	}
-	AsmGenerator::comment("ClassMemNode/>");
+	AsmGenerator::comment("ClassMethodNode/>");
 }
 
 void CodeGneratorVistor::visit(ClassCallNode *classCallNode)

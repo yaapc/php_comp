@@ -29,7 +29,7 @@ class FunctionFrame :public GlobalFrame
 public:
 	FunctionFrame();
 
-	FunctionFrame(GlobalFrame *,FunctionDefineNode *);
+	FunctionFrame(GlobalFrame *,ListNode *);
 
 	virtual void addParameter(ParameterNode *);
 
