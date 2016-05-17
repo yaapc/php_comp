@@ -528,7 +528,9 @@ void CodeGneratorVistor::visit(ElseNode *assignmentNode)
 
 void CodeGneratorVistor::visit(ForNode *forNode)
 {
-	cout << "ForNode" << endl;
+	AsmGenerator::comment("<ForNode");
+
+	AsmGenerator::comment("ForNode/>");
 }
 
 void CodeGneratorVistor::visit(IfNode *ifNode)
@@ -600,7 +602,31 @@ void CodeGneratorVistor::visit(ScalarNode *scalarNode)
 
 void CodeGneratorVistor::visit(WhileNode *whileNode)
 {
-	cout << "WhileNode" << endl;
+	AsmGenerator::comment("<WhileNode");
+	string condLabel	= "while_begin_label_" + to_string(AsmGenerator::if_temp_label_count);
+	string endWhile		= "while_end_label"  + to_string(AsmGenerator::if_temp_label_count);
+
+
+	string s0 = "s0";
+	AsmGenerator::add_label(condLabel);
+	AsmGenerator::comment("<While Condition");
+	whileNode->condition->generate_code(this);
+	AsmGenerator::comment("While Condition/>");
+	AsmGenerator::pop(s0);
+
+
+	AsmGenerator::add_instruction("beqz $"+s0+", "+endWhile);
+
+	AsmGenerator::comment("<While Body");
+	whileNode->body->generate_code(this);
+	AsmGenerator::comment("While Body/>");
+
+
+	AsmGenerator::add_instruction("b " + condLabel);
+  
+	AsmGenerator::add_label(endWhile);
+
+	AsmGenerator::comment("WhileNode/>");
 }
 
 void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)

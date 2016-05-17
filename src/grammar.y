@@ -1421,7 +1421,7 @@ expr:
 	| expr T_IS_IDENTICAL expr
 	| expr T_IS_NOT_IDENTICAL expr
 	| expr T_IS_EQUAL expr { $<r.node>$ = new BinaryOperationNode("==", $<r.node>1, $<r.node>3); }
-	| expr T_IS_NOT_EQUAL expr
+	| expr T_IS_NOT_EQUAL expr  { $<r.node>$ = new BinaryOperationNode("!=", $<r.node>1, $<r.node>3); }
 	| expr T_SPACESHIP expr
 	| expr '<' expr { $<r.node>$ = new BinaryOperationNode("<", $<r.node>1, $<r.node>3); }
 	| expr T_IS_SMALLER_OR_EQUAL expr { $<r.node>$ = new BinaryOperationNode("<=", $<r.node>1, $<r.node>3); }
