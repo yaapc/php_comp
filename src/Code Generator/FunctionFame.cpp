@@ -14,8 +14,8 @@ void GlobalFrame::addLocal(Node *node)
 	Variable* variableSymbol = declarationNode->variable;
 
 
-	//ToDo get the size of variable in Bytes
-    int varSize = 4;
+	//get the size of variable in Bytes
+    int varSize  = node->getNodeType()->getSize();
 	locals[declarationNode->variable->getNameWithout()] = globalSize;
 	
 	AsmGenerator::comment(declarationNode->variable->getNameWithout() + " in global scoop address "+to_string(globalSize)+" from gp");
@@ -32,13 +32,17 @@ void GlobalFrame::addLocal(Node *node)
 		// the address is stored as int with .word type 
 		//string variable should be initialize to "" 
 		//I stored "" in .data with a name empty_string and all string variables use it
-
 		string s0 = "s0";
 		// load the address of empty string in s0
 		AsmGenerator::la(s0,AsmGenerator::empty_string_address);
 		// store the address of empty string in variable address
 		AsmGenerator::sw(s0,to_string(globalSize)+"($gp)");
 		
+	}
+
+	if (declarationNode->getNodeType()->getTypeId() == CLASS_TYPE_ID){
+		varSize = 4; // pointer to object 
+		AsmGenerator::sw("0",to_string(globalSize)+"($gp)");
 	}
 
 	// Move Global Pointer
@@ -78,8 +82,7 @@ FunctionFrame::FunctionFrame(GlobalFrame *parent,FunctionDefineNode *fdn)
 
 void FunctionFrame::addParameter(ParameterNode *parameterNode)
 {
-	//ToDo get the size of paramter in Bytes
-	int parameterSize = 4;
+	int parameterSize = parameterNode->getNodeType()->getSize();
 	arguments[parameterNode->parSym->getNameWithout()] = paramtersOffset;
 	paramtersOffset += parameterSize;
 }
@@ -87,8 +90,7 @@ void FunctionFrame::addParameter(ParameterNode *parameterNode)
 void FunctionFrame::addLocal(Node *node)
 {
 	DeclarationNode* variableDeclarationNode = dynamic_cast<DeclarationNode*>(node);
-	//ToDo get the size of variable in Bytes
-    int varSize = 4;
+	int varSize = node->getNodeType()->getSize();
     stackSize += varSize;
 	int variableOffset = -stackSize - initialFrameSize; // offset from frame pointer
 	locals[variableDeclarationNode->variable->getNameWithout()] = variableOffset;
@@ -133,8 +135,7 @@ void ObjectFrame::addLocal(Node *node)
 {
 	ClassMemNode* classMemNode = dynamic_cast<ClassMemNode*>(node);
 	Variable* variable = classMemNode->getMemSymbol();
-	//ToDo get the size of paramter in Bytes
-	int classMemSize = 4;
+	int classMemSize = classMemNode->getNodeType()->getSize();
 	locals[variable->getNameWithout()] = membersOffset;
 	membersOffset += classMemSize;
 }

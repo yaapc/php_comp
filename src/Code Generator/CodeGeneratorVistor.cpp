@@ -4,6 +4,7 @@
 #include "../AST/ListNode.hpp"
 #include "../AST/all.hpp"
 #include "FunctionFrame.hpp"
+#include "../TypeSystem/TypeClass.hpp"
 
 
 void CodeGneratorVistor::generate(ListNode *ast)
@@ -43,8 +44,13 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 			//but when primitve variable appeare in lhs we need its address to write on it so we have to get the address 
 			string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
 			AsmGenerator::sw(s1,variableAddress);	   //  Store value from rhs in the addresss
+		}else
+
+		if (ClassCallNode *classCallNode = dynamic_cast<ClassCallNode*>(assignmentNode->lhs)){
+			string probertyAddress = getClassMemberAddress(classCallNode,s0);
+			AsmGenerator::sw(s1,probertyAddress);
 		}else{
-			cout << "left hand side should be Variable node" << endl;
+			cout << "left hand side should be Variable node or Member of object" << endl;
 		}
 	}
 
@@ -72,17 +78,40 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 
 
 
-		if (VariableNode *variableNode = dynamic_cast<VariableNode*>(assignmentNode->lhs)){
+		if (VariableNode *variableNode = dynamic_cast<VariableNode*>(assignmentNode->lhs))
+		{
 			string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
 			AsmGenerator::sw(t0,variableAddress);	   // store the addrees in variable address
-		}else{
-			cout << "left hand side should be Variable node" << endl;
+		}else
+		if (ClassCallNode *classCallNode = dynamic_cast<ClassCallNode*>(assignmentNode->lhs)){
+			string probertyAddress = getClassMemberAddress(classCallNode,s0);
+			AsmGenerator::sw(t0,probertyAddress);
 		}
+		else{
+			cout << "left hand side should be Variable node or Member of object" << endl;
+		}
+		
 		AsmGenerator::move("a0",t0); // put the address of newly created memoty in a0 (the parameter of strcpy function)
 		AsmGenerator::move("a1",s1); // put the address of string literal in a1 (the second parameter of strcpy function)
 		AsmGenerator::jal(AsmGenerator::strcpy_function_name);
-		
 	}
+
+	if (assignmentNode->getNodeType()->getTypeId() == CLASS_TYPE_ID){
+		string s0 = "s0";
+		string s1 = "s1";			 
+		AsmGenerator::pop(s1);
+		AsmGenerator::pop(s0);
+		//s0 should contain the address of object variale
+		//s1 should contain the address of object in heap
+	
+		if (VariableNode *variableNode = dynamic_cast<VariableNode*>(assignmentNode->lhs)){
+			string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
+			AsmGenerator::sw(s1,variableAddress);
+		}else{
+			cout << "left hand side should be Variable node" << endl;
+		}
+	}
+
 
 	if (assignmentNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
 		// float numeric values are stored in data like strings but the value of float variable not in heap
@@ -98,12 +127,18 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 		AsmGenerator::f_pop(f0);
 		if (VariableNode *variableNode = dynamic_cast<VariableNode*>(assignmentNode->lhs)){
 			string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
-
 			AsmGenerator::ss(f1,variableAddress);
-		}else{
-			cout << "left hand side should be Variable node" << endl;
+		}else
+		if (ClassCallNode *classCallNode = dynamic_cast<ClassCallNode*>(assignmentNode->lhs)){
+			string s0 = "s0";
+			string probertyAddress = getClassMemberAddress(classCallNode,s0);
+			AsmGenerator::ss(f1,probertyAddress);
+		}
+		else{
+			cout << "left hand side should be Variable node or Member of object" << endl;
 		}
 	}
+
 	AsmGenerator::comment("Assignment Node/>");
 }
 
@@ -425,6 +460,11 @@ void CodeGneratorVistor::visit(VariableNode *variableNode)
 		AsmGenerator::f_push("f0");
 	}
 
+	if (variableNode->getNodeType()->getTypeId()== CLASS_TYPE_ID){
+		AsmGenerator::lw(s0,variableAddress); 		//Get memory address and put in s0
+		AsmGenerator::push(s0);
+	}
+
 	AsmGenerator::comment("Variable Node/>");
 }
 
@@ -464,6 +504,8 @@ void CodeGneratorVistor::visit(EchoNode *echoNode)
 							
 						}
 				}
+				AsmGenerator::la(t0,AsmGenerator::new_line_address);
+				AsmGenerator::print_string(t0);
 				AsmGenerator::comment("List Node/>");
 		}else{
 				AsmGenerator::comment("<Experesion Node");
@@ -689,27 +731,109 @@ void CodeGneratorVistor::visit(ClassMemNode	*classMemNode)
 	}else{
 		cout << "CurrentFrame Should be objectFrame" << endl;
 	}
+	string memberName = classMemNode->getMemSymbol()->getName();
+	AsmGenerator::comment("<Declare member "+memberName+" />");
 }
 
 void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 {
+	AsmGenerator::comment("<ClassMethodNode");
 	ObjectFrame* objectFrame = dynamic_cast<ObjectFrame*>(currentFrame);
 	if (objectFrame != nullptr){
 		objectFrame->addFunction(classMethodNode);
 	}else{
 		cout << "CurrentFrame Should be objectFrame" << endl;
 	}
+	AsmGenerator::comment("ClassMemNode/>");
 }
 
 void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 {
+	AsmGenerator::comment("<ClassCallNode");
+	string s0 = "s0";
+	
+	string probertyAddress = getClassMemberAddress(classCallNode,s0);
+
+	if (!classCallNode->isMethodCall){
+		TypeClass* classType = dynamic_cast<TypeClass*>(classCallNode->object->getNodeType());
+		int propertyTypeID = classType->lookupMembers("$"+classCallNode->propertyString)->type->getTypeId();
 
 
-	cout << objectsFrames["Test"]->membersOffset <<  endl;
+		if (propertyTypeID == INTEGER_TYPE_ID	|| propertyTypeID == BOOLEAN_TYPE_ID){
+			AsmGenerator::lw(s0,probertyAddress);
+			AsmGenerator::push(s0);
+		}
+
+		if (propertyTypeID == STRING_TYPE_ID){
+			AsmGenerator::lw(s0,probertyAddress); 
+			AsmGenerator::push(s0);
+
+		}
+		
+		if (propertyTypeID == FLOAT_TYPE_ID){
+			AsmGenerator::ls("f0",probertyAddress);
+			AsmGenerator::f_push("f0");
+		}
+
+		if (propertyTypeID == CLASS_TYPE_ID){
+		AsmGenerator::lw(s0,probertyAddress); 
+		AsmGenerator::push(s0);
+	}
+	}else{
+	
+	
+	}
+
+	AsmGenerator::comment("ClassCallNode/>");
 }
 
 
 void CodeGneratorVistor::visit(NewNode *newNode)
 {
-	cout << "FFF" << endl;
+	AsmGenerator::comment("<NewNode");
+	
+	if (objectsFrames.find(newNode->className) != objectsFrames.end()) {
+		ObjectFrame *objectsFrame = objectsFrames[newNode->className];
+		int objectSize = objectsFrame->membersOffset;
+		string s0 = "s0",s1 = "s1";
+		AsmGenerator::li(s0,objectSize);
+		AsmGenerator::sbrk(s0,s1);
+		AsmGenerator::push(s1);
+	}else{
+		cout << "UnDeclared Class" << endl;
+	}
+	AsmGenerator::comment("NewNode/>");
+
+	
+}
+
+string CodeGneratorVistor::getClassMemberAddress(ClassCallNode *classCallNode,string reg)
+{
+	TypeClass* classType = dynamic_cast<TypeClass*>(classCallNode->object->getNodeType());
+
+	if (classType != nullptr){
+		string className = classType->getName();
+		if (objectsFrames.find(className) != objectsFrames.end()){
+			ObjectFrame* objectFrame = objectsFrames[className];
+
+	
+
+			string propertyOffset = objectFrame->getAddress(classCallNode->propertyString);
+			string objectAddress  = currentFrame->getAddress(classCallNode->object->variable->getNameWithout());
+
+
+			AsmGenerator::lw(reg,objectAddress); //load the addrees of object
+			string probertyAddress = propertyOffset+"($"+reg+")";
+
+
+			return probertyAddress;
+		}else{
+			cout << "UnDeclared Class" << endl;
+			return nullptr;
+		}
+	}else{
+		cout << "UnDeclared Class" << endl;
+		return nullptr;
+	}
+
 }

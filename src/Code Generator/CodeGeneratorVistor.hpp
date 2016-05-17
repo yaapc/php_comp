@@ -35,4 +35,7 @@ public:
 	virtual void visit(ClassMethodNode	*classMethodNode);
 	virtual void visit(ClassCallNode	*classCallNode);
 	virtual void visit(NewNode			*newNode);
+
+	//Helper Method
+	string getClassMemberAddress(ClassCallNode *,string);
 };
