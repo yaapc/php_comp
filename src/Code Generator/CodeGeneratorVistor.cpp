@@ -529,7 +529,48 @@ void CodeGneratorVistor::visit(ElseNode *assignmentNode)
 void CodeGneratorVistor::visit(ForNode *forNode)
 {
 	AsmGenerator::comment("<ForNode");
+	string beginFor		= "for_begin_label_" + to_string(AsmGenerator::if_temp_label_count);
+	string endFor		= "for_end_label"  + to_string(AsmGenerator::if_temp_label_count);
 
+	string s0 = "s0";
+
+	AsmGenerator::comment("<For Initializer");
+	if (forNode->initializer){
+		forNode->initializer->generate_code(this);
+	}else{
+		cout << "For without initializer" << endl;
+	}
+	AsmGenerator::comment("For Initializer/>");
+
+
+	AsmGenerator::add_label(beginFor);
+	AsmGenerator::comment("<For Condition");
+	if (forNode->condition){
+		forNode->condition->generate_code(this);
+		AsmGenerator::pop(s0);
+		AsmGenerator::add_instruction("beqz $"+s0+", "+endFor);
+	}
+	AsmGenerator::comment("For Condition/>");
+
+
+	AsmGenerator::comment("<For Body");
+	if (forNode->body){
+		forNode->body->generate_code(this);
+	}
+	AsmGenerator::comment("For Body/>");
+
+
+	AsmGenerator::comment("<For Increment");
+	if (forNode->post_statement){
+		forNode->post_statement->generate_code(this);
+	}
+	AsmGenerator::comment("For Increment/>");
+
+
+	AsmGenerator::add_instruction("b " + beginFor);
+
+	AsmGenerator::add_label(endFor);
+	AsmGenerator::if_temp_label_count++;
 	AsmGenerator::comment("ForNode/>");
 }
 
@@ -538,7 +579,7 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 	AsmGenerator::comment("<If Statment");
 	string t0 = "t0";
 	string else_label	= "else_label_" + to_string(AsmGenerator::if_temp_label_count);
-	string finish		= "finish_if_"  + to_string(AsmGenerator::if_temp_label_count);
+	string endIf		= "end_if_"     + to_string(AsmGenerator::if_temp_label_count);
 	
 	AsmGenerator::comment("<If Statment Condition Node");
 	ifNode->condition->generate_code(this);
@@ -553,14 +594,14 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 		ifNode->body->generate_code(this);
 		AsmGenerator::comment("If Statment Body Node/>");
 	}
-	AsmGenerator::jump_label(finish);	 // body completed got to finish label
+	AsmGenerator::jump_label(endIf);	 // body completed got to finish label
 	AsmGenerator::add_label(else_label);
 	if (ifNode->else_node != NULL){
 		AsmGenerator::comment("<If Statment Else Node");
 		ifNode->else_node->generate_code(this);
 		AsmGenerator::comment("If Statment Else Node/>");
 	}
-	AsmGenerator::add_label(finish);
+	AsmGenerator::add_label(endIf);
 	AsmGenerator::if_temp_label_count++;
 	AsmGenerator::comment("If Statment/>");
 }
@@ -603,29 +644,30 @@ void CodeGneratorVistor::visit(ScalarNode *scalarNode)
 void CodeGneratorVistor::visit(WhileNode *whileNode)
 {
 	AsmGenerator::comment("<WhileNode");
-	string condLabel	= "while_begin_label_" + to_string(AsmGenerator::if_temp_label_count);
+	string beginWhile	= "while_begin_label_" + to_string(AsmGenerator::if_temp_label_count);
 	string endWhile		= "while_end_label"  + to_string(AsmGenerator::if_temp_label_count);
 
 
 	string s0 = "s0";
-	AsmGenerator::add_label(condLabel);
+	AsmGenerator::add_label(beginWhile);
 	AsmGenerator::comment("<While Condition");
-	whileNode->condition->generate_code(this);
+	if (whileNode->condition){
+		whileNode->condition->generate_code(this);
+		AsmGenerator::pop(s0);
+		AsmGenerator::add_instruction("beqz $"+s0+", "+endWhile);
+	}
 	AsmGenerator::comment("While Condition/>");
-	AsmGenerator::pop(s0);
 
-
-	AsmGenerator::add_instruction("beqz $"+s0+", "+endWhile);
 
 	AsmGenerator::comment("<While Body");
 	whileNode->body->generate_code(this);
 	AsmGenerator::comment("While Body/>");
 
 
-	AsmGenerator::add_instruction("b " + condLabel);
+	AsmGenerator::add_instruction("b " + beginWhile);
   
 	AsmGenerator::add_label(endWhile);
-
+	AsmGenerator::if_temp_label_count++;
 	AsmGenerator::comment("WhileNode/>");
 }
 
