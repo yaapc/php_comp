@@ -15,7 +15,9 @@ public:
 
 protected:
     static TypeBoolean* mInstance;
-    TypeBoolean(){}
+    TypeBoolean(){
+		this->size = 4;
+	}
 
 };
 
