@@ -54,6 +54,8 @@ public:
 
 	bool equivelantTo(int secondTypeId);
 
+	MemberHolder* lookupMembers(string memberStr);
+
 private:
 	
 	vector<MemberHolder*> members;
@@ -74,7 +76,7 @@ private:
 
 
 	void addToMembers(MemberHolder* memberType);
-	MemberHolder* lookupMembers(string memberStr);
+
 
 
 	void makeSize();
