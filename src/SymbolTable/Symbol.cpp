@@ -211,30 +211,13 @@ string Function::getLabel() {
 	return this->label;
 }
 
-string Function::generateFunctionSignature() {
+void Function::generateLabel() {
 	std::ostringstream os;
-	os << "(";
-	auto par = this->params;
-	bool firstParamFlag = true;
-	while (par) {
-		if (!firstParamFlag)
-			os << ",";
-		
-		Parameter* parameter = dynamic_cast<Parameter*>(par);
-		os << parameter->getVariableType();
-
-		par = par->node;
-
-		firstParamFlag = false; //we passed the first parameter
-	}
-	os << ")" << ">" << this->getReturnType();
-	return os.str();
-
+	os << "func_" << getName() << "_" << this->id;
+	this->label = os.str();
 }
 
-string Function::getLabel() {
-	return this->label;
-}
+
 /*
 ========================================
 CLASS:

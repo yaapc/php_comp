@@ -117,7 +117,6 @@ public:
 	string getLabel();
 
 	static int functionCounter; // 
-	string generateFunctionSignature();
 
 private:
 	char* returnType;
