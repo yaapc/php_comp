@@ -1,5 +1,7 @@
 #include"Symbol.h"
 #include"../definitions.h"
+#include <sstream>
+
 
 Symbol::Symbol(char* name, int type, int colNo, int lineNo){
 	this->name = name;
@@ -118,18 +120,26 @@ FUNCTION:
 =========================================
 */
 
+int Function::functionCounter = 0; // static declaration
+
+
 Function::Function(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope) : Symbol(name, FUNCTION, colNo, lineNo) {
 	this->returnType = returnType;
 	this->bodyScope = bodyScope;
 	this->params = nullptr;
 	this->id = -1;
+	this->id = functionCounter;
+	functionCounter++;
+	generateLabel();
 }
 
 string Function::toString(){
-	string name, returnType;
+	string name, returnType, signs = "";
 	this->returnType ? returnType = this->returnType : returnType = "NULL";
 	this->getName() ? name = this->getName() : name = "NULL";
-	return " FUNCTION | " + name + " | " + returnType;
+	for (auto &sign : this->functionSignatures)
+		signs += " | " + sign;
+	return " FUNCTION | " + name + " | " + returnType + signs;
 }
 
 int Function::getSymbolType(){
@@ -165,6 +175,7 @@ vector<Parameter*> Function::parameters() {
 	}
 	return res;
 }
+
 void Function::setId(int id) {
 	this->id = id;
 }
@@ -173,10 +184,46 @@ int Function::getId() {
 	return this->id;
 }
 
+void Function::generateFunctionSignature() {
+	std::ostringstream os;
+	os << getLabel() << "(";
+	auto par = this->params;
+	bool firstParamFlag = true;
+	while (par != nullptr) {
+		
+		Parameter* parameter = dynamic_cast<Parameter*>(par);
+		if (parameter->isDefault)
+			//insert the current built signature in the @functionSignatures
+			this->functionSignatures.push_back(os.str() + ")");
+		
+
+		if (!firstParamFlag)
+			os << ",";
+		os << parameter->getVariableType();
+
+		par = par->node;
+
+		firstParamFlag = false; //we passed the first parameter
+	}
+	os << ")";
+	this->functionSignatures.push_back(os.str());
+}
+
 string Function::getUniqueName() {
 	string uniqueName = this->getName();
 	return uniqueName+to_string(id);
 }
+
+string Function::getLabel() {
+	return this->label;
+}
+
+void Function::generateLabel() {
+	std::ostringstream os;
+	os << "func_" << getName();
+	this->label = os.str();
+}
+
 /*
 ========================================
 CLASS:

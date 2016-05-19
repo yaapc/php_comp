@@ -5,6 +5,7 @@
 #include "TypeExpression.hpp"
 #include "../AST/ClassDefineNode.hpp"
 #include "../SymbolTable/Symbol.h"
+#include "../AST/FunctionDefineNode.hpp"
 
 #include <string>
 
@@ -32,10 +33,14 @@ public:
 	 * returning a pointer to the correct TypeExpression instance.
 	 */
 	TypeExpression* getType(int typeId);
+	TypeExpression* getType(string type);
+
 
 	TypeExpression* getClassType(string name);
 
 	TypeExpression* buildClassType(ClassDefineNode* classNode, Class* classSymbol);
+
+	TypeExpression* buildFunctionType(FunctionDefineNode* functionNode, Function* functionSymbol);
 };
 
 

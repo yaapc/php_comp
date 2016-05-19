@@ -111,6 +111,25 @@ public:
 	string getUniqueName();
 
 	string toString();
+
+	/*
+	   a function signature is constructed as follows: 	   
+	         func_function_name(type_name,type_name,....)
+	   a function symbol may contain multiple signatures, it's due to default values.
+	   consider the given function is:
+	         function iAmFunc(int $x, int $y = 0, int $z = 1) : void
+	   it will have the signatures:
+	        - func_iAmFunc(int,int,int)
+			- func_iAmFunc(int,int)
+			- func_iAmFunc(int)			
+	 */
+	vector<string> functionSignatures;
+	void generateFunctionSignature();
+
+	string getLabel();
+
+	static int functionCounter;
+
 private:
 	char* returnType;
 	Scope* bodyScope;
@@ -118,6 +137,9 @@ private:
 	Symbol* params;
 
 	int id;
+	string label;
+
+	void generateLabel();
 };
 
 /*
