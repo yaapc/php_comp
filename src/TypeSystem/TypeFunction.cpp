@@ -21,7 +21,8 @@ TypeExpression* TypeFunction::buildFunction(FunctionDefineNode* functionNode, Fu
 		return new TypeError(string(functionSymbol->getName())  + "already defined.");
 
 	//let's build the FunctionType:
-	TypeFunction* typeFunction = new TypeFunction(functionSymbol->functionSignatures, functionSymbol->getName());
+	TypeFunction* typeFunction = new TypeFunction(functionSymbol->functionSignatures, functionSymbol->getName()
+												  ,functionSymbol->getUniqueName());
 
 	//extract params TypeExpressions and add them to @paramsTE
 	for (auto &paramNode : functionNode->paramsList->nodes) {
@@ -65,10 +66,11 @@ bool TypeFunction::isDeclared(string name) {
 	return false;
 }
 
-TypeFunction::TypeFunction(vector<string> functionSignatures, string functionName) {
+TypeFunction::TypeFunction(vector<string> functionSignatures, string functionName, string uniqueName) {
 	this->signatures = functionSignatures;
 	this->size = 0;
 	this->functionName = functionName;
+	this->uniqueName = uniqueName;
 }
 
 TypeExpression* TypeFunction::getReturnTypeExpression() {
@@ -104,4 +106,8 @@ void TypeFunction::resize() {
 
 string TypeFunction::getFunctionName() {
 	return this->functionName;
+}
+
+string TypeFunction::getUniqueName() {
+	return this->uniqueName;
 }

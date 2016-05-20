@@ -8,6 +8,7 @@
 
 FunctionCallNode::FunctionCallNode(string name, Node* argsList) {
 	this->nodeType = nullptr;
+	this->functionType = nullptr;
 	this->name = name;
 	this->argumentsList = dynamic_cast<ListNode*>(argsList);
 }
@@ -27,6 +28,7 @@ bool FunctionCallNode::type_checking() {
 	TypeFunction* functionType = dynamic_cast<TypeFunction*>(type);
 	if (functionType != nullptr) {
 		this->nodeType = functionType->getReturnTypeExpression();
+		this->functionType = functionType;
 		return true;
 	}
 	this->nodeType = type;// TypeError indecating undefind.

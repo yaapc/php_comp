@@ -42,8 +42,12 @@ public:
 
 	string getFunctionName();
 
+	/*
+		unique name is structred as " name+id " see Function Symbol @getUniqueName for more info
+	*/
+	string getUniqueName();
 private:
-	TypeFunction(vector<string> functionSign, string functionName);
+	TypeFunction(vector<string> functionSign, string functionName, string uniqueName);
 
 	/*
 	 * searches the @functionInstances for an already declared function
@@ -71,6 +75,8 @@ private:
 	vector<string> signatures;
 
 	string functionName;
+
+	string uniqueName;
 };
 
 #endif

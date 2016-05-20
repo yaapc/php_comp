@@ -1,12 +1,15 @@
 #pragma once 
 #include "Node.hpp"
 #include "ListNode.hpp"
+#include "../TypeSystem/TypeFunction.hpp"
 
 class FunctionCallNode : public Node {
 public:
 	string name;
 	ListNode* argumentsList;
-	
+	TypeFunction* functionType;
+
+
 	FunctionCallNode(string name, Node* argsList);
 
 	void print(ostream &os);
