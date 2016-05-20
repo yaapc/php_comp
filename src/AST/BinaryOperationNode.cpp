@@ -95,5 +95,3 @@ Node* BinaryOperationNode::optmize(OptimizationVistor *optimizationVistor)
 		this->nodeType = TypesTable::getInstance()->getType(ERROR_TYPE_ID);
 		return false;
   }
-
- int BinaryOperationNode::temp_label_count = 0;

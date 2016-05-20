@@ -24,6 +24,5 @@ public:
 
 	virtual Node* optmize(OptimizationVistor *);
 
-private:
 	TypeExpression* createReturnType(); // create a TypeExpression represents the return type.
 };

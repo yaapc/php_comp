@@ -9,7 +9,6 @@ class BinaryOperationNode : public Node {
 public:
   Node *left, *right;
   char* op_type;
-  static int temp_label_count ;
 
   BinaryOperationNode(char* op, Node *lft, Node *rgt);
 
