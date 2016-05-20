@@ -4,6 +4,7 @@
 #include "../AST/all.hpp"
 #include "FunctionFrame.hpp"
 #include "../TypeSystem/TypeClass.hpp"
+#include "../TypeSystem/TypeFunction.hpp"
 
 
 void CodeGneratorVistor::generate(ListNode *ast)
@@ -352,9 +353,9 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 			string t1 = "t1";
 			string t3 = "t3";
 
-			string begin_loop_label		= "concat_begin" + binaryOperationNode->temp_label_count;
-			string finish_loop_leble	= "concat_end"   + binaryOperationNode->temp_label_count;
-			binaryOperationNode->temp_label_count++;
+			string begin_loop_label		= "concat_begin" + AsmGenerator::if_temp_label_count;
+			string finish_loop_leble	= "concat_end"   + AsmGenerator::if_temp_label_count;
+			AsmGenerator::if_temp_label_count++;
 
 	
 			AsmGenerator::pop(s1); //integer type
@@ -393,9 +394,9 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 			string t0 = "t0";
 			string t1 = "t1";
 			string t3 = "t3";
-			string begin_loop_label		= "concat_begin" + binaryOperationNode->temp_label_count;
-			string finish_loop_leble	= "concat_end"	+binaryOperationNode-> temp_label_count;
-			binaryOperationNode->temp_label_count++;
+			string begin_loop_label		= "concat_begin" + AsmGenerator::if_temp_label_count;
+			string finish_loop_leble	= "concat_end"   + AsmGenerator::if_temp_label_count;
+			AsmGenerator::if_temp_label_count++;
 			AsmGenerator::pop(s0);
 			AsmGenerator::pop(s1);
 			AsmGenerator::move("a0",s0);
@@ -436,7 +437,7 @@ void CodeGneratorVistor::visit(DeclarationNode *declarationNode)
 
 void CodeGneratorVistor::visit(VariableNode *variableNode)
 {
-	AsmGenerator::comment("<Variable Node");
+	AsmGenerator::comment("<Variable Node "+variableNode->variable->getNameWithout());
 	string s0 = "s0";
 
 	string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
@@ -674,12 +675,26 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 {
 	AsmGenerator::comment("<FunctionCallNode");
 
+	TypeFunction *functionType = functionCallNode->functionType;
+
 	AsmGenerator::comment("<ArgumentList");
 	functionCallNode->argumentsList->generate_code(this);
 	AsmGenerator::comment("ArgumentList/>");
 
-	//TODO replace this with unique name of function
-	string functionName = functionCallNode->name;
+	int arguemtnsSize	= functionCallNode->argumentsList->nodes.size();
+	int parameterSize	= functionType->getParamsTEs().size();
+	int diffSize		= parameterSize - arguemtnsSize;	// number of enabeld default parameters
+
+	//Make some space for enabeld default parameters
+	for(int i = 0 ; i < diffSize ; i++){
+		string t0 = "t0";
+		//we will store special value -1005 (maybe special) to know that this parameter is default and it's value should be
+		//taken from function decleration
+		AsmGenerator::li(t0,-1005);
+		AsmGenerator::push(t0);
+	}
+
+	string functionName = functionType->getUniqueName();
 
 	AsmGenerator::jal(functionName);
 
@@ -696,11 +711,13 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 	}
 
 	
-	if (functionCallNode->getNodeType()->getTypeId() != VOID_TYPE_ID){
-		if (functionCallNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID)
-			AsmGenerator::f_push("v1");
-		else
+	if (functionType->getReturnTypeExpression()->getTypeId() != VOID_TYPE_ID){
+		if (functionType->getReturnTypeExpression()->getTypeId() == FLOAT_TYPE_ID){
+			AsmGenerator::f_push("f1");
+		}
+		else{
 			AsmGenerator::push("v1");
+		}
 	}
 
 	AsmGenerator::comment("FunctionCallNode/>");
@@ -708,15 +725,10 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 
 void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 {
-	Function *functionSymbol = functionDefineNode->functionSym;
-
-	functionSymbol->setId(symbolIDS++);
-
 	AsmGenerator::comment("<FunctionDefineNode");
+	TypeFunction* functionType = dynamic_cast<TypeFunction*>(functionDefineNode->getNodeType());
 
-
-
-	string functionName = functionSymbol->getName();
+	string functionName = functionType->getUniqueName();
 	returnLabel = functionName+"_ret";
 
 	AsmGenerator::comment("Look below to see function "+functionName);
@@ -742,13 +754,15 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 	AsmGenerator::add_label(returnLabel);
 
-	/*if (functionDefineNode->getNodeType()->getTypeId() != VOID_TYPE_ID) {
+	if (functionType->getReturnTypeExpression()->getTypeId() != VOID_TYPE_ID) {
 		AsmGenerator::comment("Returning Value");
-		if (functionDefineNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID)
-			AsmGenerator::f_pop("v1");
+		if (functionType->getReturnTypeExpression()->getTypeId() == FLOAT_TYPE_ID)
+			AsmGenerator::f_pop("f1");
 		else
 			AsmGenerator::pop("v1");
-	}*/
+	}
+
+
 	AsmGenerator::function_epilogue(functionFrame->stackSize);
 	AsmGenerator::write_function();
 	AsmGenerator::comment("FunctionDefineNode/>");
@@ -759,7 +773,38 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 void CodeGneratorVistor::visit(ParameterNode *parameterNode)
 {
 	parameterNode->parSym->setId(symbolIDS++);
-	AsmGenerator::comment("<ParameterNode");
+	AsmGenerator::comment("<ParameterNode " + parameterNode->parSym->getNameWithout());
+
+	// if paramter is default we have to load it value and store it in proper address
+	// but some default paramters will have a value when function get called
+	// so we have to differentiate between default paramter with value in function call and 
+	// default paramter without value in funcion (value should be taken from function signature)
+	// by using special value that we stored in function call
+
+	if (parameterNode->isDefault){
+		// to contimue_without_load_default_parameter_value
+		string label = "cont_without_load_def_" + to_string(AsmGenerator::if_temp_label_count);
+		AsmGenerator::if_temp_label_count++;
+
+		string parameterAddress = currentFrame->getAddress(parameterNode->parSym->getNameWithout());
+
+
+		AsmGenerator::lw("s1",parameterAddress);
+		
+		AsmGenerator::li("s2",-1005);
+
+		// if paramters address contian -1005 value 
+		// we know that the caller didn't pass the value of defult paramter
+		AsmGenerator::add_instruction("bne $s1, $s2, "+label);
+
+		parameterNode->defaultValueNode->generate_code(this);
+		
+		AsmGenerator::pop("s0");
+		
+		AsmGenerator::sw("s0",parameterAddress);
+
+		AsmGenerator::add_label(label);
+	}
 
 	AsmGenerator::comment("ParameterNode/>");
 }

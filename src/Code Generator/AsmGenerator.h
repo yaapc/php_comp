@@ -57,7 +57,7 @@ public:
 	static void li							(string reg,int value);
 	static void f_li						(string reg,float value);
 
-	static void sw							(string address,string source_reg);	
+	static void sw							(string source_reg,string address);	
 
 	static void la							(string reg,string value);
 				

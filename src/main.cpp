@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
 	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast_optmized.dot -o ast_optmized.svg", NULL, SW_HIDE);
 
 	//Generate code AST
-	//codeGeneratorVistor.generate(tree);
+	codeGeneratorVistor.generate(tree);
 
 	if (SIMULATOR == 1){
 		system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");

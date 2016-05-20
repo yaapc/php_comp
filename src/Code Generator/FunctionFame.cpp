@@ -88,7 +88,7 @@ FunctionFrame::FunctionFrame(GlobalFrame *parent,ListNode *parametersNodes)
 
 void FunctionFrame::addParameter(ParameterNode *parameterNode)
 {
-	int parameterSize = parameterNode->getNodeType()->getSize();
+	int parameterSize =  4 ;// TODo parameterNode->getNodeType()->getSize();
 	arguments[parameterNode->parSym->getNameWithout()] = paramtersOffset;
 	paramtersOffset += parameterSize;
 }
@@ -113,7 +113,7 @@ string FunctionFrame::getAddress(string name)
 
 	if (arguments.find(name) != arguments.end()) {
 		int offset = arguments[name];
-        return to_string(offset)+"($fp)";
+        return to_string((paramtersOffset - 4) - offset)+"($fp)";
     } 
 		
 	if (parentFrame) {
