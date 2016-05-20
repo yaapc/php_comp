@@ -29,15 +29,14 @@ public:
 
 
 	/*
-		here we build the God of Classes:
-	
-	*/
+	 * here we build the God of Classes:	
+	 */
 	static TypeClass* buildObjectClass();
 	
 	/*
 		This method is responsable for looking for a given id or name of @ClassType in the @classInstances.
 	    if none is found, it will return nullptr.
-		TODO: look for isntance using Unique Name.
+		TODO: look for instance using Unique Name, INNER CLASSES!!
 	*/
 	static TypeClass* getInstance(string name);
 
@@ -63,7 +62,7 @@ private:
 	TypeExpression* parentClass;
 
 	/*
-		A vector of @TypeClass that contains the classed defined through out the code being compiled.
+		A vector of @TypeClass that contains the classes defined through out the code being compiled.
 	*/
 	static vector<TypeClass*> classInstances;
 
