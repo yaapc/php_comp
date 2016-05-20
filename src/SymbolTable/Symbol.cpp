@@ -122,6 +122,7 @@ FUNCTION:
 
 int Function::functionCounter = 0; // static declaration
 
+
 Function::Function(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope) : Symbol(name, FUNCTION, colNo, lineNo) {
 	this->returnType = returnType;
 	this->bodyScope = bodyScope;
@@ -222,7 +223,6 @@ void Function::generateLabel() {
 	os << "func_" << getName();
 	this->label = os.str();
 }
-
 
 /*
 ========================================
