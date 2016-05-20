@@ -36,6 +36,8 @@ void FunctionDefineNode::print(ostream &os) {
  }
 
 bool FunctionDefineNode::type_checking() {	
+	this->bodySts->type_checking();//perform type checking on function body 
+	//build the TypeFunction although the body of the function might have errors.
 	this->nodeType = TypesTable::getInstance()->buildFunctionType(this, this->functionSym);
 	return true;
 }
