@@ -21,3 +21,5 @@
 #include "ClassMethodNode.hpp"
 #include "ClassCallNode.hpp"
 #include "NewNode.hpp"
+#include "BreakNode.hpp"
+#include "ContinueNode.hpp"

@@ -529,10 +529,17 @@ void CodeGneratorVistor::visit(ElseNode *assignmentNode)
 void CodeGneratorVistor::visit(ForNode *forNode)
 {
 	AsmGenerator::comment("<ForNode");
-	string beginFor		= "for_begin_label_" + to_string(AsmGenerator::if_temp_label_count);
-	string endFor		= "for_end_label"  + to_string(AsmGenerator::if_temp_label_count);
+	string beginFor		= "for_begin_label_"	+ to_string(AsmGenerator::if_temp_label_count);
+	string endFor		= "for_end_label_"		+ to_string(AsmGenerator::if_temp_label_count);
+	string contineFor	= "for_continue_label_" + to_string(AsmGenerator::if_temp_label_count);
 
 	string s0 = "s0";
+	string prevReturnLabel		= returnLabel;
+	
+	returnLabel		= endFor;
+
+	string prevContinueLabel	= continueLabel;
+	continueLabel				= contineFor;
 
 	AsmGenerator::comment("<For Initializer");
 	if (forNode->initializer){
@@ -560,6 +567,9 @@ void CodeGneratorVistor::visit(ForNode *forNode)
 	AsmGenerator::comment("For Body/>");
 
 
+
+	AsmGenerator::add_label(continueLabel);
+
 	AsmGenerator::comment("<For Increment");
 	if (forNode->post_statement){
 		forNode->post_statement->generate_code(this);
@@ -571,6 +581,10 @@ void CodeGneratorVistor::visit(ForNode *forNode)
 
 	AsmGenerator::add_label(endFor);
 	AsmGenerator::if_temp_label_count++;
+
+	returnLabel		= prevReturnLabel;
+	continueLabel	= prevContinueLabel;
+
 	AsmGenerator::comment("ForNode/>");
 }
 
@@ -644,9 +658,14 @@ void CodeGneratorVistor::visit(ScalarNode *scalarNode)
 void CodeGneratorVistor::visit(WhileNode *whileNode)
 {
 	AsmGenerator::comment("<WhileNode");
-	string beginWhile	= "while_begin_label_" + to_string(AsmGenerator::if_temp_label_count);
-	string endWhile		= "while_end_label"  + to_string(AsmGenerator::if_temp_label_count);
+	string beginWhile	= "while_begin_label_"		+ to_string(AsmGenerator::if_temp_label_count);
+	string endWhile		= "while_end_label_"		+ to_string(AsmGenerator::if_temp_label_count);
+	string contineWhile	= "while_continue_label_"	+ to_string(AsmGenerator::if_temp_label_count);
 
+	string prevReturnLabel		= returnLabel;
+	string prevContinueLabel	= continueLabel;
+	returnLabel		= endWhile;
+	continueLabel	= beginWhile;
 
 	string s0 = "s0";
 	AsmGenerator::add_label(beginWhile);
@@ -669,7 +688,12 @@ void CodeGneratorVistor::visit(WhileNode *whileNode)
 	AsmGenerator::add_instruction("b " + beginWhile);
   
 	AsmGenerator::add_label(endWhile);
+
 	AsmGenerator::if_temp_label_count++;
+
+	returnLabel		= prevReturnLabel;
+	continueLabel	= prevContinueLabel;
+
 	AsmGenerator::comment("WhileNode/>");
 }
 
@@ -731,6 +755,7 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 	TypeFunction* functionType = dynamic_cast<TypeFunction*>(functionDefineNode->getNodeType());
 
 	string functionName = functionType->getUniqueName();
+	string prevReturnLabel = returnLabel;
 	returnLabel = functionName+"_ret";
 
 	AsmGenerator::comment("Look below to see function "+functionName);
@@ -770,6 +795,7 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 	AsmGenerator::comment("FunctionDefineNode/>");
 
 	currentFrame = functionFrame->parentFrame;
+	returnLabel = prevReturnLabel;
 }
 
 void CodeGneratorVistor::visit(ParameterNode *parameterNode)
@@ -859,6 +885,7 @@ void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 		Method *methodSymbol = classMethodNode->methodSym;
 
 		string methodName = methodSymbol->getName();
+		string prevReturnLabel = returnLabel;
 		returnLabel = methodName+"_ret";
 
 		AsmGenerator::comment("Look below to see method "+methodName);
@@ -883,7 +910,7 @@ void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 
 
 
-
+		returnLabel = prevReturnLabel;
 	}else{
 		cout << "CurrentFrame Should be objectFrame" << endl;
 	}
@@ -978,4 +1005,18 @@ string CodeGneratorVistor::getClassMemberAddress(ClassCallNode *classCallNode,st
 		return nullptr;
 	}
 
+}
+
+void CodeGneratorVistor::visit(BreakNode *breakNode)
+{
+	AsmGenerator::comment("<BreakNode");
+	AsmGenerator::add_instruction("b "+returnLabel);
+	AsmGenerator::comment("BreakNode/>");
+}
+
+void CodeGneratorVistor::visit(ContinueNode *continueNode)
+{
+	AsmGenerator::comment("<ContinueNode");
+	AsmGenerator::add_instruction("b "+continueLabel);
+	AsmGenerator::comment("ContinueNode/>");
 }

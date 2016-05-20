@@ -427,9 +427,9 @@ statement:
 	| do_while_loop {pl.log("do while stmt");}
 	| for_loop {pl.log("for loop stmt");}
 	| switch_start parentheses_expr switch_case_list {pl.log("switch stmt");}
-	| T_BREAK ';' {pl.log("break stmt");}
+	| T_BREAK ';' {pl.log("break stmt"); $<r.node>$ = new BreakNode();}
 	| T_BREAK expr ';' {pl.log("break exp stmt");}
-	| T_CONTINUE ';'{pl.log("contintue stmt");}
+	| T_CONTINUE ';'{pl.log("contintue stmt");  $<r.node>$ = new ContinueNode();}
 	| T_CONTINUE expr ';' {pl.log("contintue expr stmt");}
 	| T_RETURN ';' {pl.log("return stmt"); $<r.node>$ = new ReturnNode(nullptr);}
 	| T_RETURN expr ';' { pl.log("return expr stmt"); $<r.node>$ = new ReturnNode($<r.node>2); }

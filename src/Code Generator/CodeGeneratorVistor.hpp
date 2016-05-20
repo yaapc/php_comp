@@ -5,13 +5,19 @@
 #include <map>
 using namespace std;
 
-class CodeGneratorVistor : public ASTVisitor
+class CodeGneratorVistor
 {
 public:
-	int symbolIDS; //used to set id for varibles (global and local) and parameters and function and methods and class member
+	int symbolIDS;
+
 	string returnLabel;
+
+	string continueLabel;
+
 	GlobalFrame *currentFrame;
+
 	virtual void generate(ListNode *ast);
+
 	map<string,ObjectFrame*> objectsFrames;
 public:
 	virtual void visit(AssignmentNode *assignmentNode);
@@ -35,6 +41,9 @@ public:
 	virtual void visit(ClassMethodNode	*classMethodNode);
 	virtual void visit(ClassCallNode	*classCallNode);
 	virtual void visit(NewNode			*newNode);
+	virtual void visit(BreakNode 		*breakNode);
+	virtual void visit(ContinueNode 	*continueNode);
+
 
 	//Helper Method
 	string getClassMemberAddress(ClassCallNode *,string);
