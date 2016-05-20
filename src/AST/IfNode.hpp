@@ -8,7 +8,7 @@ using namespace std;
 class IfNode : public Node {
 public:
 	Node *condition, *body;
-	ElseNode *else_node;
+	Node *else_node;
 
 	IfNode(Node *cond, Node *bod, Node *el);
 
@@ -26,8 +26,10 @@ public:
   
    static IfNode* find_deepest_if(Node *root) {
 	IfNode *deepest_if = dynamic_cast<IfNode*>(root);
-		while (deepest_if->else_node) {
-			deepest_if = dynamic_cast<IfNode*>(deepest_if->else_node->body);
+		while (deepest_if->else_node) 
+		{
+			ElseNode* elseNode = dynamic_cast<ElseNode*>(deepest_if->else_node);
+			deepest_if = dynamic_cast<IfNode*>(elseNode->body);
 		}
 	return deepest_if;
 	}

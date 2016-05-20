@@ -13,8 +13,8 @@ IfNode::IfNode(Node *cond, Node *bod, Node *el) : condition(cond), body(bod), el
     os << self
        << "[label=\"If\"]"
        << endl;
-    condition->print(os);
-    body->print(os);
+	if (condition) condition->print(os);
+	if (body) body->print(os);
     if (else_node) else_node->print(os);
     os << self << "->" << int(condition) << endl;
     os << self << "->" << int(body) << endl;
