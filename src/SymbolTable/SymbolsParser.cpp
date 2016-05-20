@@ -158,6 +158,7 @@ Symbol* SymbolsParser::insertFunctionSymbol(char* name, char* returnType,int col
 
 	//linking params symbols to the function symbol
 	funcSym->setParams(params);
+	funcSym->generateFunctionSignature();
 
 	return funcSym;
 }

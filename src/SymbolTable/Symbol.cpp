@@ -120,7 +120,7 @@ FUNCTION:
 =========================================
 */
 
-int Function::functionCounter = 0;
+int Function::functionCounter = 0; // static declaration
 
 Function::Function(char* name, char* returnType, int colNo, int lineNo, Scope* bodyScope) : Symbol(name, FUNCTION, colNo, lineNo) {
 	this->returnType = returnType;
@@ -133,10 +133,12 @@ Function::Function(char* name, char* returnType, int colNo, int lineNo, Scope* b
 }
 
 string Function::toString(){
-	string name, returnType;
+	string name, returnType, signs = "";
 	this->returnType ? returnType = this->returnType : returnType = "NULL";
 	this->getName() ? name = this->getName() : name = "NULL";
-	return " FUNCTION | " + name + " | " + returnType + " | " + this->generateFunctionSignature();
+	for (auto &sign : this->functionSignatures)
+		signs += " | " + sign;
+	return " FUNCTION | " + name + " | " + returnType + signs;
 }
 
 int Function::getSymbolType(){
@@ -181,25 +183,29 @@ int Function::getId() {
 	return this->id;
 }
 
-string Function::generateFunctionSignature() {
-
+void Function::generateFunctionSignature() {
 	std::ostringstream os;
 	os << getLabel() << "(";
 	auto par = this->params;
 	bool firstParamFlag = true;
-	while (par) {
-		if (!firstParamFlag)
-			os << ",";
+	while (par != nullptr) {
 		
 		Parameter* parameter = dynamic_cast<Parameter*>(par);
+		if (parameter->isDefault)
+			//insert the current built signature in the @functionSignatures
+			this->functionSignatures.push_back(os.str() + ")");
+		
+
+		if (!firstParamFlag)
+			os << ",";
 		os << parameter->getVariableType();
 
 		par = par->node;
 
 		firstParamFlag = false; //we passed the first parameter
 	}
-	os << ")" << ">" << this->getReturnType();
-	return os.str();
+	os << ")";
+	this->functionSignatures.push_back(os.str());
 }
 
 string Function::getUniqueName() {
@@ -213,7 +219,7 @@ string Function::getLabel() {
 
 void Function::generateLabel() {
 	std::ostringstream os;
-	os << "func_" << getName() << "_" << this->id;
+	os << "func_" << getName();
 	this->label = os.str();
 }
 

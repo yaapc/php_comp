@@ -5,6 +5,8 @@
 #include "TypeVoid.hpp"
 #include "TypeBoolean.hpp"
 #include "TypeClass.hpp"
+#include "TypeError.hpp"
+#include "TypeFunction.hpp"
 
 //static definition
 TypesTable* TypesTable::mTypesTable;
@@ -34,7 +36,38 @@ TypeExpression* TypesTable::getType(int typeId) {
 	default:
 		return nullptr;
 	}
+}
 
+//get the TypeExpression from the type name
+TypeExpression* TypesTable::getType(string type) {
+
+	if (strcmp(type.c_str(), "int") == 0) {
+		return TypesTable::getInstance()->getType(INTEGER_TYPE_ID);
+	}
+
+
+	if (strcmp(type.c_str(), "bool") == 0) {
+		return TypesTable::getInstance()->getType(BOOLEAN_TYPE_ID);
+	}
+
+	if (strcmp(type.c_str(), "float") == 0) {
+		return TypesTable::getInstance()->getType(FLOAT_TYPE_ID);
+	}
+
+	if (strcmp(type.c_str(), "string") == 0) {
+		return TypesTable::getInstance()->getType(STRING_TYPE_ID);
+	}
+
+	if (strcmp(type.c_str(), "void") == 0) {
+		return TypesTable::getInstance()->getType(VOID_TYPE_ID);
+	}
+	//check if a class is available:
+	TypeExpression* typeClass = TypesTable::getInstance()->getClassType(type);
+
+	if (typeClass == nullptr) { // no type found
+		return new TypeError("Undefined");
+	}
+	return typeClass;
 }
 
 TypeExpression* TypesTable::getClassType(string name) {
@@ -43,5 +76,9 @@ TypeExpression* TypesTable::getClassType(string name) {
 
 TypeExpression* TypesTable::buildClassType(ClassDefineNode* classNode, Class* classSymbol) {
 	return TypeClass::buildClass(classNode, classSymbol);
+}
+
+TypeExpression* TypesTable::buildFunctionType(FunctionDefineNode* functionNode, Function* functionSymbol) {
+	return TypeFunction::buildFunction(functionNode, functionSymbol);
 }
 

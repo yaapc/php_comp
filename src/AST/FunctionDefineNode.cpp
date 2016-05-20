@@ -35,14 +35,8 @@ void FunctionDefineNode::print(ostream &os) {
  }
 
 bool FunctionDefineNode::type_checking() {	
-	//TODO:
-	this->nodeType = new TypeError("Not implemented yet.");
-	return false;
-}
-
-TypeExpression* FunctionDefineNode::createReturnType() {
-	//TODO:
-	return nullptr;
+	this->nodeType = TypesTable::getInstance()->buildFunctionType(this, this->functionSym);
+	return true;
 }
 
 void FunctionDefineNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
