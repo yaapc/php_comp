@@ -11,7 +11,7 @@ TypeExpression* TypeFunction::buildFunction(FunctionDefineNode* functionNode, Fu
 
 
 	//try to find a TypeFunction from the first signature of the given function symbol.
-	//the @TypeFunction::isDeclared() returns TypeError if a name of the function already found, not just unmatched signature.
+	//the @TypeFunction::isDeclared() returns false if a name of the function already found, not just unmatched signature.
 	//this behaviour can be changed, so we can obtain the functionality of Function Overloading.
 	bool isDeclared = TypeFunction::isDeclared(functionNode->functionSym->functionSignatures.at(0));
 								   
