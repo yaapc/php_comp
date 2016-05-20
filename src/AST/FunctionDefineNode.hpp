@@ -11,7 +11,7 @@
 class FunctionDefineNode : public Node {
 public:
   Function* functionSym;      // a pointer to the corresponding symbol in symbol table
-  ListNode* bodySts;          // body statements nodes
+  Node* bodySts;          // body statements nodes
   ListNode* paramsList;       // a list of parameter nodes
 
 	FunctionDefineNode(Symbol* func, Node* bod, Node* paramsList);
