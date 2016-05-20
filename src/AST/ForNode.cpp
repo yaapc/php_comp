@@ -15,10 +15,10 @@
     os << self
        << "[label=\"for\"]"
        << endl;
-    initializer->print(os);
-    condition->print(os);
-    post_statement->print(os);
-    body->print(os);
+    if(initializer) initializer->print(os);
+    if(condition)condition->print(os);
+    if(post_statement)post_statement->print(os);
+    if(body)body->print(os);
     os << self << "->" << int(initializer) << endl;
     os << self << "->" << int(condition) << endl;
     os << self << "->" << int(post_statement) << endl;
