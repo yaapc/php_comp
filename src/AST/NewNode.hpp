@@ -19,4 +19,7 @@ public:
 
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
+	virtual Node* optmize(OptimizationVistor *);
+
+
 };

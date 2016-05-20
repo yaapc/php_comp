@@ -9,11 +9,13 @@ public:
   Variable *variable;
   DeclarationNode(Symbol *v);
 
-  virtual void print(ostream &os);
+	virtual void print(ostream &os);
 
-  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
-  virtual TypeExpression* getNodeType();
+	virtual Node* optmize(OptimizationVistor *);
 
-  virtual bool type_checking();
+	virtual TypeExpression* getNodeType();
+
+	virtual bool type_checking();
 };

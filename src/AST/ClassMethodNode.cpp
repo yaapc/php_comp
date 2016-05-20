@@ -2,6 +2,7 @@
 #include "ClassMethodNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 ClassMethodNode::ClassMethodNode(Symbol* methodSym) {
 	this->nodeType = nullptr;
@@ -18,6 +19,11 @@ bool ClassMethodNode::type_checking() {
 void ClassMethodNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* ClassMethodNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }
 
 void ClassMethodNode::print(ostream &os) {

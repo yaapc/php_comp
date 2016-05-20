@@ -3,6 +3,7 @@
 #include "FunctionCallNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 #include "../TypeSystem/TypeFunction.hpp"
 #include <sstream>
 
@@ -39,7 +40,6 @@ void FunctionCallNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
 }
-
 string FunctionCallNode::generateCallSignature() {
 	std::ostringstream os;
 	bool firstParamFlag = true;
@@ -54,3 +54,7 @@ string FunctionCallNode::generateCallSignature() {
 	return os.str();
 }
 
+Node* FunctionCallNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
+}

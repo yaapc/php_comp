@@ -2,6 +2,7 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 
 NewNode::NewNode(Node* args,string className) {
@@ -43,6 +44,11 @@ bool NewNode::type_checking() {
 void NewNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* NewNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }
 
  TypeExpression* NewNode::getNodeType() {

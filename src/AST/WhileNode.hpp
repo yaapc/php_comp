@@ -5,12 +5,15 @@
 
 class WhileNode : public Node {
 public:
-  Node *condition;
-  Node *body;
+	Node *condition;
+	Node *body;
 
-  WhileNode(Node *condition, Node *body);
+	WhileNode(Node *condition, Node *body);
 
-  virtual void print(ostream &os);
+	virtual void print(ostream &os);
 
-  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+
+	virtual Node* optmize(OptimizationVistor *);
+
 };

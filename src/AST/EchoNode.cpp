@@ -5,6 +5,7 @@
 #include "../Code Generator/AsmGenerator.h"
 #include "ListNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 EchoNode::EchoNode(Node* node) : expression(node) {
 }
@@ -30,4 +31,9 @@ void EchoNode::print(ostream& os) {
 void EchoNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* EchoNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }

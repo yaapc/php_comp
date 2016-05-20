@@ -6,15 +6,17 @@
 
 class VariableNode : public Node {
 public:
-  Variable *variable;
+	Variable *variable;
 
-  VariableNode(Symbol *var);
+	VariableNode(Symbol *var);
 
-  virtual void print(ostream &os);
+	virtual void print(ostream &os);
 
-  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
-  virtual bool type_checking();
+	virtual Node* optmize(OptimizationVistor *);
 
-  virtual TypeExpression* getNodeType();
+	virtual bool type_checking();
+
+	virtual TypeExpression* getNodeType();
 };

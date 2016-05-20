@@ -5,11 +5,14 @@
 
 class ReturnNode : public Node {
 public:
-  Node* returnend_expression;
+	Node* returnend_expression;
 
-  ReturnNode(Node *exp);
+	ReturnNode(Node *exp);
 
-  virtual void print(ostream &os);
+	virtual void print(ostream &os);
 
-  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+
+	virtual Node* optmize(OptimizationVistor *);
+
 };

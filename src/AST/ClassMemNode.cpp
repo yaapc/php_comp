@@ -4,6 +4,7 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 
 ClassMemNode::ClassMemNode(Symbol* memberSym) {
@@ -48,6 +49,11 @@ bool ClassMemNode::type_checking() {
 void ClassMemNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* ClassMemNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }
 
 void ClassMemNode::print(ostream &os) {

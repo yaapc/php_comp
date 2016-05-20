@@ -1,6 +1,7 @@
 #pragma once 
 #include "ElseNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 ElseNode::ElseNode(Node *node){
 	this->body = node;
@@ -18,4 +19,9 @@ ElseNode::ElseNode(Node *node){
 void ElseNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* ElseNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }

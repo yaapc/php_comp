@@ -26,6 +26,7 @@ public:
 
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
+	virtual Node* optmize(OptimizationVistor *);
 
 private:
 	void extractInfo(); // extracts class node information from class symbol and body nodes.

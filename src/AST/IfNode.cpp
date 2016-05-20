@@ -4,6 +4,7 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../TypeSystem/TypeError.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 IfNode::IfNode(Node *cond, Node *bod, Node *el) : condition(cond), body(bod), else_node(dynamic_cast<ElseNode*>(el)) {}
 
@@ -26,6 +27,11 @@ IfNode::IfNode(Node *cond, Node *bod, Node *el) : condition(cond), body(bod), el
 	
   }
 
+Node* IfNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
+}
+
 
   bool IfNode::type_checking() {
 	  if (this->condition->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID) {
@@ -44,3 +50,4 @@ IfNode::IfNode(Node *cond, Node *bod, Node *el) : condition(cond), body(bod), el
 		  this->type_checking();
 	  return this->nodeType;
   }
+

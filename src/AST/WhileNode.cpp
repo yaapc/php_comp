@@ -1,6 +1,7 @@
 #pragma once
 #include "WhileNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 
 WhileNode::WhileNode(Node *condition, Node *body) : condition(condition), body(body) {}
@@ -19,4 +20,9 @@ WhileNode::WhileNode(Node *condition, Node *body) : condition(condition), body(b
  void WhileNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* WhileNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }

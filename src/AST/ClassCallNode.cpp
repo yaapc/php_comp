@@ -4,6 +4,8 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
+
 ClassCallNode::ClassCallNode(Node* objectNode, string propertyString) {
 	this->object = dynamic_cast<VariableNode*>(objectNode);
 	this->propertyString = propertyString;
@@ -15,6 +17,11 @@ ClassCallNode::ClassCallNode(Node* objectNode, string propertyString) {
 
 void ClassCallNode::generate_code(CodeGneratorVistor *codeGneratorVistor) {
 	codeGneratorVistor->visit(this);
+}
+
+Node* ClassCallNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }
 
 bool ClassCallNode::type_checking() {

@@ -3,6 +3,7 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 
 FunctionDefineNode::FunctionDefineNode(Symbol* func, Node* bod, Node* paramsList) {
@@ -42,4 +43,9 @@ bool FunctionDefineNode::type_checking() {
 void FunctionDefineNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* FunctionDefineNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }

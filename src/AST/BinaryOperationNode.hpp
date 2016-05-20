@@ -17,6 +17,8 @@ public:
 
   virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
+  virtual Node* optmize(OptimizationVistor *);
+
   virtual TypeExpression* getType();
 
   virtual bool type_checking();

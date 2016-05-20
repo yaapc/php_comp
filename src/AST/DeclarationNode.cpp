@@ -3,6 +3,7 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "..\TypeSystem\TypesTable.h"
 #include "../TypeSystem/TypeError.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 DeclarationNode::DeclarationNode(Symbol *v) : variable(dynamic_cast<Variable*>(v)) {
 	nodeType = nullptr;
@@ -20,6 +21,11 @@ void DeclarationNode::print(ostream &os) {
 void DeclarationNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* DeclarationNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }
 
 TypeExpression* DeclarationNode::getNodeType() {

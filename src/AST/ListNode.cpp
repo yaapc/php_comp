@@ -2,8 +2,9 @@
 
 #include "ListNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
-
 #include "../Code Generator/AsmGenerator.h"
+#include "../Code Generator/OptimizationVistor.hpp"
+
 ListNode* ListNode::add_node(Node* node) {
     nodes.push_back(node);
     return this;
@@ -50,4 +51,9 @@ void ListNode::print(ostream& os) {
  void ListNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* ListNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }

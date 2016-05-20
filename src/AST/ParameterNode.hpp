@@ -21,5 +21,7 @@ public :
 
 	void print(ostream &os);
 
+	virtual Node* optmize(OptimizationVistor *);
+
 
 };

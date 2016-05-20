@@ -57,11 +57,14 @@ public:
 	ScalarNode(bool b);
 	ScalarNode(string s);
 
-  virtual void print(ostream &os);
+	virtual void print(ostream &os);
 
-  virtual bool type_checking();
+	virtual bool type_checking();
 
-  virtual TypeExpression* getNodeType();
+	virtual TypeExpression* getNodeType();
 
-  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+
+	virtual Node* optmize(OptimizationVistor *);
+
 };

@@ -3,6 +3,7 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../TypeSystem/TypeError.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 
 VariableNode::VariableNode(Symbol *var) {
@@ -64,4 +65,9 @@ void VariableNode::print(ostream &os) {
 void VariableNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* VariableNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }

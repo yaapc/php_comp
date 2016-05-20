@@ -7,18 +7,21 @@ using namespace std;
 
 class IfNode : public Node {
 public:
-  Node *condition, *body;
-  ElseNode *else_node;
+	Node *condition, *body;
+	ElseNode *else_node;
 
-  IfNode(Node *cond, Node *bod, Node *el);
+	IfNode(Node *cond, Node *bod, Node *el);
 
-  virtual void print(ostream &os);
+	virtual void print(ostream &os);
 
-  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
-  virtual bool type_checking();
+	virtual Node* optmize(OptimizationVistor *);
 
-  virtual TypeExpression* getNodeType();
+
+	virtual bool type_checking();
+
+	virtual TypeExpression* getNodeType();
   
   
    static IfNode* find_deepest_if(Node *root) {

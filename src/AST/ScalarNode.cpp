@@ -3,6 +3,7 @@
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/AsmGenerator.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 ScalarNode::ScalarNode(int i) {
 	this->nodeType = nullptr;
@@ -68,4 +69,10 @@ TypeExpression* ScalarNode::getNodeType() {
 void ScalarNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+
+Node* ScalarNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }

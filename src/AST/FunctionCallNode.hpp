@@ -24,4 +24,6 @@ public:
 	 *  func_$function_name$($type_name$,$type_name$...)
 	 */
 	string generateCallSignature();
+
+	virtual Node* optmize(OptimizationVistor *);
 };

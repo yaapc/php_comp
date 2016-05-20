@@ -1,7 +1,6 @@
 #pragma once 
 #include "CodeGeneratorVistor.hpp"
 #include "AsmGenerator.h"
-#include "../AST/ListNode.hpp"
 #include "../AST/all.hpp"
 #include "FunctionFrame.hpp"
 #include "../TypeSystem/TypeClass.hpp"
@@ -883,7 +882,6 @@ void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 
 	AsmGenerator::comment("ClassCallNode/>");
 }
-
 
 void CodeGneratorVistor::visit(NewNode *newNode)
 {

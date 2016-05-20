@@ -2,6 +2,7 @@
 #include <iostream>
 #include "../TypeSystem/TypeExpression.hpp"
 class CodeGneratorVistor;
+class OptimizationVistor;
 using namespace std;
 
 class Node {
@@ -14,6 +15,9 @@ public:
     virtual TypeExpression* getNodeType();
 
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+
+	virtual Node* optmize(OptimizationVistor *);
+
 protected:
 	TypeExpression* nodeType;
 };

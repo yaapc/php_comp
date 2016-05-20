@@ -2,6 +2,7 @@
 #include "BinaryOperationNode.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 BinaryOperationNode::BinaryOperationNode(char* op, Node *lft, Node *rgt) : left(lft), right(rgt), op_type(op) {
 	  nodeType = nullptr;
@@ -23,6 +24,11 @@ void BinaryOperationNode::print(ostream &os) {
 void BinaryOperationNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* BinaryOperationNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }
 
  TypeExpression* BinaryOperationNode::getType() {

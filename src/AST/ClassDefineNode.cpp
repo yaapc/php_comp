@@ -4,6 +4,7 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 ClassDefineNode::ClassDefineNode(Symbol* classSym, Node* classBody) {
 	this->classSymbol = dynamic_cast<Class*>(classSym);
@@ -42,7 +43,10 @@ void ClassDefineNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 	codeGneratorVistor->visit(this);
 }
 
-
+Node* ClassDefineNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
+}
 
 void ClassDefineNode::print(ostream &os) {
 	int self = int(this);

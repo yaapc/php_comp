@@ -8,17 +8,20 @@ using namespace std;
 
 class ListNode : public Node {
 public:
-  vector<Node*> nodes;
+	vector<Node*> nodes;
 
-  ListNode* add_node(Node* node);
+	ListNode* add_node(Node* node);
 
-  ListNode* add_nodes(const vector<Node*>& nodes_list);
+	ListNode* add_nodes(const vector<Node*>& nodes_list);
 
-  virtual bool type_checking();
+	virtual bool type_checking();
 
-  virtual void print(ostream& os);
+	virtual void print(ostream& os);
 
-  static ListNode* joinNodeLists(Node* f, Node* s);
+	static ListNode* joinNodeLists(Node* f, Node* s);
 
-  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+
+	virtual Node* optmize(OptimizationVistor *);
+
 };

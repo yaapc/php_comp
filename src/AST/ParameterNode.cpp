@@ -5,6 +5,7 @@
 #include "ParameterNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 
 ParameterNode::ParameterNode(Symbol* parSym,Node *defaultValueNode,bool isDefault) {
@@ -34,6 +35,11 @@ void ParameterNode::print(ostream &os) {
  void ParameterNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+ Node* ParameterNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }
 
 bool ParameterNode::type_checking() {

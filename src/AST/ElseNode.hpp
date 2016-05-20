@@ -5,11 +5,13 @@
 
 class ElseNode : public Node {
 public:
-  Node *body;
+	Node *body;
 
-  ElseNode(Node *body);
+	ElseNode(Node *body);
 
-  virtual void print(ostream &os);
+	virtual void print(ostream &os);
 
-  virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+
+	virtual Node* optmize(OptimizationVistor *);
 };

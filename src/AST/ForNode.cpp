@@ -1,6 +1,7 @@
 #pragma once 
 #include "ForNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 
  ForNode::ForNode(Node *initializer, Node *condition, Node *post_statement, Node *body) :
@@ -27,4 +28,9 @@
 void ForNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* ForNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }

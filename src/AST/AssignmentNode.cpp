@@ -5,6 +5,7 @@
 #include "ClassCallNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 
 AssignmentNode::AssignmentNode(Node *l, Node *r) : lhs(l), rhs(r) {
@@ -26,6 +27,11 @@ void AssignmentNode::print(ostream &os) {
 void AssignmentNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 {
 	codeGneratorVistor->visit(this);
+}
+
+Node* AssignmentNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }
 
   TypeExpression* AssignmentNode::getNodeType() {
