@@ -899,7 +899,7 @@ void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 
 	if (!classCallNode->isMethodCall){
 		TypeClass* classType = dynamic_cast<TypeClass*>(classCallNode->object->getNodeType());
-		int propertyTypeID = classType->lookupMembers("$"+classCallNode->propertyString)->type->getTypeId();
+		int propertyTypeID = classType->lookupMembers(classCallNode->propertyString)->getTypeExpr()->getTypeId();
 
 
 		if (propertyTypeID == INTEGER_TYPE_ID	|| propertyTypeID == BOOLEAN_TYPE_ID){

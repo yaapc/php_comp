@@ -108,7 +108,7 @@ public:
 	void setId(int id);
 	int getId();
 
-	string getUniqueName();
+	virtual string getUniqueName();
 
 	string toString();
 
@@ -137,9 +137,12 @@ private:
 	Symbol* params;
 
 	int id;
-	string label;
+
 
 	void generateLabel();
+
+protected:
+	string label;
 };
 
 /*
@@ -245,9 +248,13 @@ public:
 	bool isAbstract;
 	bool isDefaultConstr;
 	bool isFinal();
+
+	/* generates method label based on the class name */
+	void generateLabel(string className);
 private:
 	int accessModifier;
 	int storageModifier;
+
 };
 
 

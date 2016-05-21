@@ -1,12 +1,14 @@
 #pragma once
-#include "Node.hpp"
+#include "ListNode.hpp"
 #include "../SymbolTable/Symbol.h"
 
 class ClassMethodNode : public Node {
 public:
 	Method* methodSym;
+	Node* bodySts;          // body statements nodes
+	ListNode* paramsList;   // a list of parameter nodes
 
-	ClassMethodNode(Symbol* methodSym);
+	ClassMethodNode(Symbol* methodSym, Node* bodySts, Node* paramsList);
 
 	virtual void print(ostream &os);
 

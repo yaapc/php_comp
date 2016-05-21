@@ -689,12 +689,12 @@ class_statement:
 	| method_header	method_body	close_par {	/* optional return type in case of constructor */
 			pl.log("method");
 			$<r.symbol>$ = $<r.symbol>1;
-			$<r.node>$ = new ClassMethodNode($<r.symbol>$);
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1);
 		}
 	| method_header_abstract ';' 
 	    {
 			$<r.symbol>$ = $<r.symbol>1;
-			$<r.node>$ = new ClassMethodNode($<r.symbol>$);	
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1);	
 		}
 	| member_modifiers property_declaration_list ';' 
 	    {
@@ -702,7 +702,7 @@ class_statement:
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
 			$<r.symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<r.symbol>2), modifiersTags, arrCounter, "Object"); // assume type OBJECT
 			arrCounter = 0;
-			$<r.node>$ = new ClassMethodNode($<r.symbol>$);
+			//$<r.node>$ = new ClassMethodNode($<r.symbol>$);
 		}
 	|	method_header_without_name method_body close_par 
 	    {
@@ -710,7 +710,7 @@ class_statement:
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
 			pl.log("error method-no id");
 			$<r.symbol>$ = $<r.symbol>1;
-			$<r.node>$ = new ClassMethodNode($<r.symbol>$);
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1);
 		}
 	| method_header_without_name_abstract ';' 
 	    {
@@ -718,7 +718,7 @@ class_statement:
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
 			$<r.symbol>$ = $<r.symbol>1;
 			pl.log("error method-no id");
-			$<r.node>$ = new ClassMethodNode($<r.symbol>$);	
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1);	
 		}
 	| class_declaration_statement 
 	    {
@@ -734,6 +734,7 @@ method_header:
 	{
 		//we insert the method symbol
 		$<r.symbol>$ = symbolsParser->insertMethodSymbol($<r.str>4,$<r.col_no>1,$<r.line_no>1,modifiersTags, arrCounter, $<r.str>8, $<r.scope>9, $<r.symbol>6);
+		$<r.node>$ = $<r.node>6;
 		arrCounter = 0;
 	}
 ;
@@ -1688,6 +1689,9 @@ object_access:
 			$<r.node>$ = new ClassCallNode($<r.node>1, $<r.str>3);
 		}
 	| variable_or_new_expr T_OBJECT_OPERATOR object_property argument_list
+	    {
+		    $<r.node>$ = new ClassCallNode($<r.node>1, $<r.str>3, $<r.node>4);
+		}
 	| object_access argument_list
 	| object_access '[' dim_offset ']'
 	| object_access '{' expr '}'

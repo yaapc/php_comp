@@ -6,7 +6,7 @@
 TypeBoolean* TypeBoolean::mInstance;
 
 
- TypeBoolean* TypeBoolean::getInstance() {
+TypeBoolean* TypeBoolean::getInstance() {
 	if (!mInstance) {
 		mInstance = new TypeBoolean();
 	}

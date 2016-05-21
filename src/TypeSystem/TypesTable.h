@@ -41,6 +41,10 @@ public:
 	TypeExpression* buildClassType(ClassDefineNode* classNode, Class* classSymbol);
 
 	TypeExpression* buildFunctionType(FunctionDefineNode* functionNode, Function* functionSymbol);
+
+	TypeExpression* buildFunctionType(ClassMethodNode* methodNode, Method* methodSymbol);
+
+	static void buildObjectClass();
 };
 
 

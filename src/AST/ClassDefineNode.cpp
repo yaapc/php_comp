@@ -10,7 +10,6 @@ ClassDefineNode::ClassDefineNode(Symbol* classSym, Node* classBody) {
 	this->classSymbol = dynamic_cast<Class*>(classSym);
 	this->body = dynamic_cast<ListNode*>(classBody);	
 	this->nodeType = nullptr;
-	this->classMethodsNodes = nullptr;
 	//now extract info
 	this->extractInfo();
 }
@@ -24,8 +23,13 @@ void ClassDefineNode::extractInfo() {
 
 	for (auto node : this->body->nodes) {
 		ClassMemNode* memNode = dynamic_cast<ClassMemNode*>(node);
-		if (node != nullptr)
+		if (memNode != nullptr)
 			this->classMemNodes.push_back(memNode);
+		else {
+			ClassMethodNode* methodNode = dynamic_cast<ClassMethodNode*>(node);
+			if (methodNode != nullptr)
+				this->classMethodsNodes.push_back(methodNode);
+		}
 	}
 
 	for (auto memberNode : this->classMemNodes) {
