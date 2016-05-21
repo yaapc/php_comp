@@ -660,7 +660,9 @@ void CodeGneratorVistor::visit(WhileNode *whileNode)
 
 
 	AsmGenerator::comment("<While Body");
-	whileNode->body->generate_code(this);
+	if (whileNode->body){
+		whileNode->body->generate_code(this);
+	}
 	AsmGenerator::comment("While Body/>");
 
 
