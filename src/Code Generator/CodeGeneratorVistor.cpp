@@ -522,7 +522,8 @@ void CodeGneratorVistor::visit(EchoNode *echoNode)
 void CodeGneratorVistor::visit(ElseNode *assignmentNode)
 {
 	AsmGenerator::comment("<Else Node");
-	assignmentNode->body->generate_code(this);
+	if (assignmentNode->body)
+		assignmentNode->body->generate_code(this);
 	AsmGenerator::comment("Else Node/>");
 }
 
@@ -582,13 +583,14 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 	string endIf		= "end_if_"     + to_string(AsmGenerator::if_temp_label_count);
 	
 	AsmGenerator::comment("<If Statment Condition Node");
-	ifNode->condition->generate_code(this);
+	if (ifNode->condition)
+		ifNode->condition->generate_code(this);
 	AsmGenerator::comment("<If Statment Condition Node/>");
 
 	AsmGenerator::pop(t0);
 	AsmGenerator::beq(t0,"0",else_label); // if t0 (condition) equal 0 ==> control go to else node
 
-	if (ifNode->body != NULL)					// else t0 (condition) equal 1 ==> control got to body node
+	if (ifNode->body)					// else t0 (condition) equal 1 ==> control got to body node
 	{
 		AsmGenerator::comment("<If Statment Body Node");
 		ifNode->body->generate_code(this);
@@ -596,7 +598,7 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 	}
 	AsmGenerator::jump_label(endIf);	 // body completed got to finish label
 	AsmGenerator::add_label(else_label);
-	if (ifNode->else_node != NULL){
+	if (ifNode->else_node){
 		AsmGenerator::comment("<If Statment Else Node");
 		ifNode->else_node->generate_code(this);
 		AsmGenerator::comment("If Statment Else Node/>");
@@ -680,7 +682,8 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 	TypeFunction *functionType = functionCallNode->functionType;
 
 	AsmGenerator::comment("<ArgumentList");
-	functionCallNode->argumentsList->generate_code(this);
+	if (functionCallNode->argumentsList)
+		functionCallNode->argumentsList->generate_code(this);
 	AsmGenerator::comment("ArgumentList/>");
 
 	int arguemtnsSize	= functionCallNode->argumentsList->nodes.size();
@@ -746,13 +749,13 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 	for(auto &node : functionDefineNode->paramsList->nodes)
 	{
 		ParameterNode* paramterNode = dynamic_cast<ParameterNode*>(node);
-		if (paramterNode == nullptr)
+		if (!paramterNode)
 			cout << "DAMN this shoudn't happen" << endl;
-
 		paramterNode->generate_code(this);
 	}
 
-	functionDefineNode->bodySts->generate_code(this);
+	if (functionDefineNode->bodySts)
+		functionDefineNode->bodySts->generate_code(this);
 
 	AsmGenerator::add_label(returnLabel);
 
@@ -799,7 +802,8 @@ void CodeGneratorVistor::visit(ParameterNode *parameterNode)
 		// we know that the caller didn't pass the value of defult paramter
 		AsmGenerator::add_instruction("bne $s1, $s2, "+label);
 
-		parameterNode->defaultValueNode->generate_code(this);
+		if (parameterNode->defaultValueNode)
+			parameterNode->defaultValueNode->generate_code(this);
 		
 		AsmGenerator::pop("s0");
 		
