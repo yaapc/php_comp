@@ -168,11 +168,12 @@ Node* OptimizationVistor::visit(ListNode *listNode)
 	for (auto &node : listNode->nodes) {
 		if (node == nullptr) continue;
 		node = node->optmize(this);
+		nodess.push_back(node);
 		if (dynamic_cast<ReturnNode*>(node)){
 			listNode->nodes = nodess;
 			break;
 		}
-		nodess.push_back(node);
+		
 	}
 	return listNode;
 }
