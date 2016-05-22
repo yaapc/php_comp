@@ -97,8 +97,8 @@ void FunctionFrame::addLocal(Node *node)
 {
 	DeclarationNode* variableDeclarationNode = dynamic_cast<DeclarationNode*>(node);
 	int varSize = node->getNodeType()->getSize();
-    stackSize += varSize;
 	int variableOffset = -stackSize - initialFrameSize; // offset from frame pointer
+	stackSize += varSize;
 	locals[variableDeclarationNode->variable->getNameWithout()] = variableOffset;
 	AsmGenerator::comment(variableDeclarationNode->variable->getNameWithout() + " in function scoop address "+to_string(variableOffset)+" from fp");
 }

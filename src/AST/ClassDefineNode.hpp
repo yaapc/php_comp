@@ -11,7 +11,7 @@ public:
 	ListNode* body;
 	vector<TypeExpression*>  classMemTE;		 // class' members Type Expressions
 	vector<ClassMemNode*>    classMemNodes;     // class' members Nodes
-	vector<ClassMethodNode*>* classMethodsNodes; // class' methods Nodes
+	vector<ClassMethodNode*> classMethodsNodes; // class' methods Nodes
 	vector<TypeExpression*>* classMethodsTE;     // class' methods Type Expressions
 	Class* classSymbol;
 	ClassDefineNode* parent;

@@ -6,9 +6,12 @@
 #include <vector>
 #include "../AST/ClassDefineNode.hpp"
 #include "../SymbolTable/Symbol.h"
+#include "../definitions.h"
+#include "TypeFunction.hpp"
 
-class MemberHolder;//forward declaration
-
+class MemberWrapper;//forward declaration
+class MethodWrapper;
+class PropertyWrapper;
 
 class TypeClass : public TypeExpression {
 public:
@@ -16,8 +19,8 @@ public:
 	/*
 	   This method is responsable for instantiating and building a Type of Class.
 	   It should first look for a class already created with the same name.
-	   If there is already a class with the same name, then It wont build the TypeClass.
-	   If there isn't it should parse the @ClassDefineNode and @Class Symbol for information about the type it should create.
+	   If there is already a class with the same name, then It will return TypeError indecating that It's already defined.
+	   If there isn't, it should parse the @ClassDefineNode and @Class Symbol for information about the type it should create.
 
 	   This will raise a problem with Inner Classes, where two unique classes may exist as inner classes of different
 	   outer classes... 
@@ -25,7 +28,7 @@ public:
 	   it was created in... :TODO
 
 	*/
-	static TypeClass* buildClass(ClassDefineNode* classNode, Class* classSymbol);
+	static TypeExpression* buildClass(ClassDefineNode* classNode, Class* classSymbol);
 
 
 	/*
@@ -35,14 +38,17 @@ public:
 	
 	/*
 		This method is responsable for looking for a given id or name of @ClassType in the @classInstances.
-	    if none is found, it will return nullptr.
-		TODO: look for instance using Unique Name, INNER CLASSES!!
-	*/
-	static TypeClass* getInstance(string name);
+	    if none is found, it will return a TypeError indecating that It's undefined.
+		TODO: look for isntance using Unique Name, INNER CLASSES!!
 
-	TypeExpression* opDot(string propertyStr);
+	*/
+	static TypeExpression* getInstance(string name);
+
+	TypeExpression* opDot(string propertyStr, bool isMethod, string methodSign, MemberWrapper*& memWrapper);
 
 	int getSize();
+	vector<MemberWrapper*> getMembers();
+
 
 	//TODO: bool equivelantTo(int secondTypeId);
 
@@ -53,12 +59,19 @@ public:
 
 	bool equivelantTo(int secondTypeId);
 
-	MemberHolder* lookupMembers(string memberStr);
+	PropertyWrapper* lookupMembers(string memberStr);
+
+	MethodWrapper* lookupMembers(string memberStr, string methodSign);
 
 private:
 	
-	vector<MemberHolder*> members;
-	vector<TypeExpression*> methods;
+	/* a vector of properties that this TypeClass has*/
+	vector<PropertyWrapper*> props; // properties
+	/* a vector of methods that this TypeClass has*/
+	vector<MethodWrapper*> methods;
+	/* a vector of methods and properties of this TypeClass*/
+	vector<MemberWrapper*> members;
+	/* a TypeClass of the parent of this TypeClass*/
 	TypeExpression* parentClass;
 
 	/*
@@ -66,35 +79,68 @@ private:
 	*/
 	static vector<TypeClass*> classInstances;
 
+	static bool isDefined(string name);
+
+	void addToProps(PropertyWrapper* prop);
+
 	string name;
 
+	/* a pointer to super class */
+	TypeClass* super;
 
 
 	TypeClass(string name);
 
-
-
-	void addToMembers(MemberHolder* memberType);
-
-
+	void addToMembers(MemberWrapper* memberType);
 
 	void makeSize();
+
 };
 
 
-
-class MemberHolder {
+class MemberWrapper {
 public:
+	virtual string getUniqueName() = 0;
+	virtual string getName() = 0;
+	virtual int getWrapperType() = 0;
+	static const int PROPERTY_WRAPPER = 0;
+	static const int METHOD_WRAPPER = 1;
+	int getAccessModifier();
+	TypeExpression* getTypeExpr();
+	void setTypeExpr(TypeExpression* te);
+	int getSize();
+private:
 	TypeExpression* type;
+	int accessModifier;
+};
+
+class PropertyWrapper : public MemberWrapper {
+private:
 	DataMember* memberSymbol;
-	MemberHolder(TypeExpression* te, DataMember* memberSymbol) {
-		this->type = te;
-		this->memberSymbol = memberSymbol;
-	}
+
+public:
+	PropertyWrapper(TypeExpression* te, DataMember* memberSymbol);
+	string getUniqueName();
+	string getName();
+	int getWrapperType();
 };
 
 
+class MethodWrapper : public MemberWrapper {
+private:
+		TypeExpression* returnType;
+    	Method* methodSymbol;	
+public:
+	MethodWrapper(TypeExpression* type, Method* methodSymbol);
+	
+	string getUniqueName();
+	
+	string getName();
+	
+	int getWrapperType();
 
+	TypeFunction* getMethodType();
+};
 
 
 #endif

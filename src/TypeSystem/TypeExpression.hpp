@@ -7,9 +7,10 @@
 //#include "TypeDefinitions.hpp"
 #include "TypeSystemHelper.hpp"
 //#include "TypeError.hpp"
+//#include "TypeClass.hpp"
 using namespace std;
 
-
+class MemberWrapper;
 /*
  * this class will be the interface for all the possible types ( simple and compound ) and defining thier uniform processing.
  */
@@ -31,7 +32,7 @@ public:
      * the naming convention of the methods is: op[Operation Name]
 	 */
 
-	virtual TypeExpression* opDot(string propertyStr);
+	virtual TypeExpression* opDot(string propertyStr, bool isMethod, string methodSign, MemberWrapper*& wrapper);
 
 	virtual TypeExpression* opPlus(int secondTypeId);
 

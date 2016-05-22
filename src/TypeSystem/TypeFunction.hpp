@@ -4,6 +4,7 @@
 
 #include "TypeExpression.hpp"
 #include "../AST/FunctionDefineNode.hpp"
+#include "../AST/ClassMethodNode.hpp"
 #include "../SymbolTable/Symbol.h"
 #include <vector>
 
@@ -24,6 +25,9 @@ public:
 	*/
 	static TypeExpression* buildFunction(FunctionDefineNode* functionNode, Function* functionSym);
 	
+	static TypeExpression* buildMethod(ClassMethodNode* classMethodNode, Method* methodSym);
+
+
 	/*
 	 * This method is responsable for looking for a given signature of @FunctionType in the @functionInstances.
 	 * if none is found, it will return a TypeError as not defined.
@@ -46,6 +50,9 @@ public:
 		unique name is structred as " name+id " see Function Symbol @getUniqueName for more info
 	*/
 	string getUniqueName();
+
+	static bool compareSignatures(vector<string> signature, vector<string> otherSignature);
+
 private:
 	TypeFunction(vector<string> functionSign, string functionName, string uniqueName);
 

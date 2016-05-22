@@ -282,8 +282,10 @@ Symbol* SymbolsParser::insertMethodSymbol(char* name, int colNo, int lineNo, int
 	if (bodyScope != nullptr)
 		bodyScope->setOwnerSymbol(methodSymbol);
 
+	
 	//add to current class in declaration process:
 	this->getCurrentClassSym()->addToMethodMembers(methodSymbol);
+	methodSymbol->generateLabel(this->getCurrentClassSym()->getName());//generate label and signs based on class name
 
 	return methodSymbol;
 }

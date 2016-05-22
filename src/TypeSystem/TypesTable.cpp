@@ -82,3 +82,10 @@ TypeExpression* TypesTable::buildFunctionType(FunctionDefineNode* functionNode, 
 	return TypeFunction::buildFunction(functionNode, functionSymbol);
 }
 
+TypeExpression* TypesTable::buildFunctionType(ClassMethodNode* methodNode, Method* functionSymbol) {
+	return TypeFunction::buildMethod(methodNode, functionSymbol);
+}
+
+void TypesTable::buildObjectClass() {
+	TypeClass::buildObjectClass();
+}

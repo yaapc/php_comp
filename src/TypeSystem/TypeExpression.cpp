@@ -6,7 +6,7 @@ TypeExpression::TypeExpression() {
 	this->size = 0;
 }
 
-TypeExpression* TypeExpression::opDot(string propertyStr) {
+TypeExpression* TypeExpression::opDot(string propertyStr, bool isMethod, string methodSign, MemberWrapper*& memWrapper) {
 	return new TypeError(TypeSystemHelper::getTypeName(this->getTypeId()) + " Type doesn't support -> operation");
 }
 

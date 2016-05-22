@@ -185,6 +185,7 @@ int Function::getId() {
 }
 
 void Function::generateFunctionSignature() {
+	functionSignatures.clear();
 	std::ostringstream os;
 	os << getLabel() << "(";
 	auto par = this->params;
@@ -477,6 +478,12 @@ bool Method::isFinal(){
 	return (this->storageModifier == FINAL_STORAGE || this->storageModifier == FINAL_STATIC_STORAGE) ?  true :  false;
 }
 
+void Method::generateLabel(string className) {
+	std::ostringstream os;
+	os << className << "_func_" << getName();
+	this->label = os.str();
+	this->generateFunctionSignature(); // re-generate
+}
 /*
 ============================================
 PARAMETER:

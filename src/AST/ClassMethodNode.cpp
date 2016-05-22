@@ -3,16 +3,20 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "../TypeSystem/TypesTable.h"
 
-ClassMethodNode::ClassMethodNode(Symbol* methodSym) {
+ClassMethodNode::ClassMethodNode(Symbol* methodSym, Node* bodySts, Node* params) {
 	this->nodeType = nullptr;
 	this->methodSym = dynamic_cast<Method*>(methodSym);
+	this->bodySts = bodySts;
+	this->paramsList = dynamic_cast<ListNode*>(params);
 }
 
 bool ClassMethodNode::type_checking() {
 	//TODO
-	this->nodeType = new TypeError("Not Implemented, yet");
-	return false;
+	//build the TypeFunction although the body of the function might have errors.
+	this->nodeType = TypesTable::getInstance()->buildFunctionType(this, this->methodSym);
+	return true;
 }
 
 

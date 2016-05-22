@@ -5,11 +5,13 @@
 
 class ReturnNode : public Node {
 public:
-	Node* returnend_expression;
+	Node* returned_node;
 
 	ReturnNode(Node *exp);
 
 	virtual void print(ostream &os);
+
+	virtual bool type_checking();
 
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
