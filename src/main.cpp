@@ -84,6 +84,11 @@ int main(int argc, char** argv) {
 
 
 	cout << "compilation done" << endl;
+
+
+	Node *node = nullptr;
+
+	
 	return 0;
 }
 
