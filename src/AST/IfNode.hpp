@@ -18,7 +18,6 @@ public:
 
 	virtual Node* optmize(OptimizationVistor *);
 
-
 	virtual bool type_checking();
 
 	virtual TypeExpression* getNodeType();

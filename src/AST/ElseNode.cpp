@@ -2,6 +2,7 @@
 #include "ElseNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "../TypeSystem/TypesTable.h"
 
 ElseNode::ElseNode(Node *node){
 	this->body = node;
@@ -24,4 +25,10 @@ void ElseNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 Node* ElseNode::optmize(OptimizationVistor *optimizationVistor)
 {
 	return optimizationVistor->visit(this);
+}
+
+bool ElseNode::type_checking() {
+	this->nodeType = TypesTable::getInstance()->getType(VOID_TYPE_ID);
+	this->body->type_checking();
+	return true;
 }

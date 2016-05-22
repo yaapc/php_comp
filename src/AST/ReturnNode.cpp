@@ -4,16 +4,19 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 
 
-ReturnNode::ReturnNode(Node *exp) : returnend_expression(exp) {}
+ReturnNode::ReturnNode(Node *exp) {
+	this->returned_node = exp;
+	this->nodeType = nullptr;
+}
 
 void ReturnNode::print(ostream &os) {
     auto self = int(this);
     os << self
        << "[label=\"return\"]"
        <<endl;
-    if (returnend_expression) {
-      returnend_expression->print(os);
-      os << self << "->" << int(returnend_expression) << endl;
+    if (returned_node) {
+		returned_node->print(os);
+      os << self << "->" << int(returned_node) << endl;
     }
   }
 
@@ -25,4 +28,10 @@ void ReturnNode::print(ostream &os) {
 Node* ReturnNode::optmize(OptimizationVistor *optimizationVistor)
 {
 	return optimizationVistor->visit(this);
+}
+
+bool ReturnNode::type_checking() {
+	//TODO: check if return TypeExpr is the same as the Return Type of the function defined
+	this->nodeType = this->returned_node->getNodeType();
+	return true;
 }

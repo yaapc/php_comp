@@ -36,10 +36,14 @@ Node* IfNode::optmize(OptimizationVistor *optimizationVistor)
   bool IfNode::type_checking() {
 	  if (this->condition->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID) {
 		  this->nodeType = TypesTable::getInstance()->getType(VOID_TYPE_ID);
+		  this->body->type_checking();
+		  this->else_node->type_checking();
 		  return true;
 	  }
 	  else {
 		  this->nodeType = new TypeError("Expected Boolean Expression for the Condition.");
+		  this->body->type_checking();
+		  this->else_node->type_checking();
 		  return false;
 	  }
   }

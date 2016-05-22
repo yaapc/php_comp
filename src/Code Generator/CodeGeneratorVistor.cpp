@@ -814,8 +814,8 @@ void CodeGneratorVistor::visit(ParameterNode *parameterNode)
 void CodeGneratorVistor::visit(ReturnNode *returnNode)
 {
 	AsmGenerator::comment("<ReturnNode");
-	if (returnNode->returnend_expression){
-		returnNode->returnend_expression->generate_code(this);
+	if (returnNode->returned_node){
+		returnNode->returned_node->generate_code(this);
 	}
 	AsmGenerator::add_instruction("b "+returnLabel);
 	AsmGenerator::comment("ReturnNode/>");
