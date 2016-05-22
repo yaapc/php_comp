@@ -533,6 +533,7 @@ void CodeGneratorVistor::visit(ForNode *forNode)
 	string beginFor		= "for_begin_label_"	+ to_string(AsmGenerator::if_temp_label_count);
 	string endFor		= "for_end_label_"		+ to_string(AsmGenerator::if_temp_label_count);
 	string contineFor	= "for_continue_label_" + to_string(AsmGenerator::if_temp_label_count);
+	AsmGenerator::if_temp_label_count++;
 
 	string s0 = "s0";
 	string prevReturnLabel		= returnLabel;
@@ -581,7 +582,7 @@ void CodeGneratorVistor::visit(ForNode *forNode)
 	AsmGenerator::add_instruction("b " + beginFor);
 
 	AsmGenerator::add_label(endFor);
-	AsmGenerator::if_temp_label_count++;
+
 
 	returnLabel		= prevReturnLabel;
 	continueLabel	= prevContinueLabel;
@@ -595,6 +596,7 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 	string t0 = "t0";
 	string else_label	= "else_label_" + to_string(AsmGenerator::if_temp_label_count);
 	string endIf		= "end_if_"     + to_string(AsmGenerator::if_temp_label_count);
+	AsmGenerator::if_temp_label_count++;
 	
 	AsmGenerator::comment("<If Statment Condition Node");
 	if (ifNode->condition)
@@ -618,7 +620,7 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 		AsmGenerator::comment("If Statment Else Node/>");
 	}
 	AsmGenerator::add_label(endIf);
-	AsmGenerator::if_temp_label_count++;
+
 	AsmGenerator::comment("If Statment/>");
 }
 
@@ -663,6 +665,7 @@ void CodeGneratorVistor::visit(WhileNode *whileNode)
 	string beginWhile	= "while_begin_label_"		+ to_string(AsmGenerator::if_temp_label_count);
 	string endWhile		= "while_end_label_"		+ to_string(AsmGenerator::if_temp_label_count);
 	string contineWhile	= "while_continue_label_"	+ to_string(AsmGenerator::if_temp_label_count);
+	AsmGenerator::if_temp_label_count++;
 
 	string prevReturnLabel		= returnLabel;
 	string prevContinueLabel	= continueLabel;
@@ -691,7 +694,7 @@ void CodeGneratorVistor::visit(WhileNode *whileNode)
   
 	AsmGenerator::add_label(endWhile);
 
-	AsmGenerator::if_temp_label_count++;
+	
 
 	returnLabel		= prevReturnLabel;
 	continueLabel	= prevContinueLabel;
