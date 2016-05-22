@@ -171,7 +171,7 @@ Node* OptimizationVistor::visit(ListNode *listNode)
 		nodess.push_back(node);
 
 		//TODO return may come in for/While body ?!
-		if (dynamic_cast<ReturnNode*>(node) || dynamic_cast<BreakNode*>(node)){
+		if (dynamic_cast<ReturnNode*>(node) || dynamic_cast<BreakNode*>(node) || dynamic_cast<ContinueNode*>(node)){
 			listNode->nodes = nodess;
 			break;
 		}	
