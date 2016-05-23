@@ -559,7 +559,12 @@ void AsmGenerator::f_greater_or_equal_operation(string dest_reg,string reg1,stri
 void AsmGenerator::add_instruction(string instruction)
 {
 	instruction += "\n";
-	(current_stream == MAIN_STREAM) ? main_stream << instruction: functions_stream << instruction;
+	if (current_stream == MAIN_STREAM)
+		main_stream << instruction;
+	if (current_stream == FUNCUTION_STREAM)
+		functions_stream << instruction;
+	if (current_stream == TEMP_STEARM)
+		temp_stream << instruction;
 }
 
 void AsmGenerator::add_data(string data_instruction)
@@ -583,7 +588,12 @@ void AsmGenerator::comment(string comment_message)
 void AsmGenerator::system_call(int system_call_code)
 {
 	AsmGenerator::li("v0",system_call_code);
-	(current_stream == MAIN_STREAM) ? main_stream << "syscall\n" : functions_stream << "syscall\n";
+		if (current_stream == MAIN_STREAM)
+		main_stream << "syscall\n";
+	if (current_stream == FUNCUTION_STREAM)
+		functions_stream << "syscall\n";
+	if (current_stream == TEMP_STEARM)
+		temp_stream << "syscall\n";
 }
 
 void AsmGenerator::sbrk (string amount_reg,string returned_address_memory)
@@ -643,26 +653,30 @@ void AsmGenerator::f_move(string dest_reg,string source_reg)
 void AsmGenerator::function_prologue (int frame_size)
 {
 	AsmGenerator::comment("Callee Prologue:");
-	AsmGenerator::add_instruction("\tsubu $sp, $sp, 8");
+	AsmGenerator::add_instruction("\tsubu $sp, $sp, 12");
 	AsmGenerator::add_instruction("\tsw $fp, 0($sp)");
 	AsmGenerator::add_instruction("\tsw $ra, 4($sp)");
-	AsmGenerator::add_instruction("\taddi $fp, $sp, 8");
+	AsmGenerator::add_instruction("\tsw $a3, 8($sp)");
+	AsmGenerator::add_instruction("\taddi $fp, $sp, 12");
 	if (frame_size > 0 ) {
 		AsmGenerator::comment("# Reserve space (" +  to_string(frame_size) + "b) for function local vars.");
 		AsmGenerator::add_instruction("\tsubu $sp, $sp, " + to_string(frame_size));
 	}
 	AsmGenerator::add_instruction("");
+
+	AsmGenerator::functions_stream << AsmGenerator::temp_stream.rdbuf();
 }
 
 void AsmGenerator::function_epilogue(int frame_size)
 {
 	AsmGenerator::comment("Callee Epilogue:");
 	if (frame_size > 0) {
-		AsmGenerator::add_instruction("\taddu $fp, $sp, "+to_string(frame_size));
+		AsmGenerator::add_instruction("\taddu $sp, $sp, "+to_string(frame_size));
 	}
+	AsmGenerator::add_instruction("\tlw $a3, 8($sp)");
 	AsmGenerator::add_instruction("\tlw $ra, 4($sp)");
 	AsmGenerator::add_instruction("\tlw $fp, 0($sp)");
-	AsmGenerator::add_instruction("\taddu $sp, $sp, 8" );
+	AsmGenerator::add_instruction("\taddu $sp, $sp, 12" );
 	AsmGenerator::add_instruction("");
 }
 
@@ -790,6 +804,7 @@ void AsmGenerator::strcpy()
 ofstream AsmGenerator::assembly_code_file;
 stringstream AsmGenerator::data_stream;
 stringstream AsmGenerator::main_stream;
+stringstream AsmGenerator::temp_stream;
 stringstream AsmGenerator::functions_stream;
 
 map<string,int> AsmGenerator::strings_map;

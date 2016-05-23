@@ -46,7 +46,8 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 			AsmGenerator::sw(s1,variableAddress);	   //  Store value from rhs in the addresss
 		}else
 
-		if (ClassCallNode *classCallNode = dynamic_cast<ClassCallNode*>(assignmentNode->lhs)){
+		if (ClassCallNode *classCallNode = dynamic_cast<ClassCallNode*>(assignmentNode->lhs))
+		{
 			string probertyAddress = getClassMemberAddress(classCallNode,s0);
 			AsmGenerator::sw(s1,probertyAddress);
 		}else{
@@ -772,7 +773,7 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 	FunctionFrame* functionFrame = dynamic_cast<FunctionFrame*>(currentFrame);
 
-	AsmGenerator::function_prologue(functionFrame->stackSize);
+	AsmGenerator::current_stream = TEMP_STEARM;
 
 	for(auto &node : functionDefineNode->paramsList->nodes)
 	{
@@ -784,6 +785,10 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 	if (functionDefineNode->bodySts)
 		functionDefineNode->bodySts->generate_code(this);
+
+	AsmGenerator::current_stream = FUNCUTION_STREAM;
+
+	AsmGenerator::function_prologue(functionFrame->stackSize);
 
 	AsmGenerator::add_label(returnLabel);
 
@@ -856,162 +861,186 @@ void CodeGneratorVistor::visit(ReturnNode *returnNode)
 
 void CodeGneratorVistor::visit(ClassDefineNode	*classDefineNode)
 {
-	AsmGenerator::comment("<ClassDefineNode");
-	currentFrame = new ObjectFrame(currentFrame,classDefineNode);
+	AsmGenerator::comment("<Class Define Node");
 
-	ObjectFrame* objectFrame = dynamic_cast<ObjectFrame*>(currentFrame);
-	objectsFrames[classDefineNode->classSymbol->getName()] = objectFrame;
-	classDefineNode->body->generate_code(this);
+	TypeClass *typeClass		= dynamic_cast<TypeClass*>(classDefineNode->getNodeType());
 
+	currentFrame				= new ObjectFrame(currentFrame,typeClass);
 
-	AsmGenerator::comment("ClassDefineNode/>");
+	ObjectFrame* objectFrame	= dynamic_cast<ObjectFrame*>(currentFrame);
+
+	//TODO getName() ?? 
+	objectsFrames[typeClass->getName()] = objectFrame;
+
+	if (classDefineNode->body)
+		classDefineNode->body->generate_code(this);
 
 	currentFrame = objectFrame->parentFrame;
+
+	AsmGenerator::comment("Class Define Node/>");
 }
 
 void CodeGneratorVistor::visit(ClassMemNode	*classMemNode)
 {
-	ObjectFrame* objectFrame = dynamic_cast<ObjectFrame*>(currentFrame);
-	if (objectFrame != nullptr)
-	{
-		objectFrame->addLocal(classMemNode);
-	}else{
-		cout << "CurrentFrame Should be objectFrame" << endl;
-	}
+	//TODO generate code for inilizeing
 	string memberName = classMemNode->getMemSymbol()->getName();
 	AsmGenerator::comment("<Declare member "+memberName+" />");
 }
 
 void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 {
-	AsmGenerator::comment("<ClassMethodNode");
-	ObjectFrame* objectFrame = dynamic_cast<ObjectFrame*>(currentFrame);
-	if (objectFrame != nullptr){
-		objectFrame->addFunction(classMethodNode);
+	AsmGenerator::comment("<Class Method Node");
 
-		Method *methodSymbol = classMethodNode->methodSym;
+	TypeFunction* functionType	= dynamic_cast<TypeFunction*>(classMethodNode->getNodeType());
 
-		string methodName = methodSymbol->getName();
-		string prevReturnLabel = returnLabel;
-		returnLabel = methodName+"_ret";
+	Method *methodSymbol		= classMethodNode->methodSym;
 
-		AsmGenerator::comment("Look below to see method "+methodName);
+	string methodName			= methodSymbol->getLabel();
+	string prevReturnLabel		= returnLabel;
+	returnLabel					= methodName+"_ret";
 
-		AsmGenerator::initialize_function(methodName); 
+	AsmGenerator::comment("Look below to see method "+methodName);
 
-		currentFrame = new FunctionFrame(currentFrame,nullptr);
+	AsmGenerator::initialize_function(methodName); 
 
-		FunctionFrame* functionFrame = dynamic_cast<FunctionFrame*>(currentFrame);
+	currentFrame				= new FunctionFrame(currentFrame,classMethodNode->paramsList);
+	FunctionFrame* methodFrame  = dynamic_cast<FunctionFrame*>(currentFrame);
 
-		AsmGenerator::function_prologue(functionFrame->stackSize);
+	AsmGenerator::current_stream = TEMP_STEARM;
+
+
 		
-		//TODO
-		/*for(auto &node : )
-		{
-			ParameterNode* paramterNode = dynamic_cast<ParameterNode*>(node);
-			if (paramterNode == nullptr)
-				cout << "DAMN this shoudn't happen" << endl;
-
-			paramterNode->generate_code(this);
-		}*/
-
-
-
-		returnLabel = prevReturnLabel;
-	}else{
-		cout << "CurrentFrame Should be objectFrame" << endl;
+	for(auto &node : classMethodNode->paramsList->nodes)
+	{
+		ParameterNode* paramterNode = dynamic_cast<ParameterNode*>(node);
+		if (!paramterNode)
+			cout << "DAMN this shoudn't happen" << endl;
+		paramterNode->generate_code(this);
 	}
-	AsmGenerator::comment("ClassMethodNode/>");
+
+	if (classMethodNode->bodySts)
+		classMethodNode->bodySts->generate_code(this);
+
+	AsmGenerator::current_stream = FUNCUTION_STREAM;
+
+	AsmGenerator::function_prologue(methodFrame->stackSize);
+
+	AsmGenerator::add_label(returnLabel);
+
+	if (functionType->getReturnTypeExpression()->getTypeId() != VOID_TYPE_ID) {
+		AsmGenerator::comment("Returning Value");
+		if (functionType->getReturnTypeExpression()->getTypeId() == FLOAT_TYPE_ID)
+			AsmGenerator::f_pop("f1");
+		else
+			AsmGenerator::pop("v1");
+	}
+
+
+	AsmGenerator::function_epilogue(methodFrame->stackSize);
+
+	AsmGenerator::write_function();
+
+	currentFrame	= methodFrame->parentFrame;
+	returnLabel		= prevReturnLabel;
+	
+	AsmGenerator::comment("Class Method Node/>");
 }
 
 void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 {
-	AsmGenerator::comment("<ClassCallNode");
-	string s0 = "s0";
-	
-	string probertyAddress = getClassMemberAddress(classCallNode,s0);
+	AsmGenerator::comment("<Class Call Node");
+	string thisReg = "s0";
+	string s1 = "s1";
+	string probertyAddress	= getClassMemberAddress(classCallNode,thisReg);
 
 	if (!classCallNode->isMethodCall){
-		TypeClass* classType = dynamic_cast<TypeClass*>(classCallNode->object->getNodeType());
-		int propertyTypeID = classType->lookupMembers(classCallNode->propertyString)->getTypeExpr()->getTypeId();
+		AsmGenerator::comment("<MemberProperty");
 
+		int propertyTypeID		= classCallNode->member->getTypeExpr()->getTypeId();
 
 		if (propertyTypeID == INTEGER_TYPE_ID	|| propertyTypeID == BOOLEAN_TYPE_ID){
-			AsmGenerator::lw(s0,probertyAddress);
-			AsmGenerator::push(s0);
+			AsmGenerator::lw(s1,probertyAddress);
+			AsmGenerator::push(s1);
 		}
 
 		if (propertyTypeID == STRING_TYPE_ID){
-			AsmGenerator::lw(s0,probertyAddress); 
-			AsmGenerator::push(s0);
-
+			AsmGenerator::lw(s1,probertyAddress);
+			AsmGenerator::push(s1);
 		}
 		
 		if (propertyTypeID == FLOAT_TYPE_ID){
 			AsmGenerator::ls("f0",probertyAddress);
-			AsmGenerator::f_push("f0");
+ 			AsmGenerator::f_push("f0");
 		}
 
-		if (propertyTypeID == CLASS_TYPE_ID){
-		AsmGenerator::lw(s0,probertyAddress); 
-		AsmGenerator::push(s0);
-	}
+		if (propertyTypeID == CLASS_TYPE_ID){ 
+			AsmGenerator::lw(s1,probertyAddress);
+			AsmGenerator::push(s1);
+		}
+		AsmGenerator::comment("Member Property/>");
 	}else{
-	
-	
-	}
 
-	AsmGenerator::comment("ClassCallNode/>");
+		AsmGenerator::comment("<Method Property");
+
+		TypeFunction *functionType = dynamic_cast<TypeFunction*>(classCallNode->member->getTypeExpr());
+
+		AsmGenerator::comment("<ArgumentList");
+			if (classCallNode->argumentsList)
+				classCallNode->argumentsList->generate_code(this);
+		AsmGenerator::comment("ArgumentList/>");
+
+		int arguemtnsSize	= classCallNode->argumentsList->nodes.size();
+		int parameterSize	= functionType->getParamsTEs().size();
+		int diffSize		= parameterSize - arguemtnsSize;	// number of enabeld default parameters
+
+		//Make some space for enabeld default parameters
+		for(int i = 0 ; i < diffSize ; i++){
+			string t0 = "t0";
+			//we will store special value -1005 (maybe special) to know that this parameter is default and it's value should be
+			//taken from function decleration
+			AsmGenerator::li(t0,-1005);
+			AsmGenerator::push(t0);
+		}
+
+		string thisReg = "s0";
+		string probertyAddress	= getClassMemberAddress(classCallNode,thisReg);
+		AsmGenerator::move("a3",thisReg);
+		AsmGenerator::lw(s1,probertyAddress);
+		AsmGenerator::add_instruction("jalr $"+s1);
+
+		if (classCallNode->argumentsList){
+			AsmGenerator::comment("<Clear Arguments");
+			int argumentsSize = 0; // in bytes 
+			for(auto &node : classCallNode->argumentsList->nodes){
+				//TODO replace fixed size with size from type System
+				int argSize = 4;
+				argumentsSize+= argSize;
+			}
+			AsmGenerator::add_instruction("addi $sp, $sp, " + to_string(argumentsSize));
+			AsmGenerator::comment("Clear Arguments/>");
+		}
+
+	
+		if (functionType->getReturnTypeExpression()->getTypeId() != VOID_TYPE_ID){
+			if (functionType->getReturnTypeExpression()->getTypeId() == FLOAT_TYPE_ID){
+				AsmGenerator::f_push("f1");
+			}
+			else{
+				AsmGenerator::push("v1");
+			}
+		}
+
+		AsmGenerator::comment("Method Property/>");
+	}
+	AsmGenerator::comment("Class Call Node/>");
 }
 
 void CodeGneratorVistor::visit(NewNode *newNode)
 {
 	AsmGenerator::comment("<NewNode");
-	
-	if (objectsFrames.find(newNode->className) != objectsFrames.end()) {
-		ObjectFrame *objectsFrame = objectsFrames[newNode->className];
-		int objectSize = objectsFrame->membersOffset;
-		string s0 = "s0",s1 = "s1";
-		AsmGenerator::li(s0,objectSize);
-		AsmGenerator::sbrk(s0,s1);
-		AsmGenerator::push(s1);
-	}else{
-		cout << "UnDeclared Class" << endl;
-	}
-	AsmGenerator::comment("NewNode/>");
-
-	
-}
-
-string CodeGneratorVistor::getClassMemberAddress(ClassCallNode *classCallNode,string reg)
-{
-	TypeClass* classType = dynamic_cast<TypeClass*>(classCallNode->object->getNodeType());
-
-	if (classType != nullptr){
-		string className = classType->getName();
-		if (objectsFrames.find(className) != objectsFrames.end()){
-			ObjectFrame* objectFrame = objectsFrames[className];
-
-	
-
-			string propertyOffset = objectFrame->getAddress(classCallNode->propertyString);
-			string objectAddress  = currentFrame->getAddress(classCallNode->object->variable->getNameWithout());
-
-
-			AsmGenerator::lw(reg,objectAddress); //load the addrees of object
-			string probertyAddress = propertyOffset+"($"+reg+")";
-
-
-			return probertyAddress;
-		}else{
-			cout << "UnDeclared Class" << endl;
-			return nullptr;
-		}
-	}else{
-		cout << "UnDeclared Class" << endl;
-		return nullptr;
-	}
-
+	ObjectFrame* objectFrame = objectsFrames[newNode->className];
+		objectFrame->newObject();
+	AsmGenerator::comment("NewNode/>");	
 }
 
 void CodeGneratorVistor::visit(BreakNode *breakNode)
@@ -1026,4 +1055,17 @@ void CodeGneratorVistor::visit(ContinueNode *continueNode)
 	AsmGenerator::comment("<ContinueNode");
 	AsmGenerator::add_instruction("b "+continueLabel);
 	AsmGenerator::comment("ContinueNode/>");
+}
+
+string CodeGneratorVistor::getClassMemberAddress(ClassCallNode*  classCallNode,string thisReg)
+{
+	TypeClass *typeClass		= dynamic_cast<TypeClass*>(classCallNode->object->getNodeType());
+
+	string objectAddress		= currentFrame->getAddress(classCallNode->object->variable->getNameWithout());
+
+	AsmGenerator::lw(thisReg,objectAddress);
+
+	ObjectFrame* objectFrame	= objectsFrames[typeClass->getName()];
+	objectFrame->thisReg		= thisReg;
+	return objectFrame->getAddress(classCallNode->propertyString);
 }

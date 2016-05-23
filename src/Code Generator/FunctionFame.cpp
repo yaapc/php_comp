@@ -75,8 +75,8 @@ FunctionFrame::FunctionFrame(GlobalFrame *parent,ListNode *parametersNodes)
 {
 	paramtersOffset			= 0;
 	stackSize				= 0;
-	initialFrameSize		= 2*4;	// 4 for $fp and 4 for $ra
-	this->parentFrame			= parent;
+	initialFrameSize		= 3*4;	// 4 for $fp and 4 for $ra and $a0
+	this->parentFrame		= parent;
 	if (parametersNodes){
 		for(auto &node : parametersNodes->nodes)
 		{
@@ -97,10 +97,9 @@ void FunctionFrame::addLocal(Node *node)
 {
 	DeclarationNode* variableDeclarationNode = dynamic_cast<DeclarationNode*>(node);
 	int varSize = node->getNodeType()->getSize();
-	int variableOffset = -stackSize - initialFrameSize; // offset from frame pointer
 	stackSize += varSize;
-	locals[variableDeclarationNode->variable->getNameWithout()] = variableOffset;
-	AsmGenerator::comment(variableDeclarationNode->variable->getNameWithout() + " in function scoop address "+to_string(variableOffset)+" from fp");
+	locals[variableDeclarationNode->variable->getNameWithout()] = -stackSize;
+	AsmGenerator::comment(variableDeclarationNode->variable->getNameWithout() + " in function scoop address "+to_string(-stackSize - initialFrameSize)+" from fp");
 }
 
 string FunctionFrame::getAddress(string name)
@@ -108,7 +107,7 @@ string FunctionFrame::getAddress(string name)
 
 	if (locals.find(name) != locals.end()) {
     	int offset = locals[name];
-		return to_string(offset)+"($fp)";
+		return to_string(offset - initialFrameSize)+"($fp)";
     } 
 
 	if (arguments.find(name) != arguments.end()) {
@@ -126,38 +125,41 @@ string FunctionFrame::getAddress(string name)
 ObjectFrame::ObjectFrame()
 {
 	GlobalFrame();
-	membersOffset = 0;
+	this->classType		= nullptr;
+	this->parentFrame	= nullptr;
+	objectsCount		= 0;
 }
 
-ObjectFrame::ObjectFrame(GlobalFrame *parent,ClassDefineNode *cdn)
+ObjectFrame::ObjectFrame(GlobalFrame *parent,TypeClass *classType)
 {
 	GlobalFrame();
-	this->parentFrame			= parent;
-	membersOffset = 0;
+	this->classType		= classType;
+	this->parentFrame	= parent;
+	objectsCount		= 0;
+	classTagAddress		= AsmGenerator::store_string_literal(classType->getName());
 
+	fillFrame(classType);
 }
 
 void ObjectFrame::addLocal(Node *node)
 {
-	ClassMemNode* classMemNode = dynamic_cast<ClassMemNode*>(node);
-	Variable* variable = classMemNode->getMemSymbol();
-	int classMemSize = classMemNode->getNodeType()->getSize();
-	locals[variable->getNameWithout()] = membersOffset;
-	membersOffset += classMemSize;
+	//ClassMemNode* classMemNode			= dynamic_cast<ClassMemNode*>(node);
+	//Variable* variable					= classMemNode->getMemSymbol();
+	//int classMemSize						= classMemNode->getNodeType()->getSize();
+	//locals[variable->getNameWithout()]	= objectOffset;
+	//objectOffset							= objectOffset + classMemSize;
 }
 
 string ObjectFrame::getAddress(string name)
 {
-
 	if (locals.find(name) != locals.end()) {
 		int offset = locals[name];
-		return to_string(offset);
-	} 
 
-	if (functions.find(name) != functions.end()) {
-		int offset = functions[name];
-		return to_string(offset);
-	}
+		if (thisReg.empty()){ // we are in function
+			return to_string(offset) + "($a3)";
+		}
+		return to_string(offset) + "($" + thisReg + ")";
+	} 
 
 	if (parentFrame) {
 		return parentFrame->getAddress(name);
@@ -170,8 +172,71 @@ string ObjectFrame::getAddress(string name)
 
 void ObjectFrame::addFunction(Node *node)
 {
-	ClassMethodNode* classMethodNode = dynamic_cast<ClassMethodNode*>(node);
-	Function* function = classMethodNode->methodSym;
-	functions[function->getName()] = membersOffset;
-	membersOffset += 4;
+	//ClassMethodNode* classMethodNode		= dynamic_cast<ClassMethodNode*>(node);
+	//Function* function					= classMethodNode->methodSym;
+	//locals[function->getName()]			= objectOffset;
+	//objectOffset							= objectOffset + 4;
+}
+
+void ObjectFrame::newObject()
+{
+	string s0 = "s0",s1 = "s1",s2 = "s2";
+
+	// load the size of oject in $s0
+	AsmGenerator::li(s0,classType->getSize());
+
+	//syscall to allocate space for object, the address of new allocated memory $s1 (address of object)
+	AsmGenerator::sbrk(s0,s1);
+
+	// push the address into stack
+	AsmGenerator::push(s1);
+
+	AsmGenerator::comment("<Fill Functions Table");
+	for(auto &memberWrapper :classType->getMembers())
+	{
+		if (memberWrapper->getWrapperType() == MemberWrapper::PROPERTY_WRAPPER)
+		{
+			PropertyWrapper* propertyWrapper = dynamic_cast<PropertyWrapper*>(memberWrapper);
+		}
+
+		if (memberWrapper->getWrapperType() == MemberWrapper::METHOD_WRAPPER){
+			MethodWrapper* methodWrapper = dynamic_cast<MethodWrapper*>(memberWrapper);
+
+			int methodOffset		= locals[methodWrapper->getName()];
+			string methodLabel		= methodWrapper->getLabel();
+			string methodAddress	= to_string(methodOffset)+"($" + s1 + ")"; // address in object
+
+			AsmGenerator::la(s2,methodLabel);	//load the address of method
+			AsmGenerator::sw(s2,methodAddress); //store the address of method in object
+		}
+	}
+	AsmGenerator::comment("Fill Functions Table/>");
+}
+
+
+void ObjectFrame::fillFrame(TypeClass* typeClass)
+{
+	int memberOffset = 0;
+	for(auto &memberWrapper :classType->getMembers())
+	{
+		if (memberWrapper->getWrapperType() == MemberWrapper::PROPERTY_WRAPPER)
+		{
+			PropertyWrapper* propertyWrapper = dynamic_cast<PropertyWrapper*>(memberWrapper);
+			
+			string propertyName		= propertyWrapper->getUniqueName(); // TODO replace getUniqueName with !!
+			int propertySize		= propertyWrapper->getSize();
+			locals[propertyName]	= memberOffset;
+			memberOffset			= memberOffset + propertySize;
+		}
+
+		if (memberWrapper->getWrapperType() == MemberWrapper::METHOD_WRAPPER)
+		{
+			MethodWrapper* methodWrapper = dynamic_cast<MethodWrapper*>(memberWrapper);
+
+			string propertyName		= methodWrapper->getName();
+			locals[propertyName]	= memberOffset;
+			memberOffset			= memberOffset + 4;
+		
+		}
+	}
 }

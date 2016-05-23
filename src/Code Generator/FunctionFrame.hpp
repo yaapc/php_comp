@@ -6,6 +6,7 @@
 #include "../AST/ClassDefineNode.hpp"
 #include "../SymbolTable/Symbol.h"
 #include "../AST/FunctionDefineNode.hpp"
+#include "../TypeSystem/TypeClass.hpp"
 
 class GlobalFrame 
 {
@@ -49,7 +50,7 @@ class ObjectFrame : public GlobalFrame
 public:
 	ObjectFrame();
 
-	ObjectFrame(GlobalFrame *,ClassDefineNode *);
+	ObjectFrame(GlobalFrame *,TypeClass *);
 
 	virtual void addLocal(Node *);
 
@@ -57,9 +58,17 @@ public:
 
 	virtual string getAddress(string);
 
-	map<string, int> functions;
+	virtual void newObject();
 
-	int membersOffset;
+	virtual void fillFrame(TypeClass*);
+
+	int objectsCount;
+
+	string classTagAddress;
+
+	TypeClass *classType;
+
+	string thisReg;
 };
 
 

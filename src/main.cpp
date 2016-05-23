@@ -6,6 +6,7 @@
 #include "Code Generator/AsmGenerator.h"
 #include "Code Generator\CodeGeneratorVistor.hpp"
 #include "Code Generator\OptimizationVistor.hpp"
+#include "TypeSystem\TypesTable.h"
 
 #include <iostream>
 #include <fstream>
@@ -58,6 +59,8 @@ int main(int argc, char** argv) {
 	symbolsParser->printSymbolTables(); cout << "printSymbolTables\n";
 	errorRec.printErrQueue(); cout << "printErrQueue\n";
 
+	TypesTable::buildObjectClass();
+
 	//Check AST types 
 	tree->type_checking(); cout << "TypeChecking Pass\n";
 
@@ -81,14 +84,7 @@ int main(int argc, char** argv) {
 		system("QtSpim.exe -a ./src/\"Code Generator\"/mips1.asm");
 	}
 
-
-
 	cout << "compilation done" << endl;
-
-
-	Node *node = nullptr;
-
-	
 	return 0;
 }
 

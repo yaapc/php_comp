@@ -10,14 +10,16 @@
 
 #define MAIN_STREAM 0
 #define FUNCUTION_STREAM 1
+#define TEMP_STEARM 2 //used when generate code for function body (becase we need to know to mush local variables)
 
 using namespace std;
 
 class AsmGenerator{
-private:
+public:
 	static ofstream assembly_code_file;
 	static stringstream data_stream;
 	static stringstream main_stream;
+	static stringstream temp_stream;
 	static stringstream functions_stream;
 
 	static int current_stream;

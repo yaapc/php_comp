@@ -19,6 +19,7 @@ public:
 	virtual void generate(ListNode *ast);
 
 	map<string,ObjectFrame*> objectsFrames;
+
 public:
 	virtual void visit(AssignmentNode *assignmentNode);
 	virtual void visit(BinaryOperationNode *binaryOperationNode);
@@ -44,7 +45,6 @@ public:
 	virtual void visit(BreakNode 		*breakNode);
 	virtual void visit(ContinueNode 	*continueNode);
 
-
-	//Helper Method
-	string getClassMemberAddress(ClassCallNode *,string);
+	//Helper Methods
+	string getClassMemberAddress(ClassCallNode*,string);
 };
