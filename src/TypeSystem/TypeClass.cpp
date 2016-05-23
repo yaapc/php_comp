@@ -39,8 +39,7 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 		typeClass->addToMembers(prop);
 		typeClass->addToProps(prop);
 	}	
-	//all members added, tell typeClass to resize itself:
-	typeClass->makeSize();	
+
 
 	//extract methods' types and symbols from @classNode and append them to the TypeClass members as a @MethodWrapper
 	for (auto &method : classNode->classMethodsNodes) {
@@ -67,6 +66,9 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 
 	//and finally, add it to the TypeClasses we have:
 	TypeClass::classInstances.push_back(typeClass);
+
+	//all members added, tell typeClass to resize itself:
+	typeClass->makeSize();	
 
 	return typeClass;
 }
@@ -177,10 +179,16 @@ MethodWrapper* TypeClass::lookupMembers(string memberStr, string methodSign) {
 
 void TypeClass::makeSize() {
 	int size = 0;
+
 	for (auto mem : this->props) {
 		size += mem->getSize();
 	}
-	this->size = size;
+
+	for(auto methoed: this->methods){
+		size += 4;
+	}
+	int parentSize = parentClass->getSize();
+	this->size = size + parentSize;
 }
 
 bool TypeClass::equivelantTo(int secondTypeId){
@@ -250,6 +258,10 @@ string MethodWrapper::getUniqueName() {
 
 string MethodWrapper::getName() {
 	return this->methodSymbol->getName();
+}
+
+string MethodWrapper::getLabel() {
+	return this->methodSymbol->getLabel();
 }
 
 int MethodWrapper::getWrapperType() {

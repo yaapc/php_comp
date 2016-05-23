@@ -132,6 +132,8 @@ private:
     	Method* methodSymbol;	
 public:
 	MethodWrapper(TypeExpression* type, Method* methodSymbol);
+
+	string getLabel();
 	
 	string getUniqueName();
 	
