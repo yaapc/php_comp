@@ -84,6 +84,14 @@ TypeExpression* TypeFloat::opEqual(int secondTypeId) {
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + " Type doesn't support == operation");
 }
 
+bool TypeFloat::equivelantTo(int secondTypeId) {
+	if (secondTypeId == FLOAT_TYPE_ID)
+		return true;
+
+	return false;
+}
+
+
 //overriding virtual method
 int TypeFloat::getTypeId() {
 	return FLOAT_TYPE_ID;
