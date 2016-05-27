@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include "../AST/ASTVisitor.h"
-#include "FunctionFrame.hpp"
+#include "Frame.hpp"
 #include <map>
 using namespace std;
 

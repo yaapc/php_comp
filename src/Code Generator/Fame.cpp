@@ -1,4 +1,4 @@
-#include "FunctionFrame.hpp"
+#include "Frame.hpp"
 #include "../SymbolTable/Symbol.h"
 #include "AsmGenerator.h"
 

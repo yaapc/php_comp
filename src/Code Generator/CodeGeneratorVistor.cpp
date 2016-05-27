@@ -2,7 +2,7 @@
 #include "CodeGeneratorVistor.hpp"
 #include "AsmGenerator.h"
 #include "../AST/all.hpp"
-#include "FunctionFrame.hpp"
+#include "Frame.hpp"
 #include "../TypeSystem/TypeClass.hpp"
 #include "../TypeSystem/TypeFunction.hpp"
 
