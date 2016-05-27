@@ -226,11 +226,6 @@ int MemberWrapper::getSize() {
 	return this->type->getSize();
 }
 
-
-int PropertyWrapper::getStoragModifier(){
-	return this->memberSymbol->getStorageModifier();
-}
-
 PropertyWrapper::PropertyWrapper(TypeExpression* te, DataMember* dm){
 	this->setTypeExpr(te);
 	this->memberSymbol = dm;
@@ -247,8 +242,6 @@ string PropertyWrapper::getName() {
 int PropertyWrapper::getWrapperType() {
 	return MemberWrapper::PROPERTY_WRAPPER;
 }
-
-
 
 
 MethodWrapper::MethodWrapper(TypeExpression* type, Method* method) {

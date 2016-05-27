@@ -356,10 +356,15 @@ void Class::setOuterClass(Class* outerClass){
 DATA MEMBER:
 ============================================
 */
-
 DataMember::DataMember(char * name, bool isInit, int colNo, int lineNo) : Variable(name, DATA_MEMBER, isInit, colNo, lineNo){
-	this->accessModifier = PRIVATE_ACCESS;
-	this->storageModifier = DEFAULT_STORAGE;
+	this->accessModifier	= PRIVATE_ACCESS;
+	this->storageModifier	= DEFAULT_STORAGE;
+};
+
+DataMember::DataMember(char * name, bool isInit, int colNo, int lineNo,Value initialValue) : Variable(name, DATA_MEMBER, isInit, colNo, lineNo){
+	this->accessModifier	= PRIVATE_ACCESS;
+	this->storageModifier	= DEFAULT_STORAGE;
+	this->initialValue		= initialValue;
 };
 
 int DataMember::getAccessModifier(){
@@ -376,6 +381,11 @@ int DataMember::getStorageModifier(){
 
 void DataMember::setStorageModifier(int storageModifier){
 	this->storageModifier = storageModifier;
+}
+
+
+Value DataMember::getInitialValue(){
+	return this->initialValue;
 }
 
 int DataMember::getSymbolType(){

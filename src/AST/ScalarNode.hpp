@@ -4,7 +4,7 @@
 #include <iostream>
 
 
-typedef struct Values
+struct Value
 {
 	int		type;
 	int		int_val;
@@ -51,7 +51,7 @@ typedef struct Values
 class ScalarNode : public Node {
 
 public:
-	Values  value;
+	Value  value;
 	ScalarNode(int i);
 	ScalarNode(float f);
 	ScalarNode(bool b);

@@ -1317,7 +1317,13 @@ property_declaration:
 	| T_VARIABLE '=' static_scalar
 		{
 			pl.log("property assigned", 0); pl.log($<r.str>1);
-			$<r.symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, true, $<r.col_no>1, $<r.line_no>1));
+			auto scalarNode = dynamic_cast<ScalarNode*>($<r.node>3);
+			if (scalarNode){
+				Value value = scalarNode->value;
+				$<r.symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, true, $<r.col_no>1, $<r.line_no>1,value));
+			}else{
+				$<r.symbol>$ = symbolsParser->insertSymbol(new DataMember($<r.str>1, false, $<r.col_no>1, $<r.line_no>1));
+			}
 		}
 	| T_VARIABLE '='
 		{
@@ -1574,11 +1580,21 @@ ctor_arguments:
 ;
 
 common_scalar:
-		T_LNUMBER { $<r.node>$ = new ScalarNode($<r.i>1); }
-	| T_DNUMBER   { $<r.node>$ = new ScalarNode($<r.f>1);}
-	| T_TRUE	  { $<r.node>$ = new ScalarNode(bool(true));}
-	| T_FALSE	  { $<r.node>$ = new ScalarNode(bool(false));}
-	| T_CONSTANT_ENCAPSED_STRING  { $<r.node>$ = new ScalarNode(std::string($<r.str>1));}
+		T_LNUMBER { 
+					$<r.i>$ = $<r.i>1;
+					$<r.node>$ = new ScalarNode($<r.i>1); }
+	| T_DNUMBER   { 
+					$<r.f>$ = $<r.f>1;
+					$<r.node>$ = new ScalarNode($<r.f>1);}
+	| T_TRUE	  { 
+					$<r.i>$ = 1;
+					$<r.node>$ = new ScalarNode(bool(true));}
+	| T_FALSE	  { 
+					$<r.i>$ = 0;
+					$<r.node>$ = new ScalarNode(bool(false));}
+	| T_CONSTANT_ENCAPSED_STRING  { 
+					$<r.str>$ = $<r.str>1;
+					$<r.node>$ = new ScalarNode(std::string($<r.str>1));}
 	| T_LINE
 	| T_FILE
 	| T_DIR

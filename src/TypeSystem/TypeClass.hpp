@@ -121,7 +121,6 @@ public:
 	string getUniqueName();
 	string getName();
 	int getWrapperType();
-	int getStoragModifier();
 };
 
 

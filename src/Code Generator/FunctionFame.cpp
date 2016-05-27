@@ -60,7 +60,7 @@ string GlobalFrame::getAddress(string name)
 		return parentFrame->getAddress(name);
 	}
 	cout << "This error should not be possible here, can not find symbol you're looking for." << endl;
-
+	return nullptr;
 }
 
 FunctionFrame::FunctionFrame()
@@ -120,6 +120,7 @@ string FunctionFrame::getAddress(string name)
     }
 
 	cout << "This error should not be possible here, can not find symbol you're looking for." << endl;
+	return nullptr;
 }
 
 ObjectFrame::ObjectFrame()
@@ -143,11 +144,7 @@ ObjectFrame::ObjectFrame(GlobalFrame *parent,TypeClass *classType)
 
 void ObjectFrame::addLocal(Node *node)
 {
-	//ClassMemNode* classMemNode			= dynamic_cast<ClassMemNode*>(node);
-	//Variable* variable					= classMemNode->getMemSymbol();
-	//int classMemSize						= classMemNode->getNodeType()->getSize();
-	//locals[variable->getNameWithout()]	= objectOffset;
-	//objectOffset							= objectOffset + classMemSize;
+
 }
 
 string ObjectFrame::getAddress(string name)
@@ -166,17 +163,14 @@ string ObjectFrame::getAddress(string name)
     }
 
 	cout << "This error should not be possible here, can not find symbol you're looking for." << endl;
-
-	
+	return nullptr;
 }
 
 void ObjectFrame::addFunction(Node *node)
 {
-	//ClassMethodNode* classMethodNode		= dynamic_cast<ClassMethodNode*>(node);
-	//Function* function					= classMethodNode->methodSym;
-	//locals[function->getName()]			= objectOffset;
-	//objectOffset							= objectOffset + 4;
+
 }
+
 
 void ObjectFrame::newObject()
 {

@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include "../AST/ScalarNode.hpp"
 using namespace std;
 
 /*
@@ -207,6 +208,7 @@ class DataMember : public Variable {
 public:
 
 	DataMember(char * name, bool isInit, int colNo, int lineNo);
+	DataMember(char * name, bool isInit, int colNo, int lineNo,Value initialValue);
 	~DataMember();
 
 	int getAccessModifier();
@@ -215,6 +217,8 @@ public:
 	int getStorageModifier();
 	void setStorageModifier(int storageModifier);
 
+	Value getInitialValue();
+
 	//overrided methods
 	int getSymbolType();
 	string toString();
@@ -222,6 +226,7 @@ private:
 	int accessModifier;
 	int storageModifier;
 
+	Value initialValue;
 };
 /*
 =========================
