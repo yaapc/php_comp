@@ -115,14 +115,13 @@ private:
 };
 
 class PropertyWrapper : public MemberWrapper {
-private:
-	DataMember* memberSymbol;
-
 public:
+	DataMember* memberSymbol;
 	PropertyWrapper(TypeExpression* te, DataMember* memberSymbol);
 	string getUniqueName();
 	string getName();
 	int getWrapperType();
+	int getStoragModifier();
 };
 
 
