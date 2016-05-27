@@ -188,17 +188,65 @@ void ObjectFrame::newObject()
 	AsmGenerator::comment("<Fill Functions Table");
 	for(auto &memberWrapper :classType->getMembers())
 	{
-		if (memberWrapper->getWrapperType() == MemberWrapper::PROPERTY_WRAPPER)
-		{
-			PropertyWrapper* propertyWrapper = dynamic_cast<PropertyWrapper*>(memberWrapper);
+		if (memberWrapper->getWrapperType() == MemberWrapper::PROPERTY_WRAPPER){
+			PropertyWrapper* propertyWrapper	= dynamic_cast<PropertyWrapper*>(memberWrapper);
+			DataMember* dataMember				= propertyWrapper->memberSymbol;
+			int propertyOffset					= locals[dataMember->getNameWithout()];
+			string propertyAddress				= to_string(propertyOffset)+"($" + s1 + ")"; // address in object
+			if (dataMember->isInit()){
+
+				if (propertyWrapper->getTypeExpr()->getTypeId() == INTEGER_TYPE_ID){
+					AsmGenerator::li(s2,dataMember->getInitialValue().int_val);
+					AsmGenerator::sw(s2,propertyAddress);
+				}
+
+				if (propertyWrapper->getTypeExpr()->getTypeId() == BOOLEAN_TYPE_ID){
+					AsmGenerator::li(s2,dataMember->getInitialValue().bool_val);
+					AsmGenerator::sw(s2,propertyAddress);
+				}
+
+				if (propertyWrapper->getTypeExpr()->getTypeId() == FLOAT_TYPE_ID){
+					AsmGenerator::f_li("f0",dataMember->getInitialValue().float_val);
+					AsmGenerator::ss("f0",propertyAddress);
+				}
+
+				if (propertyWrapper->getTypeExpr()->getTypeId() == STRING_TYPE_ID){
+					string t0 = "t0",t1 = "t1";
+
+					string stringAddress = AsmGenerator::store_string_literal(dataMember->getInitialValue().string_val);
+
+
+					AsmGenerator::la(t0,stringAddress);
+					
+					AsmGenerator::move("a0",t0); // copy address of string literal into a0
+					AsmGenerator::jal(AsmGenerator::strlen_functoion_name); // calculate length of string the result will be in $v1
+					AsmGenerator::add_instruction("addi $t0,$v1,1"); // length++;
+					AsmGenerator::sbrk(t0,s2);						// allcoate memory and store the address of newley crated memory in t0
+					AsmGenerator::sw(s2,propertyAddress);
+
+					AsmGenerator::la(t0,stringAddress);
+					AsmGenerator::move("a0",s2); // put the address of newly created memory in a0 (the parameter of strcpy function)
+					AsmGenerator::move("a1",t0); // put the address of string literal in a1 (the second parameter of strcpy function)
+					AsmGenerator::jal(AsmGenerator::strcpy_function_name);
+				}
+			}else{
+					
+				if (propertyWrapper->getTypeExpr()->getTypeId() == STRING_TYPE_ID){
+					// load the address of empty string in s0
+					AsmGenerator::la(s2,AsmGenerator::empty_string_address);
+					// store the address of empty string in variable address
+					AsmGenerator::sw(s2,propertyAddress);
+				}
+
+			}
 		}
 
 		if (memberWrapper->getWrapperType() == MemberWrapper::METHOD_WRAPPER){
-			MethodWrapper* methodWrapper = dynamic_cast<MethodWrapper*>(memberWrapper);
+			MethodWrapper* methodWrapper	= dynamic_cast<MethodWrapper*>(memberWrapper);
 
-			int methodOffset		= locals[methodWrapper->getName()];
-			string methodLabel		= methodWrapper->getLabel();
-			string methodAddress	= to_string(methodOffset)+"($" + s1 + ")"; // address in object
+			int methodOffset				= locals[methodWrapper->getName()];
+			string methodLabel				= methodWrapper->getLabel();
+			string methodAddress			= to_string(methodOffset)+"($" + s1 + ")"; // address in object
 
 			AsmGenerator::la(s2,methodLabel);	//load the address of method
 			AsmGenerator::sw(s2,methodAddress); //store the address of method in object
