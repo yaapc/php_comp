@@ -37,14 +37,13 @@ public:
 
 class ScopeFrame : public Frame{
 public:
-	ScopeFrame();
-
-	ScopeFrame(Frame *);
+	ScopeFrame(Frame *,bool isFunction);
 
 	virtual void addLocal(Node *);
 
 	virtual string getAddress(string);
 
+	bool isFunction;
 };
 
 class FunctionFrame :public Frame

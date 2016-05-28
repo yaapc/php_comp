@@ -20,6 +20,8 @@ public:
 
 	map<string,ObjectFrame*> objectsFrames;
 
+	bool isFunction;
+
 public:
 	virtual void visit(AssignmentNode *assignmentNode);
 	virtual void visit(BinaryOperationNode *binaryOperationNode);

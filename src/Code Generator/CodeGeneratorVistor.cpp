@@ -628,7 +628,7 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 void CodeGneratorVistor::visit(ListNode *listNode)
 {
 	if (listNode->hasScopeFrame){
-		currentFrame = new ScopeFrame(currentFrame);
+		currentFrame = new ScopeFrame(currentFrame,isFunction);
 	}
 	for (auto &node : listNode->nodes) {
 		if (node == nullptr) continue;
@@ -764,6 +764,7 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 
 void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 {
+	isFunction = true;
 	AsmGenerator::comment("<FunctionDefineNode");
 	TypeFunction* functionType = dynamic_cast<TypeFunction*>(functionDefineNode->getNodeType());
 
@@ -774,6 +775,7 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 	AsmGenerator::comment("Look below to see function "+functionName);
 
 	AsmGenerator::initialize_function(functionName); 
+
 
 	currentFrame = new FunctionFrame(currentFrame,functionDefineNode->paramsList);
 
@@ -820,6 +822,8 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 	currentFrame = functionFrame->parentFrame;
 	returnLabel = prevReturnLabel;
+
+	isFunction = false;
 }
 
 void CodeGneratorVistor::visit(ParameterNode *parameterNode)
@@ -902,6 +906,7 @@ void CodeGneratorVistor::visit(ClassMemNode	*classMemNode)
 
 void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 {
+	isFunction = true;
 	AsmGenerator::comment("<Class Method Node");
 
 	TypeFunction* functionType	= dynamic_cast<TypeFunction*>(classMethodNode->getNodeType());
@@ -963,6 +968,8 @@ void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 	returnLabel		= prevReturnLabel;
 	
 	AsmGenerator::comment("Class Method Node/>");
+	
+	isFunction = false;
 }
 
 void CodeGneratorVistor::visit(ClassCallNode *classCallNode)

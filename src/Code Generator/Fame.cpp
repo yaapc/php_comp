@@ -65,18 +65,19 @@ string GlobalFrame::getAddress(string name)
 	return nullptr;
 }
 
-ScopeFrame::ScopeFrame(Frame *parent)
+ScopeFrame::ScopeFrame(Frame *parent,bool isFunction)
 {
 	this->parentFrame		= parent;
 	reg						= parent->reg;
 	frameSize				= parent->frameSize;
 	initialFrameSize		= parent->initialFrameSize;
+
+	this->isFunction		= isFunction;
 }
 
 void ScopeFrame::addLocal(Node *node)
 {
-	GlobalFrame* gf		= dynamic_cast<GlobalFrame*>(parentFrame);
-	if (gf){
+	if (!isFunction){
 		DeclarationNode* declarationNode = dynamic_cast<DeclarationNode*>(node);
 		Variable* variableSymbol = declarationNode->variable;
 
@@ -116,9 +117,7 @@ void ScopeFrame::addLocal(Node *node)
 		frameSize += varSize;	
 		return;
 	}
-	FunctionFrame* ff	= dynamic_cast<FunctionFrame*>(parentFrame);
-
-	if (ff){
+	else{
 		DeclarationNode* variableDeclarationNode = dynamic_cast<DeclarationNode*>(node);
 		int varSize = node->getNodeType()->getSize();
 		frameSize += varSize;
@@ -128,12 +127,6 @@ void ScopeFrame::addLocal(Node *node)
 		return;
 	}
 
-
-	ScopeFrame* sf		= dynamic_cast<ScopeFrame*>(parentFrame);
-	if (sf){
-		parentFrame->addLocal(node);
-	}
-
 }
 
 string ScopeFrame::getAddress(string name)
@@ -141,22 +134,11 @@ string ScopeFrame::getAddress(string name)
 	if (locals.find(name) != locals.end()) {
     	int offset = locals[name];
 
-		GlobalFrame* gf		= dynamic_cast<GlobalFrame*>(parentFrame);
-		if (gf){
+		if (!isFunction){
 			return to_string(offset)+reg;
 		}
-
-		
-		FunctionFrame* ff	= dynamic_cast<FunctionFrame*>(parentFrame);
-		if (ff){
+		else{
 			return to_string(offset - initialFrameSize)+reg;
-		}
-		
-
-		ScopeFrame* sf		= dynamic_cast<ScopeFrame*>(parentFrame);
-
-		if (sf){
-			return sf->getAddress(name);
 		}
 	}
 
