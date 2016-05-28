@@ -6,6 +6,7 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "../TypeSystem/TypesTable.h"
 
 
 ParameterNode::ParameterNode(Symbol* parSym,Node *defaultValueNode,bool isDefault) {
@@ -43,8 +44,38 @@ void ParameterNode::print(ostream &os) {
 }
 
 bool ParameterNode::type_checking() {
-	this->nodeType = new TypeError("Not Implemented yet.");
-	return false;
+	if (strcmp(this->parSym->getVariableType(), "int") == 0) {
+		this->nodeType = TypesTable::getInstance()->getType(INTEGER_TYPE_ID);
+		return true;
+	}
+
+
+	if (strcmp(this->parSym->getVariableType(), "bool") == 0) {
+		this->nodeType = TypesTable::getInstance()->getType(BOOLEAN_TYPE_ID);
+		return true;
+	}
+
+
+	if (strcmp(this->parSym->getVariableType(), "float") == 0) {
+		this->nodeType = TypesTable::getInstance()->getType(FLOAT_TYPE_ID);
+		return true;
+	}
+
+	if (strcmp(this->parSym->getVariableType(), "string") == 0) {
+		this->nodeType = TypesTable::getInstance()->getType(STRING_TYPE_ID);
+		return true;
+	}
+
+	//check if a class is available:
+	string type = this->parSym->getVariableType(); // converting char* to string
+	this->nodeType = TypesTable::getInstance()->getClassType(type);
+
+	if (this->nodeType == nullptr) { // no type found
+		this->nodeType = new TypeError("Undefined");
+		return false;
+	}
+
+	return true;
 }
 
 #endif
