@@ -33,22 +33,24 @@ void AsmGenerator::write_data()
 
 void AsmGenerator::initialize_main()
 {
-	main_stream	<< ".text\n" 
-				<< ".globl main\n" 
-				<< "main:\n\n";
+	*current_stream	<< ".text\n" 
+					<< ".globl main\n" 
+					<< "main:\n\n";
 }
 
 void AsmGenerator::write_main()
 {
 	AsmGenerator::system_call(10);
-	AsmGenerator::add_instruction("\n\n\n\n");
+	AsmGenerator::add_instruction("\n\n\n\n");	
+	main_stream << current_stream->str();
+	current_stream->str("");
 	assembly_code_file << main_stream.str();
-	
 }
 
 void AsmGenerator::initialize_function(string function_name)
 {
-	current_stream = FUNCUTION_STREAM;
+	AsmGenerator::main_stream << AsmGenerator::current_stream->str();
+	AsmGenerator::current_stream->str("");
 	AsmGenerator::comment("Function:"+function_name+"---------------------");
 	AsmGenerator::add_label(function_name);
 }
@@ -56,7 +58,8 @@ void AsmGenerator::initialize_function(string function_name)
 void AsmGenerator::write_function()
 {
 	AsmGenerator::jr("ra");
-	current_stream = MAIN_STREAM;
+	AsmGenerator::functions_stream << AsmGenerator::current_stream->rdbuf();
+	AsmGenerator::current_stream->str("");
 }
 
 void AsmGenerator::write_functions()
@@ -66,6 +69,11 @@ void AsmGenerator::write_functions()
 	AsmGenerator::int_to_asci();
 	AsmGenerator::strcpy();
 	assembly_code_file << functions_stream.str();
+}
+
+void AsmGenerator::switchStream(stringstream *newStream)
+{
+	current_stream = newStream;
 }
 
 string AsmGenerator::store_global_int(string variable_name,int initial_value)
@@ -559,12 +567,7 @@ void AsmGenerator::f_greater_or_equal_operation(string dest_reg,string reg1,stri
 void AsmGenerator::add_instruction(string instruction)
 {
 	instruction += "\n";
-	if (current_stream == MAIN_STREAM)
-		main_stream << instruction;
-	if (current_stream == FUNCUTION_STREAM)
-		functions_stream << instruction;
-	if (current_stream == TEMP_STEARM)
-		temp_stream << instruction;
+	*current_stream << instruction;	
 }
 
 void AsmGenerator::add_data(string data_instruction)
@@ -588,12 +591,7 @@ void AsmGenerator::comment(string comment_message)
 void AsmGenerator::system_call(int system_call_code)
 {
 	AsmGenerator::li("v0",system_call_code);
-		if (current_stream == MAIN_STREAM)
-		main_stream << "syscall\n";
-	if (current_stream == FUNCUTION_STREAM)
-		functions_stream << "syscall\n";
-	if (current_stream == TEMP_STEARM)
-		temp_stream << "syscall\n";
+	*current_stream << "syscall\n";
 }
 
 void AsmGenerator::sbrk (string amount_reg,string returned_address_memory)
@@ -664,7 +662,7 @@ void AsmGenerator::function_prologue (int frame_size)
 	}
 	AsmGenerator::add_instruction("");
 
-	AsmGenerator::functions_stream << AsmGenerator::temp_stream.rdbuf();
+	
 }
 
 void AsmGenerator::function_epilogue(int frame_size)
@@ -804,12 +802,13 @@ void AsmGenerator::strcpy()
 ofstream AsmGenerator::assembly_code_file;
 stringstream AsmGenerator::data_stream;
 stringstream AsmGenerator::main_stream;
-stringstream AsmGenerator::temp_stream;
 stringstream AsmGenerator::functions_stream;
+
+stringstream *AsmGenerator::current_stream = new stringstream();
 
 map<string,int> AsmGenerator::strings_map;
 
-int AsmGenerator::current_stream			= MAIN_STREAM;
+int AsmGenerator::currentStreamID			= 0;
 int AsmGenerator::temp_label_count			= 0;
 int AsmGenerator::floats_count				= 0;
 int AsmGenerator::strings_count				= 0;

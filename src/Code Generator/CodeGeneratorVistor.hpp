@@ -14,7 +14,7 @@ public:
 
 	string continueLabel;
 
-	GlobalFrame *currentFrame;
+	Frame *currentFrame;
 
 	virtual void generate(ListNode *ast);
 

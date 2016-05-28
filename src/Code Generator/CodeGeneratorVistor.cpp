@@ -609,9 +609,13 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 
 	if (ifNode->body)					// else t0 (condition) equal 1 ==> control got to body node
 	{
+		currentFrame = new ScopeFrame(currentFrame);
 		AsmGenerator::comment("<If Statment Body Node");
 		ifNode->body->generate_code(this);
 		AsmGenerator::comment("If Statment Body Node/>");
+
+		currentFrame = currentFrame->parentFrame;
+
 	}
 	AsmGenerator::jump_label(endIf);	 // body completed got to finish label
 	AsmGenerator::add_label(else_label);
@@ -773,7 +777,12 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 	FunctionFrame* functionFrame = dynamic_cast<FunctionFrame*>(currentFrame);
 
-	AsmGenerator::current_stream = TEMP_STEARM;
+	stringstream *temp = new stringstream();
+	stringstream *prev;
+
+	prev = AsmGenerator::current_stream;
+
+	AsmGenerator::current_stream = temp;
 
 	for(auto &node : functionDefineNode->paramsList->nodes)
 	{
@@ -786,9 +795,11 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 	if (functionDefineNode->bodySts)
 		functionDefineNode->bodySts->generate_code(this);
 
-	AsmGenerator::current_stream = FUNCUTION_STREAM;
+	AsmGenerator::current_stream = prev;
 
-	AsmGenerator::function_prologue(functionFrame->stackSize);
+	AsmGenerator::function_prologue(functionFrame->frameSize);
+
+	*AsmGenerator::current_stream << temp->str();
 
 	AsmGenerator::add_label(returnLabel);
 
@@ -801,7 +812,7 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 	}
 
 
-	AsmGenerator::function_epilogue(functionFrame->stackSize);
+	AsmGenerator::function_epilogue(functionFrame->frameSize);
 	AsmGenerator::write_function();
 	AsmGenerator::comment("FunctionDefineNode/>");
 
@@ -906,9 +917,12 @@ void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 	currentFrame				= new FunctionFrame(currentFrame,classMethodNode->paramsList);
 	FunctionFrame* methodFrame  = dynamic_cast<FunctionFrame*>(currentFrame);
 
-	AsmGenerator::current_stream = TEMP_STEARM;
+	stringstream *temp = new stringstream();
+	stringstream *prev;
 
+	prev = AsmGenerator::current_stream;
 
+	AsmGenerator::current_stream = temp;
 		
 	for(auto &node : classMethodNode->paramsList->nodes)
 	{
@@ -921,9 +935,12 @@ void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 	if (classMethodNode->bodySts)
 		classMethodNode->bodySts->generate_code(this);
 
-	AsmGenerator::current_stream = FUNCUTION_STREAM;
 
-	AsmGenerator::function_prologue(methodFrame->stackSize);
+	AsmGenerator::current_stream = prev;
+
+	AsmGenerator::function_prologue(methodFrame->frameSize);
+
+	*AsmGenerator::current_stream << temp->str();
 
 	AsmGenerator::add_label(returnLabel);
 
@@ -936,7 +953,7 @@ void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 	}
 
 
-	AsmGenerator::function_epilogue(methodFrame->stackSize);
+	AsmGenerator::function_epilogue(methodFrame->frameSize);
 
 	AsmGenerator::write_function();
 

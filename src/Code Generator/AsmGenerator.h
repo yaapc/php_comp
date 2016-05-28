@@ -8,21 +8,19 @@
 #include <sstream>
 #include <map>
 
-#define MAIN_STREAM 0
-#define FUNCUTION_STREAM 1
-#define TEMP_STEARM 2 //used when generate code for function body (becase we need to know to mush local variables)
-
 using namespace std;
 
 class AsmGenerator{
 public:
 	static ofstream assembly_code_file;
+
 	static stringstream data_stream;
 	static stringstream main_stream;
-	static stringstream temp_stream;
 	static stringstream functions_stream;
 
-	static int current_stream;
+	static stringstream *current_stream;
+
+	static int currentStreamID;
 	static int temp_label_count;
 	static int floats_count;
 	static int strings_count;
@@ -47,6 +45,10 @@ public:
 	static void write_function();
 
 	static void write_functions();
+
+	static void switchStream(stringstream *);
+
+	static void switchPrevStream();
 	
 	static string store_global_int			(string variable_name,int initial_value);
 	static string store_global_float		(string variable_name,float initial_value);

@@ -2,10 +2,12 @@
 #include "../SymbolTable/Symbol.h"
 #include "AsmGenerator.h"
 
+
 GlobalFrame::GlobalFrame()
 {
 	parentFrame				= nullptr;
-	globalSize				= 0;
+	frameSize				= 0;
+	reg						= "($gp)";
 }
 
 void GlobalFrame::addLocal(Node *node)
@@ -16,15 +18,15 @@ void GlobalFrame::addLocal(Node *node)
 
 	//get the size of variable in Bytes
     int varSize  = node->getNodeType()->getSize();
-	locals[declarationNode->variable->getNameWithout()] = globalSize;
+	locals[declarationNode->variable->getNameWithout()] = frameSize;
 	
-	AsmGenerator::comment(declarationNode->variable->getNameWithout() + " in global scoop address "+to_string(globalSize)+" from gp");
+	AsmGenerator::comment(declarationNode->variable->getNameWithout() + " in global scoop address "+to_string(frameSize)+" from gp");
 
 	if (declarationNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID 
 			|| declarationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID
 			|| declarationNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
 		// int inital value = 0 , boolean inital value is false
-		AsmGenerator::sw("0",to_string(globalSize)+"($gp)");
+		AsmGenerator::sw("0",to_string(frameSize)+reg);
 	}
 
 	if (declarationNode->getNodeType()->getTypeId() == STRING_TYPE_ID){
@@ -36,24 +38,24 @@ void GlobalFrame::addLocal(Node *node)
 		// load the address of empty string in s0
 		AsmGenerator::la(s0,AsmGenerator::empty_string_address);
 		// store the address of empty string in variable address
-		AsmGenerator::sw(s0,to_string(globalSize)+"($gp)");
+		AsmGenerator::sw(s0,to_string(frameSize)+reg);
 		
 	}
 
 	if (declarationNode->getNodeType()->getTypeId() == CLASS_TYPE_ID){
 		varSize = 4; // pointer to object 
-		AsmGenerator::sw("0",to_string(globalSize)+"($gp)");
+		AsmGenerator::sw("0",to_string(frameSize)+reg);
 	}
 
 	// Move Global Pointer
-	globalSize += varSize;
+	frameSize += varSize;
 }
 
 string GlobalFrame::getAddress(string name)
 {
 	if (locals.find(name) != locals.end()) {
     	int offset = locals[name];
-		return to_string(offset)+"($gp)";
+		return to_string(offset)+reg;
 	}
 
 	if (parentFrame){
@@ -63,20 +65,115 @@ string GlobalFrame::getAddress(string name)
 	return nullptr;
 }
 
-FunctionFrame::FunctionFrame()
+ScopeFrame::ScopeFrame(Frame *parent)
 {
-	GlobalFrame();
-	paramtersOffset			= 0;
-	stackSize				= 0;
-	initialFrameSize		= 2*4;	// 4 for $fp and 4 for $ra
+	this->parentFrame		= parent;
+	reg						= parent->reg;
+	frameSize				= parent->frameSize;
+	initialFrameSize		= parent->initialFrameSize;
 }
 
-FunctionFrame::FunctionFrame(GlobalFrame *parent,ListNode *parametersNodes)
+void ScopeFrame::addLocal(Node *node)
+{
+	GlobalFrame* gf		= dynamic_cast<GlobalFrame*>(parentFrame);
+	if (gf){
+		DeclarationNode* declarationNode = dynamic_cast<DeclarationNode*>(node);
+		Variable* variableSymbol = declarationNode->variable;
+
+
+		//get the size of variable in Bytes
+		int varSize  = node->getNodeType()->getSize();
+		locals[declarationNode->variable->getNameWithout()] = frameSize;
+	
+		AsmGenerator::comment(declarationNode->variable->getNameWithout() + " in ??? scoop address "+to_string(frameSize)+" from "+reg);
+
+		if (declarationNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID 
+				|| declarationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID
+				|| declarationNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
+			// int inital value = 0 , boolean inital value is false
+			AsmGenerator::sw("0",to_string(frameSize)+reg);
+		}
+
+		if (declarationNode->getNodeType()->getTypeId() == STRING_TYPE_ID){
+			// String variables are allocated in heap but the address is stored in data
+			// the address is stored as int with .word type 
+			//string variable should be initialize to "" 
+			//I stored "" in .data with a name empty_string and all string variables use it
+			string s0 = "s0";
+			// load the address of empty string in s0
+			AsmGenerator::la(s0,AsmGenerator::empty_string_address);
+			// store the address of empty string in variable address
+			AsmGenerator::sw(s0,to_string(frameSize)+reg);
+		
+		}
+
+		if (declarationNode->getNodeType()->getTypeId() == CLASS_TYPE_ID){
+			varSize = 4; // pointer to object 
+			AsmGenerator::sw("0",to_string(frameSize)+reg);
+		}
+
+		// Move Global Pointer
+		frameSize += varSize;	
+		return;
+	}
+	FunctionFrame* ff	= dynamic_cast<FunctionFrame*>(parentFrame);
+
+	if (ff){
+		DeclarationNode* variableDeclarationNode = dynamic_cast<DeclarationNode*>(node);
+		int varSize = node->getNodeType()->getSize();
+		frameSize += varSize;
+		locals[variableDeclarationNode->variable->getNameWithout()] = -frameSize;
+		AsmGenerator::comment(variableDeclarationNode->variable->getNameWithout() + " in function scoop address "+to_string(-frameSize - initialFrameSize)+" from fp");
+		parentFrame->frameSize += varSize;
+		return;
+	}
+
+
+	ScopeFrame* sf		= dynamic_cast<ScopeFrame*>(parentFrame);
+	if (sf){
+		parentFrame->addLocal(node);
+	}
+
+}
+
+string ScopeFrame::getAddress(string name)
+{
+	if (locals.find(name) != locals.end()) {
+    	int offset = locals[name];
+
+		GlobalFrame* gf		= dynamic_cast<GlobalFrame*>(parentFrame);
+		if (gf){
+			return to_string(offset)+reg;
+		}
+
+		
+		FunctionFrame* ff	= dynamic_cast<FunctionFrame*>(parentFrame);
+		if (ff){
+			return to_string(offset - initialFrameSize)+reg;
+		}
+		
+
+		ScopeFrame* sf		= dynamic_cast<ScopeFrame*>(parentFrame);
+
+		if (sf){
+			return sf->getAddress(name);
+		}
+	}
+
+	if (parentFrame){
+		return parentFrame->getAddress(name);
+	}
+	cout << "This error should not be possible here, can not find symbol you're looking for." << endl;
+	return nullptr;
+}
+
+FunctionFrame::FunctionFrame(Frame *parent,ListNode *parametersNodes)
 {
 	paramtersOffset			= 0;
-	stackSize				= 0;
+	frameSize				= 0;
 	initialFrameSize		= 3*4;	// 4 for $fp and 4 for $ra and $a0
 	this->parentFrame		= parent;
+	reg						= "($fp)";
 	if (parametersNodes){
 		for(auto &node : parametersNodes->nodes)
 		{
@@ -97,9 +194,9 @@ void FunctionFrame::addLocal(Node *node)
 {
 	DeclarationNode* variableDeclarationNode = dynamic_cast<DeclarationNode*>(node);
 	int varSize = node->getNodeType()->getSize();
-	stackSize += varSize;
-	locals[variableDeclarationNode->variable->getNameWithout()] = -stackSize;
-	AsmGenerator::comment(variableDeclarationNode->variable->getNameWithout() + " in function scoop address "+to_string(-stackSize - initialFrameSize)+" from fp");
+	frameSize += varSize;
+	locals[variableDeclarationNode->variable->getNameWithout()] = -frameSize;
+	AsmGenerator::comment(variableDeclarationNode->variable->getNameWithout() + " in function scoop address "+to_string(-frameSize - initialFrameSize)+" from fp");
 }
 
 string FunctionFrame::getAddress(string name)
@@ -107,12 +204,12 @@ string FunctionFrame::getAddress(string name)
 
 	if (locals.find(name) != locals.end()) {
     	int offset = locals[name];
-		return to_string(offset - initialFrameSize)+"($fp)";
+		return to_string(offset - initialFrameSize)+reg;
     } 
 
 	if (arguments.find(name) != arguments.end()) {
 		int offset = arguments[name];
-        return to_string((paramtersOffset - 4) - offset)+"($fp)";
+        return to_string((paramtersOffset - 4) - offset)+reg;
     } 
 		
 	if (parentFrame) {
@@ -123,17 +220,8 @@ string FunctionFrame::getAddress(string name)
 	return nullptr;
 }
 
-ObjectFrame::ObjectFrame()
+ObjectFrame::ObjectFrame(Frame *parent,TypeClass *classType)
 {
-	GlobalFrame();
-	this->classType		= nullptr;
-	this->parentFrame	= nullptr;
-	objectsCount		= 0;
-}
-
-ObjectFrame::ObjectFrame(GlobalFrame *parent,TypeClass *classType)
-{
-	GlobalFrame();
 	this->classType		= classType;
 	this->parentFrame	= parent;
 	objectsCount		= 0;
@@ -170,7 +258,6 @@ void ObjectFrame::addFunction(Node *node)
 {
 
 }
-
 
 void ObjectFrame::newObject()
 {
@@ -254,7 +341,6 @@ void ObjectFrame::newObject()
 	}
 	AsmGenerator::comment("Fill Functions Table/>");
 }
-
 
 void ObjectFrame::fillFrame(TypeClass* typeClass)
 {

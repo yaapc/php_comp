@@ -8,29 +8,51 @@
 #include "../AST/FunctionDefineNode.hpp"
 #include "../TypeSystem/TypeClass.hpp"
 
-class GlobalFrame 
+class Frame {
+public:
+	virtual void addLocal(Node *) = 0;
+
+	virtual string getAddress(string) = 0;
+
+	map<string, int> locals;
+
+	Frame *parentFrame;
+
+	int frameSize;
+
+	int initialFrameSize;
+
+	string reg;
+};
+
+class GlobalFrame : public Frame
 {
 public:
-
 	GlobalFrame();
 
 	virtual void addLocal(Node *);
 
 	virtual string getAddress(string);
-
-	map<string, int> locals;
-
-	GlobalFrame *parentFrame;
-
-	int globalSize;
 };
 
-class FunctionFrame :public GlobalFrame
+class ScopeFrame : public Frame{
+public:
+	ScopeFrame();
+
+	ScopeFrame(Frame *);
+
+	virtual void addLocal(Node *);
+
+	virtual string getAddress(string);
+
+};
+
+class FunctionFrame :public Frame
 {
 public:
 	FunctionFrame();
 
-	FunctionFrame(GlobalFrame *,ListNode *);
+	FunctionFrame(Frame *,ListNode *);
 
 	virtual void addParameter(ParameterNode *);
 
@@ -41,16 +63,15 @@ public:
 	map<string, int> arguments;
 
 	int paramtersOffset;
-	int initialFrameSize;
-	int stackSize;   
+
 };
 
-class ObjectFrame : public GlobalFrame
+class ObjectFrame : public Frame
 {
 public:
 	ObjectFrame();
 
-	ObjectFrame(GlobalFrame *,TypeClass *);
+	ObjectFrame(Frame *,TypeClass *);
 
 	virtual void addLocal(Node *);
 
