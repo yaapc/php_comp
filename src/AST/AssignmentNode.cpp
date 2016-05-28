@@ -42,6 +42,18 @@ Node* AssignmentNode::optmize(OptimizationVistor *optimizationVistor)
 
 
   bool AssignmentNode::type_checking() {
+	  //check lhs and rhs for TypeErrors
+	  TypeError* typeError = dynamic_cast<TypeError*>(this->lhs->getNodeType());
+	  if (typeError != nullptr) {
+		  this->nodeType = typeError;
+		  return false;
+	  }
+	  typeError = dynamic_cast<TypeError*>(this->rhs->getNodeType());
+	  if (typeError != nullptr) {
+		  this->nodeType = typeError;
+		  return false;
+	  }
+	  
 	  VariableNode* leftVar = dynamic_cast<VariableNode*>(lhs);
 	  if(leftVar != nullptr){
 		  if (leftVar->variable->isConst) {
@@ -59,7 +71,7 @@ Node* AssignmentNode::optmize(OptimizationVistor *optimizationVistor)
 			  }
 		  }
 	  }
-	  
+
 	  //TODO: should be implemented with coercion, not equivelantTo !!
 	  if (lhs->getNodeType()->equivelantTo(rhs->getNodeType()->getTypeId())) {
 		  this->nodeType = lhs->getNodeType();
