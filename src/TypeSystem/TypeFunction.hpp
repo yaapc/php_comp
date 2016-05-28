@@ -27,6 +27,8 @@ public:
 	
 	static TypeExpression* buildMethod(ClassMethodNode* classMethodNode, Method* methodSym);
 
+	//used to build default constructors in TypeClass
+	static TypeExpression* buildConstructor(Method* methodSym);
 
 	/*
 	 * This method is responsable for looking for a given signature of @FunctionType in the @functionInstances.
@@ -35,6 +37,8 @@ public:
 	static TypeExpression* getInstance(string signature);
 
 	TypeExpression* getReturnTypeExpression(); // get the TypeExpression of the return value of the function
+
+	void setReturnTypeExpression(TypeExpression* returnType);
 
 	vector<TypeExpression*> getParamsTEs(); // get params Type Expressions
 

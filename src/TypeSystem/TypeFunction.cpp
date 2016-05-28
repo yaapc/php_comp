@@ -60,14 +60,16 @@ TypeExpression* TypeFunction::buildMethod(ClassMethodNode* methodNode, Method* m
 		typeFunction->addToParams(paramNode->getNodeType());
 	}
 
-	//extract return type
-	typeFunction->returnType = TypesTable::getInstance()->getType(methodSymbol->getReturnType());
+	//extract return type: 
+	//check if a returnType exists in the symbol (might be a constructor)
+	if (methodSymbol->getReturnType() != nullptr) {
+		typeFunction->returnType = TypesTable::getInstance()->getType(methodSymbol->getReturnType());
 
-	//if return type not found, return a TypeError
-	TypeError* errorReturnType = dynamic_cast<TypeError*>(typeFunction->returnType);
-	if (errorReturnType != nullptr)
-		return new TypeError("return type: " + string(methodSymbol->getReturnType()) + " is undefied.");
-
+		//if return type not found, return a TypeError
+		TypeError* errorReturnType = dynamic_cast<TypeError*>(typeFunction->returnType);
+		if (errorReturnType != nullptr)
+			return new TypeError("return type: " + string(methodSymbol->getReturnType()) + " is undefied.");
+	}
 
 	//everything is ok
 	//now let's resize according to the new params
@@ -75,6 +77,24 @@ TypeExpression* TypeFunction::buildMethod(ClassMethodNode* methodNode, Method* m
 
 	return typeFunction;
 }
+
+TypeExpression* TypeFunction::buildConstructor(Method* methodSym) {
+	//let's build the FunctionType:
+	TypeFunction* typeFunction = new TypeFunction(methodSym->functionSignatures, methodSym->getName()
+		, methodSym->getUniqueName());
+
+	//no params, so not adding any
+
+	//return type should be the TypeClass the constructor is for, so setting the returnType is moved
+	//to caller
+	
+	//everything is ok
+	//now let's resize according to the new params
+	typeFunction->resize();
+
+	return typeFunction;
+}
+
 
 TypeExpression* TypeFunction::getInstance(string signature) {
 	for (auto functionType : TypeFunction::functionInstances) {
@@ -103,6 +123,10 @@ TypeFunction::TypeFunction(vector<string> functionSignatures, string functionNam
 
 TypeExpression* TypeFunction::getReturnTypeExpression() {
 	return this->returnType;
+}
+
+void TypeFunction::setReturnTypeExpression(TypeExpression* returnType) {
+	this->returnType = returnType;
 }
 
 vector<TypeExpression*> TypeFunction::getParamsTEs() {

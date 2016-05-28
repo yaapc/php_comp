@@ -42,6 +42,7 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 
 
 	//extract methods' types and symbols from @classNode and append them to the TypeClass members as a @MethodWrapper
+	bool foundConstruct = false; // a found constructor flag, to prevent inserting a default one
 	for (auto &method : classNode->classMethodsNodes) {
 		//check if the method is overriding a base method
 		bool isOverriding = false;
@@ -58,17 +59,36 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 			}
 		}
 		if (!isOverriding) {
+			//check if a constructor
+			if (method->methodSym->isConstructor) {
+				foundConstruct = true;
+				//set return type of constructor to TypeClass we are building
+				dynamic_cast<TypeFunction*>(method->getNodeType())->setReturnTypeExpression(typeClass);
+			}
+
 			MethodWrapper* methodWrapper = new MethodWrapper(method->getNodeType(), method->methodSym);
 			typeClass->members.push_back(methodWrapper);
 			typeClass->methods.push_back(methodWrapper);
 		}
 	}
 
-	//and finally, add it to the TypeClasses we have:
+	//if no constructor defined, define a default one
+	if (!foundConstruct) {
+		Method* conSym = dynamic_cast<Method*>(classSymbol->getBodyScope()->getSymbolTable()->lookup(classSymbol->getName()));
+		TypeFunction* conType = dynamic_cast<TypeFunction*>(TypeFunction::buildConstructor(conSym));
+		conType->setReturnTypeExpression(typeClass);
+		MethodWrapper* methodWrapper = new MethodWrapper(conType, conSym);
+
+		typeClass->members.push_back(methodWrapper);
+		typeClass->methods.push_back(methodWrapper);
+	}
+
+
+	//and finally, add the typeClass we are building to the TypeClasses we have:
 	TypeClass::classInstances.push_back(typeClass);
 
 	//all members added, tell typeClass to resize itself:
-	typeClass->makeSize();	
+	typeClass->makeSize();
 
 	return typeClass;
 }
@@ -170,7 +190,9 @@ PropertyWrapper* TypeClass::lookupMembers(string memberStr) {
 MethodWrapper* TypeClass::lookupMembers(string memberStr, string methodSign) {
 	for (auto member : this->members) {
 		if (member->getName() == memberStr) {
-			return dynamic_cast<MethodWrapper*>(member);
+			for(auto sign : dynamic_cast<TypeFunction*>(member->getTypeExpr())->getSignatures())
+				if(this->getName()+ "_" + methodSign == sign)
+					return dynamic_cast<MethodWrapper*>(member);
 		}
 	}
 	return nullptr;
@@ -247,6 +269,7 @@ int PropertyWrapper::getWrapperType() {
 MethodWrapper::MethodWrapper(TypeExpression* type, Method* method) {
 	this->setTypeExpr(type);
 	this->methodSymbol = method;
+	this->returnType = dynamic_cast<TypeFunction*>(type)->getReturnTypeExpression();
 }
 
 string MethodWrapper::getUniqueName() {
@@ -267,4 +290,8 @@ int MethodWrapper::getWrapperType() {
 
 TypeFunction* MethodWrapper::getMethodType() {
 	return dynamic_cast<TypeFunction*>(this->getTypeExpr());
+}
+
+bool MethodWrapper::isDefaultContructor() {
+	return this->methodSymbol->isDefaultConstr;
 }

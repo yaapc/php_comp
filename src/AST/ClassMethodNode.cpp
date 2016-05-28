@@ -16,6 +16,7 @@ bool ClassMethodNode::type_checking() {
 	//TODO
 	//build the TypeFunction although the body of the function might have errors.
 	this->nodeType = TypesTable::getInstance()->buildFunctionType(this, this->methodSym);
+	this->bodySts->type_checking();
 	return true;
 }
 

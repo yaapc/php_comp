@@ -7,7 +7,8 @@ using namespace std;
 class NewNode : public Node {
 public:
 	string className;
-	ListNode* argumentsList;       // a list of parameter nodes
+	ListNode* argumentsList;  // a list of parameter nodes
+	MemberWrapper* constructorWr; // a MethodWrapper represents called constructor 
 
 	NewNode(Node* args,string className);
 
@@ -21,5 +22,11 @@ public:
 
 	virtual Node* optmize(OptimizationVistor *);
 
+	/*
+	*	generates a signature of the constructor called.
+	*	the default structure of our Function Signature is as follows:
+	*  func_$function_name$($type_name$,$type_name$...)
+	*/
+	string generateCallSignature();
 
 };

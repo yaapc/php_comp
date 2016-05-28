@@ -139,6 +139,8 @@ public:
 	
 	int getWrapperType();
 
+	bool isDefaultContructor();
+
 	TypeFunction* getMethodType();
 };
 

@@ -3,7 +3,7 @@
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
-
+#include <sstream>
 
 NewNode::NewNode(Node* args,string className) {
 	this->className		= className;
@@ -38,6 +38,8 @@ bool NewNode::type_checking() {
 		this->nodeType = new TypeError("Undefined");
 		return false;
 	}
+	//class found, but does it have the given constructor?
+	this->nodeType = this->nodeType->opDot(this->className, true, this->generateCallSignature(), this->constructorWr);
 	return true;
 }
 
@@ -56,3 +58,17 @@ Node* NewNode::optmize(OptimizationVistor *optimizationVistor)
 		  this->type_checking();
 	  return this->nodeType;
 }
+
+ string NewNode::generateCallSignature() {
+	 std::ostringstream os;
+	 bool firstParamFlag = true;
+	 os << "func_" << this->className << "(";
+	 for (auto &param : this->argumentsList->nodes) {
+		 if (!firstParamFlag)
+			 os << ",";
+		 os << TypeSystemHelper::getTypeName(param->getNodeType()->getTypeId());
+		 firstParamFlag = false;
+	 }
+	 os << ")";
+	 return os.str();
+ }
