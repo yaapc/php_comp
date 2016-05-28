@@ -123,7 +123,6 @@ void ScopeFrame::addLocal(Node *node)
 		frameSize += varSize;
 		locals[variableDeclarationNode->variable->getNameWithout()] = -frameSize;
 		AsmGenerator::comment(variableDeclarationNode->variable->getNameWithout() + " in function scoop address "+to_string(-frameSize - initialFrameSize)+" from fp");
-		parentFrame->frameSize += varSize;
 		return;
 	}
 

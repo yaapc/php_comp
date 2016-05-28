@@ -544,6 +544,8 @@ void CodeGneratorVistor::visit(ForNode *forNode)
 	string prevContinueLabel	= continueLabel;
 	continueLabel				= contineFor;
 
+	currentFrame = new ScopeFrame(currentFrame,isFunction);
+
 	AsmGenerator::comment("<For Initializer");
 	if (forNode->initializer){
 		forNode->initializer->generate_code(this);
@@ -584,6 +586,9 @@ void CodeGneratorVistor::visit(ForNode *forNode)
 
 	AsmGenerator::add_label(endFor);
 
+	int size				= currentFrame->frameSize;
+	currentFrame			= currentFrame->parentFrame;
+	currentFrame->frameSize = size;
 
 	returnLabel		= prevReturnLabel;
 	continueLabel	= prevContinueLabel;
@@ -635,7 +640,9 @@ void CodeGneratorVistor::visit(ListNode *listNode)
 		node->generate_code(this);
 	}
 	if (listNode->hasScopeFrame){
-		currentFrame = currentFrame->parentFrame;
+		int size				= currentFrame->frameSize;
+		currentFrame			= currentFrame->parentFrame;
+		currentFrame->frameSize = size;
 	}
 }
 

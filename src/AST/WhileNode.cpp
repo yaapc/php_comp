@@ -4,7 +4,10 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 
 
-WhileNode::WhileNode(Node *condition, Node *body) : condition(condition), body(body) {}
+WhileNode::WhileNode(Node *condition, Node *body) : condition(condition) {
+	this->body = body;
+	this->body->hasScopeFrame = true;
+}
 
  void WhileNode::print(ostream &os) {
     int self = int(this);

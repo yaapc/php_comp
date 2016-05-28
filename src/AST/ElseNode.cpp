@@ -6,6 +6,7 @@
 
 ElseNode::ElseNode(Node *node){
 	this->body = node;
+	this->body->hasScopeFrame = true;
 }
 
  void ElseNode::print(ostream &os) {
