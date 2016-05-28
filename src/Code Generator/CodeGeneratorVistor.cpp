@@ -609,13 +609,9 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 
 	if (ifNode->body)					// else t0 (condition) equal 1 ==> control got to body node
 	{
-		currentFrame = new ScopeFrame(currentFrame);
 		AsmGenerator::comment("<If Statment Body Node");
 		ifNode->body->generate_code(this);
 		AsmGenerator::comment("If Statment Body Node/>");
-
-		currentFrame = currentFrame->parentFrame;
-
 	}
 	AsmGenerator::jump_label(endIf);	 // body completed got to finish label
 	AsmGenerator::add_label(else_label);
@@ -631,9 +627,15 @@ void CodeGneratorVistor::visit(IfNode *ifNode)
 
 void CodeGneratorVistor::visit(ListNode *listNode)
 {
+	if (listNode->hasScopeFrame){
+		currentFrame = new ScopeFrame(currentFrame);
+	}
 	for (auto &node : listNode->nodes) {
 		if (node == nullptr) continue;
 		node->generate_code(this);
+	}
+	if (listNode->hasScopeFrame){
+		currentFrame = currentFrame->parentFrame;
 	}
 }
 

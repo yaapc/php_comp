@@ -7,6 +7,7 @@ using namespace std;
 
 class Node {
 public:
+	Node();
 
 	virtual void print(ostream& os);
 
@@ -17,6 +18,8 @@ public:
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	bool hasScopeFrame;
 
 protected:
 	TypeExpression* nodeType;

@@ -6,7 +6,11 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 
-IfNode::IfNode(Node *cond, Node *bod, Node *el) : condition(cond), body(bod), else_node(dynamic_cast<ElseNode*>(el)) {}
+IfNode::IfNode(Node *cond, Node *bod, Node *el) : condition(cond), else_node(dynamic_cast<ElseNode*>(el)) 
+{
+	body = bod;
+	body->hasScopeFrame = true;
+}
 
    void IfNode::print(ostream &os) {
     int self = int(this);

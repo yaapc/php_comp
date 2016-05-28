@@ -3,6 +3,10 @@
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/OptimizationVistor.hpp"
 
+Node::Node(){
+	hasScopeFrame = false;
+}
+
 void Node::print(ostream& os) {
 	os << int(this) << "[label = \"Node\"]" << endl;
 	}
