@@ -958,12 +958,14 @@ void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 
 	AsmGenerator::add_label(returnLabel);
 
-	if (functionType->getReturnTypeExpression()->getTypeId() != VOID_TYPE_ID) {
-		AsmGenerator::comment("Returning Value");
-		if (functionType->getReturnTypeExpression()->getTypeId() == FLOAT_TYPE_ID)
-			AsmGenerator::f_pop("f1");
-		else
-			AsmGenerator::pop("v1");
+	if (!methodSymbol->isConstructor){
+		if (functionType->getReturnTypeExpression()->getTypeId() != VOID_TYPE_ID) {
+			AsmGenerator::comment("Returning Value");
+			if (functionType->getReturnTypeExpression()->getTypeId() == FLOAT_TYPE_ID)
+				AsmGenerator::f_pop("f1");
+			else
+				AsmGenerator::pop("v1");
+		}
 	}
 
 
@@ -1071,8 +1073,136 @@ void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 void CodeGneratorVistor::visit(NewNode *newNode)
 {
 	AsmGenerator::comment("<NewNode");
+	string s0 = "s0",s1 = "s1",s2 = "s2";
+
+	TypeClass *classType = static_cast<TypeClass*>(newNode->getNodeType());
+
 	ObjectFrame* objectFrame = objectsFrames[newNode->className];
-		objectFrame->newObject();
+
+	// load the size of oject in $s0
+	AsmGenerator::li(s0,classType->getSize());
+
+	//syscall to allocate space for object, the address of new allocated memory $s1 (address of object)
+	AsmGenerator::sbrk(s0,s1);
+
+	AsmGenerator::move("a3",s1);
+
+	AsmGenerator::comment("<Fill Object Table");
+	for(auto &memberWrapper :classType->getMembers())
+	{
+		if (memberWrapper->getWrapperType() == MemberWrapper::PROPERTY_WRAPPER){
+
+			PropertyWrapper* propertyWrapper	= dynamic_cast<PropertyWrapper*>(memberWrapper);
+			DataMember* dataMember				= propertyWrapper->memberSymbol;
+			int propertyOffset					= objectFrame->locals[dataMember->getNameWithout()];
+			string propertyAddress				= to_string(propertyOffset)+"($" + s1 + ")"; // address in object
+
+			if (dataMember->isInit()){
+
+				if (propertyWrapper->getTypeExpr()->getTypeId() == INTEGER_TYPE_ID){
+					AsmGenerator::li(s2,dataMember->getInitialValue().int_val);
+					AsmGenerator::sw(s2,propertyAddress);
+				}
+
+				if (propertyWrapper->getTypeExpr()->getTypeId() == BOOLEAN_TYPE_ID){
+					AsmGenerator::li(s2,dataMember->getInitialValue().bool_val);
+					AsmGenerator::sw(s2,propertyAddress);
+				}
+
+				if (propertyWrapper->getTypeExpr()->getTypeId() == FLOAT_TYPE_ID){
+					AsmGenerator::f_li("f0",dataMember->getInitialValue().float_val);
+					AsmGenerator::ss("f0",propertyAddress);
+				}
+
+				if (propertyWrapper->getTypeExpr()->getTypeId() == STRING_TYPE_ID){
+					string t0 = "t0",t1 = "t1";
+
+					string stringAddress = AsmGenerator::store_string_literal(dataMember->getInitialValue().string_val);
+
+
+					AsmGenerator::la(t0,stringAddress);
+					
+					AsmGenerator::move("a0",t0); // copy address of string literal into a0
+					AsmGenerator::jal(AsmGenerator::strlen_functoion_name); // calculate length of string the result will be in $v1
+					AsmGenerator::add_instruction("addi $t0,$v1,1"); // length++;
+					AsmGenerator::sbrk(t0,s2);						// allcoate memory and store the address of newley crated memory in t0
+					AsmGenerator::sw(s2,propertyAddress);
+
+					AsmGenerator::la(t0,stringAddress);
+					AsmGenerator::move("a0",s2); // put the address of newly created memory in a0 (the parameter of strcpy function)
+					AsmGenerator::move("a1",t0); // put the address of string literal in a1 (the second parameter of strcpy function)
+					AsmGenerator::jal(AsmGenerator::strcpy_function_name);
+				}
+			}else{
+					
+				if (propertyWrapper->getTypeExpr()->getTypeId() == STRING_TYPE_ID){
+					// load the address of empty string in s0
+					AsmGenerator::la(s2,AsmGenerator::empty_string_address);
+					// store the address of empty string in variable address
+					AsmGenerator::sw(s2,propertyAddress);
+				}
+
+			}
+		}
+
+		if (memberWrapper->getWrapperType() == MemberWrapper::METHOD_WRAPPER){
+			MethodWrapper* methodWrapper	= dynamic_cast<MethodWrapper*>(memberWrapper);
+
+			int methodOffset				= objectFrame->locals[methodWrapper->getName()];
+			string methodLabel				= methodWrapper->getLabel();
+			string methodAddress			= to_string(methodOffset)+"($" + s1 + ")"; // address in object
+
+			AsmGenerator::la(s2,methodLabel);	//load the address of method
+			AsmGenerator::sw(s2,methodAddress); //store the address of method in object
+		}
+	}
+	AsmGenerator::comment("Fill Object Table/>");
+
+	AsmGenerator::comment("<Calling Constructor");
+
+	MethodWrapper * constructorWr	= static_cast<MethodWrapper*>(newNode->constructorWr);
+	TypeFunction *functionType		= static_cast<TypeFunction*>(constructorWr->getTypeExpr());
+
+	AsmGenerator::comment("<ArgumentList");
+	if (newNode->argumentsList)
+		newNode->argumentsList->generate_code(this);
+	AsmGenerator::comment("ArgumentList/>");
+
+	int arguemtnsSize	= newNode->argumentsList->nodes.size();
+	int parameterSize	= functionType->getParamsTEs().size();
+	int diffSize		= parameterSize - arguemtnsSize;	// number of enabeld default parameters
+
+	//Make some space for enabeld default parameters
+	for(int i = 0 ; i < diffSize ; i++)
+	{
+		string t0 = "t0";
+		//we will store special value -1005 (maybe special) to know that this parameter is default and it's value should be
+		//taken from function decleration
+		AsmGenerator::li(t0,-1005);
+		AsmGenerator::push(t0);
+	}
+
+	string constractorName = constructorWr->getLabel();
+
+
+	AsmGenerator::jal(constractorName);
+
+	if (newNode->argumentsList){
+		AsmGenerator::comment("<Clear Arguments");
+		int argumentsSize = 0; // in bytes 
+		for(auto &node : newNode->argumentsList->nodes){
+			//TODO replace fixed size with size from type System
+			int argSize = 4;
+			argumentsSize+= argSize;
+		}
+		AsmGenerator::add_instruction("addi $sp, $sp, " + to_string(argumentsSize));
+		AsmGenerator::comment("Clear Arguments/>");
+	}
+
+
+	AsmGenerator::comment("Calling Constructor/>");
+
+	AsmGenerator::push("a3");
 	AsmGenerator::comment("NewNode/>");	
 }
 

@@ -78,8 +78,6 @@ public:
 
 	virtual string getAddress(string);
 
-	virtual void newObject();
-
 	virtual void fillFrame(TypeClass*);
 
 	int objectsCount;
