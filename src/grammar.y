@@ -1048,8 +1048,15 @@ non_empty_parameter_list:
 		{
 			//**chain symbols in the list and pass it:
 			pl.log("non_empty_parameter_list with parameter");
-			$<r.symbol>3->node = $<r.symbol>1;
-			$<r.symbol>$ = $<r.symbol>3;
+			//TODO: encapsulate
+			Symbol* walker = $<r.symbol>1;
+			Symbol* stalker = walker;
+			while(walker != nullptr){
+			    stalker = walker;
+				walker = walker->node;
+			}
+			stalker->node = $<r.symbol>3;
+			$<r.symbol>$ = $<r.symbol>1;
 
 			ListNode* list = dynamic_cast<ListNode*>($<r.node>1);
 			list->add_node($<r.node>3);
@@ -1067,8 +1074,15 @@ non_empty_default_parameter_list:
 	| non_empty_default_parameter_list ',' default_parameter
 		{
 			//**chain symbols in the list and pass it:
-			$<r.symbol>3->node = $<r.symbol>1;
-			$<r.symbol>$ = $<r.symbol>3;
+			//TODO: encapsulate
+			Symbol* walker = $<r.symbol>1;
+			Symbol* stalker = walker;
+			while(walker != nullptr){
+			    stalker = walker;
+				walker = walker->node;
+			}
+			stalker->node = $<r.symbol>3;
+			$<r.symbol>$ = $<r.symbol>1;
 
 			ListNode* list = dynamic_cast<ListNode*>($<r.node>1);
 			list->add_node($<r.node>3);
@@ -1079,8 +1093,15 @@ non_empty_default_parameter_list:
 			/* ERROR RULE */
 			errorRec.errQ->enqueue($<r.line_no>3,$<r.col_no>3,"default parameters must appear only at the end","");
 			//**chain symbols in the list and pass it:
-			$<r.symbol>3->node = $<r.symbol>1;
-			$<r.symbol>$ = $<r.symbol>3;
+			//TODO: encapsulate
+			Symbol* walker = $<r.symbol>1;
+			Symbol* stalker = walker;
+			while(walker != nullptr){
+			    stalker = walker;
+				walker = walker->node;
+			}
+			stalker->node = $<r.symbol>3;
+			$<r.symbol>$ = $<r.symbol>1;
 
 			ListNode* list = dynamic_cast<ListNode*>($<r.node>1);
 			list->add_node($<r.node>3);
