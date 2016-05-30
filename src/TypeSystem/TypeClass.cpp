@@ -42,7 +42,7 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 
 
 	//extract methods' types and symbols from @classNode and append them to the TypeClass members as a @MethodWrapper
-	bool foundConstruct = false; // a found constructor flag, to prevent inserting a default one
+	bool foundConstruct = false; // a constructor flag, to prevent inserting a default one
 	for (auto &method : classNode->classMethodsNodes) {
 		//check if the method is overriding a base method
 		bool isOverriding = false;
@@ -53,6 +53,7 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 					//TODO: Overriding with the concept of Default values
 					//TODO: type check assigning weaker privileges 
 					baseMember = new MethodWrapper(method->getNodeType(), method->methodSym);
+					typeClass->methods.push_back(dynamic_cast<MethodWrapper*>(baseMember));
 					isOverriding = true;
 					break;//out of typeClass->members
 				}
@@ -188,10 +189,22 @@ PropertyWrapper* TypeClass::lookupMembers(string memberStr) {
 }
 
 MethodWrapper* TypeClass::lookupMembers(string memberStr, string methodSign) {
-	for (auto member : this->members) {
+	//first search current class methods:
+	for (auto member : this->methods) {
 		if (member->getName() == memberStr) {
 			for(auto sign : dynamic_cast<TypeFunction*>(member->getTypeExpr())->getSignatures())
 				if(this->getName()+ "_" + methodSign == sign)
+					return dynamic_cast<MethodWrapper*>(member);
+		}
+	}
+
+	//if not found in current class methods,
+	//then search in super class methods:
+	TypeClass* parent = dynamic_cast<TypeClass*>(this->parentClass);
+	for (auto member : this->members) {
+		if (member->getName() == memberStr) {
+			for (auto sign : dynamic_cast<TypeFunction*>(member->getTypeExpr())->getSignatures())
+				if (parent->getName() + "_" + methodSign == sign)
 					return dynamic_cast<MethodWrapper*>(member);
 		}
 	}
