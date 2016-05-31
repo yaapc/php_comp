@@ -5,6 +5,8 @@
 #include <map>
 using namespace std;
 
+extern bool GC;
+
 class CodeGneratorVistor
 {
 public:
@@ -48,5 +50,6 @@ public:
 	virtual void visit(ContinueNode 	*continueNode);
 
 	//Helper Methods
-	string getClassMemberAddress(ClassCallNode*,string);
+	string	getClassMemberAddress(ClassCallNode*,string);
+	void	collectRefVariablesGarbage(Frame *);
 };

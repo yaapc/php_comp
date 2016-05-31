@@ -16,6 +16,8 @@ public:
 
 	map<string, int> locals;
 
+	vector<string> objectsLocals;
+
 	Frame *parentFrame;
 
 	int frameSize;

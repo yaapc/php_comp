@@ -55,7 +55,8 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 		}
 	}
 
-	if (assignmentNode->getNodeType()->getTypeId() == STRING_TYPE_ID){
+	if (assignmentNode->getNodeType()->getTypeId() == STRING_TYPE_ID)
+	{
 		// String literals are stored in data and in variableNode we pushed the address of this literals
 		string s0 = "s0";
 		string s1 = "s1";			 
@@ -83,7 +84,8 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 		{
 			string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
 			AsmGenerator::sw(t0,variableAddress);	   // store the addrees in variable address
-		}else
+		}
+		else
 		if (ClassCallNode *classCallNode = dynamic_cast<ClassCallNode*>(assignmentNode->lhs)){
 			string probertyAddress = getClassMemberAddress(classCallNode,s0);
 			AsmGenerator::sw(t0,probertyAddress);
@@ -95,9 +97,16 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 		AsmGenerator::move("a0",t0); // put the address of newly created memoty in a0 (the parameter of strcpy function)
 		AsmGenerator::move("a1",s1); // put the address of string literal in a1 (the second parameter of strcpy function)
 		AsmGenerator::jal(AsmGenerator::strcpy_function_name);
+
+		if (GC){
+
+			AsmGenerator::move("a1","a0");
+			AsmGenerator::jal(AsmGenerator::increase_rc_function_name);
+		}
 	}
 
-	if (assignmentNode->getNodeType()->getTypeId() == CLASS_TYPE_ID){
+	if (assignmentNode->getNodeType()->getTypeId() == CLASS_TYPE_ID)
+	{
 		string s0 = "s0";
 		string s1 = "s1";			 
 		AsmGenerator::pop(s1);
@@ -105,12 +114,38 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 		//s0 should contain the address of object variale
 		//s1 should contain the address of object in heap
 	
-		if (VariableNode *variableNode = dynamic_cast<VariableNode*>(assignmentNode->lhs)){
+		if (VariableNode *variableNode = dynamic_cast<VariableNode*>(assignmentNode->lhs))
+		{
 			string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
 			AsmGenerator::sw(s1,variableAddress);
+			if (GC)
+			{
+
+				// If we are in scoopeFrame and i have an assigment
+				ScopeFrame *scopeFrame = dynamic_cast<ScopeFrame*>(currentFrame);
+				if (scopeFrame){
+					scopeFrame->objectsLocals.push_back(variableNode->variable->getNameWithout());
+				}
+
+				string endEditingRC = "GC_Finish_RC_Editing_"	+ to_string(AsmGenerator::temp_label_count++);
+
+				AsmGenerator::beq(s0,s1,endEditingRC);
+
+				AsmGenerator::move("a1",s1);
+				AsmGenerator::jal(AsmGenerator::increase_rc_function_name);
+
+				AsmGenerator::move("a1",s0);
+				AsmGenerator::jal(AsmGenerator::decrease_rc_function_name);
+
+
+				AsmGenerator::add_instruction("beq $v0,$0,"+endEditingRC); // after decrease if v0 != 0 ( I know that object is freed)
+				AsmGenerator::sw("0",variableAddress);						// so i put null in its variabless
+
+				AsmGenerator::add_label(endEditingRC);
+			}
 		}else{
 			cout << "left hand side should be Variable node" << endl;
-		}
+		}	
 	}
 
 
@@ -640,6 +675,9 @@ void CodeGneratorVistor::visit(ListNode *listNode)
 		node->generate_code(this);
 	}
 	if (listNode->hasScopeFrame){
+		if (GC){
+			collectRefVariablesGarbage(currentFrame);
+		}
 		int size				= currentFrame->frameSize;
 		currentFrame			= currentFrame->parentFrame;
 		currentFrame->frameSize = size;
@@ -988,6 +1026,9 @@ void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 	string s1 = "s1";
 	string probertyAddress	= getClassMemberAddress(classCallNode,thisReg);
 
+	//if thisReg = null go to null ptre exeption handler and stop the program.
+	AsmGenerator::add_instruction("beq $"+thisReg+",$0,"+AsmGenerator::nullptr_exception_function_name);
+
 	if (!classCallNode->isMethodCall){
 		AsmGenerator::comment("<MemberProperty");
 
@@ -1232,3 +1273,21 @@ string CodeGneratorVistor::getClassMemberAddress(ClassCallNode*  classCallNode,s
 	objectFrame->thisReg		= thisReg;
 	return objectFrame->getAddress(classCallNode->propertyString);
 }
+
+void CodeGneratorVistor::collectRefVariablesGarbage(Frame *frame)
+{
+	//Loop over ref variables in this frame and performe decrease
+	for (string varName : frame->objectsLocals) 
+	{
+		string varAddress = frame->getAddress(varName);
+		AsmGenerator::lw("a1",varAddress); //store address of ojbect in a0
+		AsmGenerator::jal(AsmGenerator::decrease_rc_function_name);
+
+		
+		string endLebel = "GC_Finish_decress_"	+ to_string(AsmGenerator::temp_label_count++);
+		AsmGenerator::add_instruction("beq $v0,$0,"+endLebel);		// after decrease if v0 != 0 ( I know that object is freed)
+		AsmGenerator::sw("0",varAddress);						// so i put null in its variabless
+		AsmGenerator::add_label(endLebel);
+	}
+}
+

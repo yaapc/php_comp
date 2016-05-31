@@ -8,6 +8,9 @@
 #include <sstream>
 #include <map>
 
+extern bool GC;
+extern bool withComments;
+
 using namespace std;
 
 class AsmGenerator{
@@ -30,8 +33,6 @@ public:
 	static map<string,int> strings_map;
 
 	
-
-public:
 	static void initialize_file(); 
 	static void write_file();
 
@@ -138,6 +139,15 @@ public:
 
 	//pre defined functions
 
+	static string increase_rc_function_name;
+	static void increase_rc				();
+
+	static string decrease_rc_function_name;
+	static void decrease_rc				();
+
+	static string my_sbrk_function_name;
+	static void my_sbrk();
+
 	static string strconcat_functoion_name;
 	static void strconcat				();
 
@@ -150,8 +160,14 @@ public:
 	static string strcpy_function_name;
 	static void   strcpy			();
 
+	static string nullptr_exception_function_name;
+	static void nullptr_exception_handler	();
+
 	static string new_line_address;
 	static string empty_string_address;
+	static string head_GL_address; // address of first block of grabage list
+	static string tail_GL_address; // address of first block of grabage list
+	static string nullptr_message_address;
 };
 
 

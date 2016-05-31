@@ -3,6 +3,7 @@
 #include <string> 
 
 
+
 void AsmGenerator::initialize_file()
 {
 	assembly_code_file.open("src/Code Generator/AssemblyCode.asm");
@@ -21,8 +22,15 @@ void AsmGenerator::write_file()
 void AsmGenerator::initialize_data()
 {
 	data_stream		<< ".data\n";
-	data_stream		<< new_line_address	 << ": .asciiz \"\\n\" \n";
-	data_stream		<< empty_string_address << ": .asciiz \"\" \n";
+	data_stream		<< new_line_address				<< ": .asciiz \"\\n\" \n";
+	data_stream		<< empty_string_address			<< ": .asciiz \"\" \n";
+	data_stream		<< nullptr_message_address		<< ": .asciiz \"Null Pointer Exception.\"\n";
+
+	if (GC){
+		data_stream		<< head_GL_address << ": .word 0 \n";
+		data_stream		<< tail_GL_address << ": .word 0 \n";
+	}
+
 	data_stream		<< "\n"; 
 }
 
@@ -68,6 +76,12 @@ void AsmGenerator::write_functions()
 	AsmGenerator::strlen();
 	AsmGenerator::int_to_asci();
 	AsmGenerator::strcpy();
+	AsmGenerator::nullptr_exception_handler();
+	if (GC){
+		AsmGenerator::increase_rc();
+		AsmGenerator::decrease_rc();
+		AsmGenerator::my_sbrk();
+	}
 	assembly_code_file << functions_stream.str();
 }
 
@@ -578,6 +592,8 @@ void AsmGenerator::add_data(string data_instruction)
 
 void AsmGenerator::comment(string comment_message)
 {
+	if (!withComments)
+		return;
 	stringstream cmt(comment_message);
 	string line;
 	while (getline(cmt, line))
@@ -596,9 +612,17 @@ void AsmGenerator::system_call(int system_call_code)
 
 void AsmGenerator::sbrk (string amount_reg,string returned_address_memory)
 {
-	AsmGenerator::move("a0",amount_reg);
-	AsmGenerator::system_call(9);
-	AsmGenerator::move(returned_address_memory,"v0");
+	if (GC)
+	{
+		AsmGenerator::move("a0",amount_reg);
+		AsmGenerator::jal(AsmGenerator::my_sbrk_function_name);
+		AsmGenerator::move(returned_address_memory,"v0");
+	}else
+	{
+		AsmGenerator::move("a0",amount_reg);
+		AsmGenerator::system_call(9);
+		AsmGenerator::move(returned_address_memory,"v0");
+	}
 }
 
 void AsmGenerator::print_string(string reg_string_address)
@@ -643,13 +667,13 @@ void AsmGenerator::f_move(string dest_reg,string source_reg)
 	AsmGenerator::add_instruction(c);
 }
 
-/*
-*	save $fp
-*	save $ra
-*	reserve space for local variables
-*/
 void AsmGenerator::function_prologue (int frame_size)
 {
+	/*
+	*	save $fp
+	*	save $ra
+	*	reserve space for local variables
+	*/
 	AsmGenerator::comment("Callee Prologue:");
 	AsmGenerator::add_instruction("\tsubu $sp, $sp, 12");
 	AsmGenerator::add_instruction("\tsw $fp, 0($sp)");
@@ -799,6 +823,109 @@ void AsmGenerator::strcpy()
 	AsmGenerator::write_function();
 }
 
+void AsmGenerator::increase_rc()
+{
+	//argument $a0 address of object
+	// return nothing
+	AsmGenerator::initialize_function(increase_rc_function_name);
+	AsmGenerator::push("t0");
+	AsmGenerator::add_instruction("beq $a1,$0,increase_rc_end");
+	AsmGenerator::add_instruction("blt $a1,0x10040000,increase_rc_end");
+	AsmGenerator::add_instruction("lw $t0,-4($a1)");
+	AsmGenerator::add_instruction("addi $t0,$t0,1");
+	AsmGenerator::add_instruction("sw $t0,-4($a1)");
+	AsmGenerator::add_instruction("increase_rc_end:");
+	AsmGenerator::pop("t0");
+	AsmGenerator::write_function();
+}
+
+void AsmGenerator::decrease_rc()
+{
+	//argument	$a1 address of object
+	// return	$v0 1 object has freed , 0 hasn't freed.
+	AsmGenerator::initialize_function(decrease_rc_function_name);
+
+	AsmGenerator::push("t0");
+	AsmGenerator::li("v0",0);											// store 0 in v1 (so far the object hasn't been freed).
+	AsmGenerator::add_instruction("beq $a1,$0,decrease_rc_end"); // if object is already null return.
+	AsmGenerator::add_instruction("blt $a1,0x10040000,decrease_rc_end"); // if object address is not in heap boundary also return.
+	AsmGenerator::add_instruction("lw $t0,-4($a1)");					// get the ref count
+	AsmGenerator::add_instruction("addi $t0,$t0,-1");					// ref count --
+	AsmGenerator::add_instruction("sw $t0,-4($a1)");					// store new value of ref count
+
+	AsmGenerator::add_instruction("bne $t0,$0,decrease_rc_end");		// if the new value of ref count != 0  return.
+
+	//Freeing the object			
+	AsmGenerator::move("t0","a1");									// else the object must be freed.
+	AsmGenerator::add_instruction("addi $t0,$a1,-12");				// get the address of extras (next,size,rc).
+
+	AsmGenerator::sw("0","0($t0)");									// make the ref count value = 0
+	AsmGenerator::sw("0","8($t0)");									// make the next address of block is null
+	
+
+	AsmGenerator::lw("t1",tail_GL_address);							// get the address of last block in GL 
+
+	AsmGenerator::add_instruction("beq $t1,$0,Empty_Tail_Block");	// if the GL is empty go to label 
+	AsmGenerator::sw("t0","0($t1)");								// store object block address in next of last block 
+	AsmGenerator::sw("t0",tail_GL_address);							// make the last block address point to the object block
+	AsmGenerator::li("v0",1);										// v1 = 1 so we know the object has been freed.
+	AsmGenerator::add_instruction("b decrease_rc_end");				// return
+	
+
+	AsmGenerator::add_label("Empty_Tail_Block");
+	AsmGenerator::sw("t0",tail_GL_address);							// store the address of object block in garbage list
+	AsmGenerator::sw("t0",head_GL_address);
+	AsmGenerator::li("v0",1);										// v1 = 1 so we know the object has been freed.
+
+
+	AsmGenerator::add_label("decrease_rc_end");
+	AsmGenerator::pop("t0");
+	AsmGenerator::write_function();
+}
+
+void AsmGenerator::my_sbrk()
+{
+	//argument $a0 address of object
+	// return address new space in $v0
+	
+	AsmGenerator::initialize_function(my_sbrk_function_name);
+		AsmGenerator::lw("t0",head_GL_address);					// load first Garbage Block address 
+		AsmGenerator::add_label("Begin_Loop_GL");	
+			AsmGenerator::beq("t0","0","Allocate_New_Memory"); // if garbage Block is Null (Either first sbrk Or we are in the last block of GL), So Allocate new Memory
+			AsmGenerator::lw("t1","4($t0)");					// else get the size of garbage block
+			AsmGenerator::add_instruction("ble $a1,$t1,Found_Grabage_Block"); // if the size is enough, reuse this block
+			AsmGenerator::lw("t0","0($t0)");					 // else get the next garbage block address to go back to loop begin
+		AsmGenerator::add_instruction("b Begin_Loop_GL");
+
+
+		AsmGenerator::add_label("Found_Grabage_Block"); // if we got to here, we have a garbage block we can reuse it t0 is the address of the block
+			AsmGenerator::add_instruction("addi $t0,$t0,12");
+			AsmGenerator::move("v1","t0");
+			AsmGenerator::add_instruction("b End_Sbrk_label");
+
+		AsmGenerator::add_label("Allocate_New_Memory");
+			AsmGenerator::add_instruction("addi $a0,$a0,12"); // make space for (next,size,reference count)
+			AsmGenerator::system_call(9);
+			AsmGenerator::add_instruction("addi $v0,$v0,12"); // make the object address beging after 12 (next,size,rc)
+			AsmGenerator::add_instruction("addi $a0,$a0,-12"); // revert the increment in size
+			AsmGenerator::sw("0","-12($v0)");  //initial value for reference count = 0 
+			AsmGenerator::sw("a0","-8($v0)");  //initial value for size  
+			AsmGenerator::sw("0", "-4($v0)"); //initial value for next null 
+		AsmGenerator::add_label("End_Sbrk_label");
+
+
+	AsmGenerator::write_function();
+}
+
+void AsmGenerator::nullptr_exception_handler()
+{
+	AsmGenerator::initialize_function(nullptr_exception_function_name);
+	AsmGenerator::la("t0",nullptr_message_address);
+	AsmGenerator::print_string("t0");
+	AsmGenerator::system_call(10);
+	AsmGenerator::write_function();
+}
+
 ofstream AsmGenerator::assembly_code_file;
 stringstream AsmGenerator::data_stream;
 stringstream AsmGenerator::main_stream;
@@ -815,11 +942,18 @@ int AsmGenerator::strings_count				= 0;
 int AsmGenerator::if_temp_label_count		= 0;
 int AsmGenerator::else_temp_label_count		= 0;
 
-string AsmGenerator::strconcat_functoion_name		= "strconcat";
-string AsmGenerator::strlen_functoion_name			= "strlen";
-string AsmGenerator::int_to_asci_functoion_name		= "ItoA";
-string AsmGenerator::strcpy_function_name			= "strcpy";
+string AsmGenerator::strconcat_functoion_name			= "strconcat";
+string AsmGenerator::strlen_functoion_name				= "strlen";
+string AsmGenerator::int_to_asci_functoion_name			= "ItoA";
+string AsmGenerator::strcpy_function_name				= "strcpy";
+string AsmGenerator::increase_rc_function_name			= "increase_rc";
+string AsmGenerator::decrease_rc_function_name			= "decrease_rc";
+string AsmGenerator::my_sbrk_function_name				= "my_sbrk";
+string AsmGenerator::nullptr_exception_function_name	= "nullPtr_handle";
+string AsmGenerator::global_label						= "global_";
+string AsmGenerator::new_line_address					= "new_line";
+string AsmGenerator::nullptr_message_address			= "nullptr_message";
+string AsmGenerator::empty_string_address				= "empty_string";
+string AsmGenerator::head_GL_address					= "head_GL";
+string AsmGenerator::tail_GL_address					= "tail_GL";
 
-string AsmGenerator::global_label					= "global_";
-string AsmGenerator::new_line_address				= "new_line";
-string AsmGenerator::empty_string_address			= "empty_string";

@@ -105,12 +105,16 @@ void ScopeFrame::addLocal(Node *node)
 			AsmGenerator::la(s0,AsmGenerator::empty_string_address);
 			// store the address of empty string in variable address
 			AsmGenerator::sw(s0,to_string(frameSize)+reg);
-		
+			
+			objectsLocals.push_back(declarationNode->variable->getNameWithout());
 		}
 
 		if (declarationNode->getNodeType()->getTypeId() == CLASS_TYPE_ID){
 			varSize = 4; // pointer to object 
 			AsmGenerator::sw("0",to_string(frameSize)+reg);
+			//instead of add objects local here, i add it in assigment node so 
+			//we can add also outer objects ref which being created with new operation in this scope
+			//objectsLocals.push_back(declarationNode->variable->getNameWithout());
 		}
 
 		// Move Global Pointer

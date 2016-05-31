@@ -14,8 +14,6 @@
 #include <Windows.h>
 #include <unistd.h>
 
-#define SIMULATOR 1
-
 using namespace std;
 extern void initSymbolsParser();
 extern SymbolsParser * symbolsParser;
@@ -27,6 +25,9 @@ CodeGneratorVistor codeGeneratorVistor;
 OptimizationVistor optimizationVistor;
 
 void print_ast(Node *root, std::ostream &os,string name);
+
+bool GC				= 1;
+bool withComments	= 1;
 
 int main(int argc, char** argv) {
 	initSymbolsParser();
@@ -76,15 +77,12 @@ int main(int argc, char** argv) {
 	//Generate code AST
 	codeGeneratorVistor.generate(tree);
 
-	if (SIMULATOR == 1){
-		system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");
-	}
 
-	if (SIMULATOR == 2){
-		system("QtSpim.exe -a ./src/\"Code Generator\"/mips1.asm");
-	}
+	system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");
 
-	cout << "compilation done" << endl;
+
+
+	cout << "\n\ncompilation done" << endl;
 	return 0;
 }
 
