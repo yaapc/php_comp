@@ -32,6 +32,8 @@ Node* ReturnNode::optmize(OptimizationVistor *optimizationVistor)
 
 bool ReturnNode::type_checking() {
 	//TODO: check if return TypeExpr is the same as the Return Type of the function defined
-	this->nodeType = this->returned_node->getNodeType();
+	if (returned_node){
+		this->nodeType = this->returned_node->getNodeType();
+	}
 	return true;
 }

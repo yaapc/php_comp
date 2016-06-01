@@ -44,7 +44,8 @@ string FunctionCallNode::generateCallSignature() {
 	std::ostringstream os;
 	bool firstParamFlag = true;
 	os << "func_" << this->name << "(";
-	for (auto &param : this->argumentsList->nodes) {
+	ListNode *argsList = static_cast<ListNode*>(argumentsList);
+	for (auto &param : argsList->nodes) {
 		if (!firstParamFlag)
 			os << ",";		
 		os << TypeSystemHelper::getTypeName(param->getNodeType()->getTypeId());

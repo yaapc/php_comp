@@ -6,7 +6,7 @@
 class FunctionCallNode : public Node {
 public:
 	string name;
-	ListNode* argumentsList;
+	Node* argumentsList;
 	TypeFunction* functionType;
 
 
