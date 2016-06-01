@@ -1329,6 +1329,11 @@ void CodeGneratorVistor::visit(ContinueNode *continueNode)
 	AsmGenerator::comment("ContinueNode/>");
 }
 
+void CodeGneratorVistor::visit(StaticCallNode 	*staticCallNode)
+{
+
+}
+
 string CodeGneratorVistor::getClassMemberAddress(ClassCallNode*  classCallNode,string thisReg)
 {
 	TypeClass *typeClass		= dynamic_cast<TypeClass*>(classCallNode->object->getNodeType());

@@ -48,6 +48,7 @@ public:
 	virtual void visit(NewNode			*newNode);
 	virtual void visit(BreakNode 		*breakNode);
 	virtual void visit(ContinueNode 	*continueNode);
+	virtual void visit(StaticCallNode 	*staticCallNode);
 
 	//Helper Methods
 	string	getClassMemberAddress(ClassCallNode*,string);

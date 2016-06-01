@@ -378,3 +378,8 @@ Node* OptimizationVistor::visit(ContinueNode *continueNode)
 }
 
 
+Node* OptimizationVistor::visit(StaticCallNode 	*staticCallNode)
+{
+	return staticCallNode;
+}
+

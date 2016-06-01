@@ -35,4 +35,5 @@ public:
 	virtual Node* visit(NewNode			*newNode);
 	virtual Node* visit(BreakNode		*breakNode);
 	virtual Node* visit(ContinueNode	*contineNode);
+	virtual Node* visit(StaticCallNode 	*staticCallNode);
 };

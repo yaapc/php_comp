@@ -16,6 +16,8 @@ public:
 
 	virtual bool type_checking();
 	
-	virtual void generate_code();
+	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
+
+	virtual Node* optmize(OptimizationVistor *);
 
 };
