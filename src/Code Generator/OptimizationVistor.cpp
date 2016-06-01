@@ -25,57 +25,167 @@ Node* OptimizationVistor::visit(BinaryOperationNode *binaryOperationNode)
 
 	if (lhs && rhs){
 
-		if (binaryOperationNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID){
-			if (*(binaryOperationNode->op_type) == '+'){
-				return new ScalarNode(lhs->value.int_val + rhs->value.int_val);
+			if (binaryOperationNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID)
+			{
+				if (*(binaryOperationNode->op_type) == '+'){
+					return new ScalarNode(lhs->value.int_val + rhs->value.int_val);
+				}
+
+				if (*(binaryOperationNode->op_type) == '-'){
+					return new ScalarNode(lhs->value.int_val - rhs->value.int_val);
+				}
+
+				if (*(binaryOperationNode->op_type) == '*'){
+					return new ScalarNode(lhs->value.int_val * rhs->value.int_val);
+				}
+
+				if (*(binaryOperationNode->op_type) == '/'){
+					return new ScalarNode(lhs->value.int_val / rhs->value.int_val);
+				}
+
+				if (*(binaryOperationNode->op_type) == '%'){
+					return new ScalarNode(lhs->value.int_val % rhs->value.int_val);
+				}
 			}
 
-			if (*(binaryOperationNode->op_type) == '-'){
-				return new ScalarNode(lhs->value.int_val - rhs->value.int_val);
-			}
 
-			if (*(binaryOperationNode->op_type) == '*'){
-				return new ScalarNode(lhs->value.int_val * rhs->value.int_val);
-			}
+			if (binaryOperationNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
 
-			if (*(binaryOperationNode->op_type) == '/'){
-				return new ScalarNode(lhs->value.int_val / rhs->value.int_val);
-			}
+				float lFloat;
+				float rFloat;
+				if (lhs->getNodeType()->getTypeId() == INTEGER_TYPE_ID){
+					lFloat	= (float)lhs->value.int_val;
+					rFloat	= rhs->value.float_val;
+				}else
+				if (rhs->getNodeType()->getTypeId() == INTEGER_TYPE_ID){
+					lFloat	= lhs->value.float_val;
+					rFloat	= (float)rhs->value.int_val;
+				}
+				else{
+					lFloat	= lhs->value.float_val;
+					rFloat	= rhs->value.float_val;
+				}
+			
+				if (*(binaryOperationNode->op_type) == '+')
+					return new ScalarNode(lFloat + rFloat);
 
-			if (*(binaryOperationNode->op_type) == '%'){
-				return new ScalarNode(lhs->value.int_val % rhs->value.int_val);
-			}
-		}
+				if (*(binaryOperationNode->op_type) == '-')
+					return new ScalarNode(lFloat - rFloat);
 
+				if (*(binaryOperationNode->op_type) == '*')
+					return new ScalarNode(lFloat * rFloat);
 
-		if (binaryOperationNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
-			if (*(binaryOperationNode->op_type) == '+'){
-				return new ScalarNode(lhs->value.float_val + rhs->value.float_val);
-			}
-
-			if (*(binaryOperationNode->op_type) == '-'){
-				return new ScalarNode(lhs->value.float_val - rhs->value.float_val);
-			}
-
-			if (*(binaryOperationNode->op_type) == '*'){
-				return new ScalarNode(lhs->value.float_val * rhs->value.float_val);
-			}
-
-			if (*(binaryOperationNode->op_type) == '/'){
-				return new ScalarNode(lhs->value.float_val / rhs->value.float_val);
-			}
-		}
-
+				if (*(binaryOperationNode->op_type) == '/')
+					return new ScalarNode(lFloat / rFloat);
+			}	
+	
 		
-		if (binaryOperationNode->getNodeType()->getTypeId() == STRING_TYPE_ID){
+			if (binaryOperationNode->getNodeType()->getTypeId() == STRING_TYPE_ID)
+			{
 
-			if (*(binaryOperationNode->op_type) == '+'){
-				return new ScalarNode(lhs->value.string_val + rhs->value.string_val);
+				if (*(binaryOperationNode->op_type) == '+')
+				{
+
+					string lString;
+					string rString;
+					if (lhs->getNodeType()->getTypeId() == INTEGER_TYPE_ID){
+						lString	= to_string(lhs->value.int_val);
+						rString	= rhs->value.string_val;
+					}else
+					if (rhs->getNodeType()->getTypeId() == INTEGER_TYPE_ID){
+						lString	= lhs->value.string_val;
+						rString	= to_string(rhs->value.int_val);
+					}else
+					if (lhs->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
+						lString	= to_string(lhs->value.bool_val);
+						rString	= rhs->value.string_val;
+					}else
+					if (rhs->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
+						lString	= lhs->value.string_val;
+						rString	= to_string(rhs->value.bool_val);
+					}
+					else{
+						lString	= lhs->value.string_val;
+						rString	= rhs->value.string_val;
+					}	
+					return new ScalarNode(lString + rString);
+				}
 			}
-		}
 
-		
-	}
+			if (binaryOperationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
+
+				if (lhs->getNodeType()->getTypeId() == INTEGER_TYPE_ID && 
+					rhs->getNodeType()->getTypeId() == INTEGER_TYPE_ID){
+			
+					if (strcmp(binaryOperationNode->op_type, ">") == 0)
+						return new ScalarNode(lhs->value.int_val > rhs->value.int_val);
+
+					if (strcmp(binaryOperationNode->op_type, "<") == 0)
+						return new ScalarNode(lhs->value.int_val < rhs->value.int_val);
+
+					if (strcmp(binaryOperationNode->op_type, ">=") == 0)
+						return new ScalarNode(lhs->value.int_val >= rhs->value.int_val);
+
+					if (strcmp(binaryOperationNode->op_type, "<=") == 0)
+						return new ScalarNode(lhs->value.int_val <= rhs->value.int_val);
+
+					if (strcmp(binaryOperationNode->op_type, "==") == 0)
+						return new ScalarNode(lhs->value.int_val == rhs->value.int_val);
+
+					if (strcmp(binaryOperationNode->op_type, "!=") == 0)
+						return new ScalarNode(lhs->value.int_val != rhs->value.int_val);
+
+				}
+
+				if (lhs->getNodeType()->getTypeId() == FLOAT_TYPE_ID || 
+					rhs->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
+
+					float lFloat;
+					float rFloat;
+					if (lhs->getNodeType()->getTypeId() == INTEGER_TYPE_ID){
+						lFloat	= (float)lhs->value.int_val;
+						rFloat	= rhs->value.float_val;
+					}else
+					if (rhs->getNodeType()->getTypeId() == INTEGER_TYPE_ID){
+						lFloat	= lhs->value.float_val;
+						rFloat	= (float)rhs->value.int_val;
+					}
+					else{
+						lFloat	= lhs->value.float_val;
+						rFloat	= rhs->value.float_val;
+					}			
+
+					if (strcmp(binaryOperationNode->op_type, ">") == 0)
+						return new ScalarNode(lFloat > rFloat);
+
+					if (strcmp(binaryOperationNode->op_type, "<") == 0)
+						return new ScalarNode(lFloat < rFloat);
+
+					if (strcmp(binaryOperationNode->op_type, ">=") == 0)
+						return new ScalarNode(lFloat >= rFloat);
+
+					if (strcmp(binaryOperationNode->op_type, "<=") == 0)
+						return new ScalarNode(lFloat <= rFloat);
+
+					if (strcmp(binaryOperationNode->op_type, "==") == 0)
+						return new ScalarNode(lFloat == rFloat);
+
+					if (strcmp(binaryOperationNode->op_type, "!=") == 0)
+						return new ScalarNode(lFloat != rFloat);
+
+				}
+
+				if (lhs->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID && 
+					rhs->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
+
+					if (strcmp(binaryOperationNode->op_type, "&&") == 0)
+						return new ScalarNode(lhs->value.bool_val && rhs->value.bool_val);
+
+					if (strcmp(binaryOperationNode->op_type, "||") == 0)
+						return new ScalarNode(lhs->value.bool_val || rhs->value.bool_val);			
+				}
+			}
+		}		
 	return binaryOperationNode;
 }
 
@@ -209,6 +319,8 @@ Node* OptimizationVistor::visit(WhileNode *whileNode)
 
 Node* OptimizationVistor::visit(FunctionCallNode *functionCallNode)
 {
+	if (functionCallNode->argumentsList)
+		functionCallNode->argumentsList = functionCallNode->argumentsList->optmize(this);
 	return functionCallNode;
 }
 
