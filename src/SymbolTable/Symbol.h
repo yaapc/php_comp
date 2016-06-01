@@ -73,6 +73,8 @@ public:
 
 	string getNameWithout();
 
+	string getUniqeName();
+
 	string toString();
 private:
 	char* variableType;
@@ -225,6 +227,8 @@ public:
 private:
 	int accessModifier;
 	int storageModifier;
+
+	static int staticCounter;
 
 	Value initialValue;
 };

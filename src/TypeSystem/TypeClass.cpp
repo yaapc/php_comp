@@ -287,6 +287,10 @@ PropertyWrapper::PropertyWrapper(TypeExpression* te, DataMember* dm){
 }
 
 string PropertyWrapper::getUniqueName() {
+	return this->memberSymbol->getUniqeName();
+}
+
+string PropertyWrapper::getNameWithout(){
 	return this->memberSymbol->getNameWithout();
 }
 

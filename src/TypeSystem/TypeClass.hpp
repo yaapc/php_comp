@@ -127,6 +127,7 @@ public:
 	string getUniqueName();
 	string getName();
 	int getWrapperType();
+	string getNameWithout();
 
 	bool isStatic();
 	bool isConst();

@@ -111,8 +111,13 @@ int Variable::getId() {
 }
 
 string Variable::getNameWithout() {
-	string uniqueName = this->getName();
-	return uniqueName.erase(0,1);
+	string nameAsString = this->getName();
+	return nameAsString.erase(0,1);
+}
+
+string Variable::getUniqeName() {
+	string nameAsStringWithoutDollar = this->getNameWithout();
+	return nameAsStringWithoutDollar + "_" + to_string(id);
 }
 /*
 =========================================
@@ -356,6 +361,8 @@ void Class::setOuterClass(Class* outerClass){
 DATA MEMBER:
 ============================================
 */
+int DataMember::staticCounter = 0;
+
 DataMember::DataMember(char * name, bool isInit, int colNo, int lineNo) : Variable(name, DATA_MEMBER, isInit, colNo, lineNo){
 	this->accessModifier	= PRIVATE_ACCESS;
 	this->storageModifier	= DEFAULT_STORAGE;
@@ -381,8 +388,10 @@ int DataMember::getStorageModifier(){
 
 void DataMember::setStorageModifier(int storageModifier){
 	this->storageModifier = storageModifier;
-	if (storageModifier == STATIC_STORAGE)
+	if (storageModifier == STATIC_STORAGE){
 		this->isStatic = true;
+		setId(staticCounter++);
+	}
 	else if (storageModifier == FINAL_STATIC_STORAGE) {
 		this->isStatic = true;
 		this->isConst = true;

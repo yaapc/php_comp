@@ -253,7 +253,7 @@ void ObjectFrame::fillFrame(TypeClass* typeClass)
 		{
 			PropertyWrapper* propertyWrapper = dynamic_cast<PropertyWrapper*>(memberWrapper);
 			
-			string propertyName		= propertyWrapper->getUniqueName(); // TODO replace getUniqueName with !!
+			string propertyName		= propertyWrapper->getNameWithout();
 			int propertySize		= propertyWrapper->getSize();
 			locals[propertyName]	= memberOffset;
 			memberOffset			= memberOffset + propertySize;
