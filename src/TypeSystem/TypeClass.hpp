@@ -60,7 +60,7 @@ public:
 
 	string getName();
 
-	bool equivelantTo(int secondTypeId);
+	int equivelantTo(int secondTypeId);
 
 	PropertyWrapper* lookupMembers(string memberStr);
 

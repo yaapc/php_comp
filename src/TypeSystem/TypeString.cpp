@@ -30,11 +30,10 @@ int TypeString::getTypeId() {
 	return STRING_TYPE_ID;
 }
 
-bool TypeString::equivelantTo(int secondTypeId) {
-	if (secondTypeId == STRING_TYPE_ID || 
-		secondTypeId == INTEGER_TYPE_ID	||
-		secondTypeId == FLOAT_TYPE_ID)
-		return true;
-
-	return false;
+int TypeString::equivelantTo(int secondTypeId) {
+	if (secondTypeId == STRING_TYPE_ID)
+		return STRING_TYPE_ID;
+	if (secondTypeId == INTEGER_TYPE_ID)
+		return STRING_TYPE_ID;
+	return ERROR_TYPE_ID;
 }

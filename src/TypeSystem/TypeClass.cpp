@@ -246,11 +246,11 @@ void TypeClass::makeSize() {
 	this->size = size + parentSize;
 }
 
-bool TypeClass::equivelantTo(int secondTypeId){
+int TypeClass::equivelantTo(int secondTypeId){
 	//TODO
 	if(this->getTypeId() == secondTypeId)
-		return true;
-	return false;	
+		return secondTypeId;
+	return ERROR_TYPE_ID;	
 }
 
 vector<MemberWrapper*> TypeClass::getMembers() {
