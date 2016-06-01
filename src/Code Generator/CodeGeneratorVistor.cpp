@@ -10,7 +10,6 @@
 void CodeGneratorVistor::generate(ListNode *ast)
 {
 	currentFrame	= new GlobalFrame();
-	symbolIDS		= 0;
 	AsmGenerator::initialize_file();
 	ast->generate_code(this);
 	AsmGenerator::write_file();
@@ -660,7 +659,9 @@ void CodeGneratorVistor::visit(ForNode *forNode)
 	}
 	AsmGenerator::comment("For Body/>");
 
-
+	if (GC){
+		collectRefVariablesGarbage(currentFrame);
+	}
 
 	AsmGenerator::add_label(continueLabel);
 
@@ -934,7 +935,6 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 void CodeGneratorVistor::visit(ParameterNode *parameterNode)
 {
-	parameterNode->parSym->setId(symbolIDS++);
 	AsmGenerator::comment("<ParameterNode " + parameterNode->parSym->getNameWithout());
 
 	// if paramter is default we have to load it value and store it in proper address
@@ -1005,9 +1005,12 @@ void CodeGneratorVistor::visit(ClassDefineNode	*classDefineNode)
 
 void CodeGneratorVistor::visit(ClassMemNode	*classMemNode)
 {
-	//TODO generate code for inilizeing
 	string memberName = classMemNode->getMemSymbol()->getName();
 	AsmGenerator::comment("<Declare member "+memberName+" />");
+
+	if (classMemNode->getMemSymbol()->isStatic){
+		currentFrame->addStatic(classMemNode);
+	}
 }
 
 void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
@@ -1331,7 +1334,36 @@ void CodeGneratorVistor::visit(ContinueNode *continueNode)
 
 void CodeGneratorVistor::visit(StaticCallNode 	*staticCallNode)
 {
+	PropertyWrapper *staticProperty = staticCallNode->propWrapper;
+	AsmGenerator::comment("<Static Variable Node "+staticProperty->getName());
+	string s0 = "s0";
 
+	string variableAddress = currentFrame->getAddress(staticProperty->getUniqueName());
+
+	if (staticProperty->getTypeExpr()->getTypeId() == INTEGER_TYPE_ID	|| 
+		staticProperty->getTypeExpr()->getTypeId()  == BOOLEAN_TYPE_ID){
+		// In primitive types we care about value so we have to load it
+		AsmGenerator::lw(s0,variableAddress); 		//Get value from memory address and put the value in s0
+		AsmGenerator::push(s0);
+	}
+
+	if (staticProperty->getTypeExpr()->getTypeId()  == STRING_TYPE_ID){
+		AsmGenerator::lw(s0,variableAddress); 		//Get memory address and put in s0
+		AsmGenerator::push(s0);
+
+	}
+		
+	if (staticProperty->getTypeExpr()->getTypeId()  == FLOAT_TYPE_ID){
+		//float literals are stored in data so we only load the address of those literals
+		AsmGenerator::ls("f0",variableAddress);	//Get value from memory address and put the value in s0	
+		AsmGenerator::f_push("f0");
+	}
+
+	if (staticProperty->getTypeExpr()->getTypeId() == CLASS_TYPE_ID){
+		AsmGenerator::lw(s0,variableAddress); 		//Get memory address and put in s0
+		AsmGenerator::push(s0);
+	}
+	AsmGenerator::comment("Static Variable Node/>");
 }
 
 string CodeGneratorVistor::getClassMemberAddress(ClassCallNode*  classCallNode,string thisReg)

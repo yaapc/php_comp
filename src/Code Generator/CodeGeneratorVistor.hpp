@@ -10,8 +10,6 @@ extern bool GC;
 class CodeGneratorVistor
 {
 public:
-	int symbolIDS;
-
 	string returnLabel;
 
 	string continueLabel;
