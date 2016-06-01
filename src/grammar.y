@@ -1708,10 +1708,10 @@ static_array_pair:
 ;
 
 variable:
-	  object_access
-	| base_variable
-	| function_call 
-	| new_expr_array_deref
+	  object_access { pl.log("object_access");}
+	| base_variable { pl.log("base_variable");}
+	| function_call { pl.log("function_call");}
+	| new_expr_array_deref { pl.log("new_expr_array_deref");}
 ;
 
 new_expr_array_deref:
@@ -1745,17 +1745,27 @@ variable_without_objects:
 ;
 
 base_variable:
-		variable_without_objects
+	  variable_without_objects { pl.log("variable_without_objects");}
 	| static_property
 ;
 
 static_property:
-		class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '$' reference_variable
-	| static_property_with_arrays
+	  class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '$' reference_variable {
+			/* This rule parses the following:
+			    NAME::$$staticProperty
+				PHP MY ASS!!
+			*/
+			pl.log("static_property");			
+		}
+	| static_property_with_arrays { pl.log("static_property_with_arrays"); }
 ;
 
 static_property_with_arrays:
-		class_name_or_var T_PAAMAYIM_NEKUDOTAYIM T_VARIABLE
+	  class_name_or_var T_PAAMAYIM_NEKUDOTAYIM T_VARIABLE {
+			pl.log("static_property_with_arrays", 0);
+			pl.log($<r.str>3);
+			$<r.node>$ = new StaticCallNode($<r.str>1, $<r.str>3);
+	  }
 	| class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '$' open_par expr close_par
 	| static_property_with_arrays '[' dim_offset ']'
 	| static_property_with_arrays open_par expr close_par
@@ -1765,8 +1775,9 @@ reference_variable:
 		reference_variable '[' dim_offset ']'
 	| reference_variable open_par expr close_par
 	| T_VARIABLE {
-		$<r.symbol>$ = symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1, $<r.line_no>1, $<r.col_no>1);
-		$<r.node>$ = new VariableNode($<r.symbol>$); }
+			$<r.symbol>$ = symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1, $<r.line_no>1, $<r.col_no>1);
+			$<r.node>$ = new VariableNode($<r.symbol>$); 
+	    }
 	| '$' open_par expr close_par
 ;
 

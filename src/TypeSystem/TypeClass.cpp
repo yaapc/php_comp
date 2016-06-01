@@ -31,13 +31,19 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 		typeClass->addToMembers(member);
 	}
 
-	//extract members' types and symbols from @classNode and append them to the TypeClass members, as a @PropertyWrapper
+	//extract properties' types and symbols from @classNode and append them to the TypeClass properties, as a @PropertyWrapper
 	for (int i = 0; i < classNode->classMemNodes.size(); i++) {
 		PropertyWrapper* prop = 
 			new PropertyWrapper(classNode->classMemNodes.at(i)->getNodeType(),
 				classNode->classMemNodes.at(i)->getMemSymbol());
-		typeClass->addToMembers(prop);
-		typeClass->addToProps(prop);
+		//if it's a static property, then just add it to @staticProps
+		if (prop->isStatic()) {
+			typeClass->staticProps.push_back(prop);
+		}
+		else {
+			typeClass->addToMembers(prop);
+			typeClass->addToProps(prop);
+		}
 	}	
 
 
@@ -162,6 +168,20 @@ TypeExpression* TypeClass::opDot(string memberStr, bool isMethod, string methodS
 	}
 }
 
+PropertyWrapper* TypeClass::getStaticProperty(string className, string propName) {
+	for (auto &_class : TypeClass::classInstances) {
+		if (_class->getName() == className) {
+			for (auto &prop : _class->staticProps) {
+				if (prop->getName() == propName)
+					return prop;
+			}
+			return nullptr;
+		}
+	}
+	return nullptr;
+}
+
+
 int TypeClass::getSize() {
 	return this->size; 
 }
@@ -278,6 +298,13 @@ int PropertyWrapper::getWrapperType() {
 	return MemberWrapper::PROPERTY_WRAPPER;
 }
 
+bool PropertyWrapper::isStatic() {
+	return this->memberSymbol->isStatic;
+}
+
+bool PropertyWrapper::isConst() {
+	return this->memberSymbol->isConst;
+}
 
 MethodWrapper::MethodWrapper(TypeExpression* type, Method* method) {
 	this->setTypeExpr(type);

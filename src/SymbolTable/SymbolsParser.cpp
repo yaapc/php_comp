@@ -307,7 +307,7 @@ Scope* SymbolsParser::createNewScope(){
 }
 
 void SymbolsParser::checkModifiersAndSet(DataMember *mem, int* modifiers, int modCount){
-	int mods[] = { 0, 0 }; // the modifiers that will be assigned the first will be the access modifier, the second is the storage.
+	int mods[] = { 0, 0 }; // the modifiers that will be assigned, the first will be the access modifier, the second is the storage.
 	
 	if (modCount == 0){ // no modifiers
 		mem->setAccessModifier(PRIVATE_ACCESS); // the default access

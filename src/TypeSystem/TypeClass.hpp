@@ -44,6 +44,9 @@ public:
 	*/
 	static TypeExpression* getInstance(string name);
 
+	static PropertyWrapper* getStaticProperty(string name, string propName);
+
+
 	TypeExpression* opDot(string propertyStr, bool isMethod, string methodSign, MemberWrapper*& memWrapper);
 
 	int getSize();
@@ -71,6 +74,9 @@ private:
 	vector<MethodWrapper*> methods;
 	/* a vector of methods and properties of this TypeClass*/
 	vector<MemberWrapper*> members;
+	/* a vector of static properties of this TypeClass */
+	vector<PropertyWrapper*> staticProps;
+
 	/* a TypeClass of the parent of this TypeClass*/
 	TypeExpression* parentClass;
 
@@ -121,6 +127,9 @@ public:
 	string getUniqueName();
 	string getName();
 	int getWrapperType();
+
+	bool isStatic();
+	bool isConst();
 };
 
 

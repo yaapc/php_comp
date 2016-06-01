@@ -23,3 +23,4 @@
 #include "NewNode.hpp"
 #include "BreakNode.hpp"
 #include "ContinueNode.hpp"
+#include "StaticCallNode.hpp"

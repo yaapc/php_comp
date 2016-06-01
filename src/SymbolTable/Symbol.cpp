@@ -381,6 +381,14 @@ int DataMember::getStorageModifier(){
 
 void DataMember::setStorageModifier(int storageModifier){
 	this->storageModifier = storageModifier;
+	if (storageModifier == STATIC_STORAGE)
+		this->isStatic = true;
+	else if (storageModifier == FINAL_STATIC_STORAGE) {
+		this->isStatic = true;
+		this->isConst = true;
+	}
+	else if (storageModifier == FINAL_STORAGE)
+		this->isConst = true;
 }
 
 
