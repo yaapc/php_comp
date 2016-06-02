@@ -42,6 +42,12 @@ Node* AssignmentNode::optmize(OptimizationVistor *optimizationVistor)
 
 
   bool AssignmentNode::type_checking() {
+	  if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
+		  return true; // pass it this time
+	  }
+
+	  this->lhs->type_checking();
+	  this->rhs->type_checking();
 	  //check lhs and rhs for TypeErrors
 	  TypeError* typeError = dynamic_cast<TypeError*>(this->lhs->getNodeType());
 	  if (typeError != nullptr) {

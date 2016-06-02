@@ -5,7 +5,7 @@
 
 //static defination
 vector<TypeClass*> TypeClass::classInstances;
-
+vector<ClassDefineNode*> TypeClass::errorTypeClasses;
 
 TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSymbol) {
 	
@@ -21,8 +21,10 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 	//get base class TypeClass
 	TypeExpression* instance = TypeClass::getInstance(classSymbol->getInhertedFrom());
 	//check if base class exists
-	if (instance->getTypeId() == ERROR_TYPE_ID) // it's a TypeError
+	if (instance->getTypeId() == ERROR_TYPE_ID) { // it's a TypeError
+		TypeClass::errorTypeClasses.push_back(classNode);
 		return instance; //cancel creating of type 
+	}
 
 	TypeClass* baseType = dynamic_cast<TypeClass*>(instance);
 	typeClass->parentClass = baseType;
@@ -145,7 +147,7 @@ TypeExpression* TypeClass::opDot(string memberStr, bool isMethod, string methodS
 		PropertyWrapper* prop = this->lookupMembers("$" + memberStr);
 		if (prop == nullptr) { // property not found
 			memWrapper = nullptr;
-			return new TypeError(this->getName() + " doesn't have property " + memberStr);
+			return new TypeError(this->getName() + " doesn't have property " + memberStr + ", remember properties don't need $ to access them.");
 		}
 		else {
 			//TODO: check access context and what so ever....
@@ -167,6 +169,27 @@ TypeExpression* TypeClass::opDot(string memberStr, bool isMethod, string methodS
 		}
 	}
 }
+
+bool TypeClass::tryReDefine() {
+	int first, later;
+	first = later = TypeClass::errorTypeClasses.size();
+	while (true) {
+		later = first;
+		for (int i = 0; i < TypeClass::errorTypeClasses.size(); i++) {
+			auto& classDefineNode = TypeClass::errorTypeClasses.at(i);
+			if (classDefineNode->type_checking()) {
+				TypeClass::errorTypeClasses.erase(errorTypeClasses.begin() + i);
+				first--;
+			}
+		}		
+		if (first == later)
+			break;
+	}
+	if (first == 0)
+		return true;
+	return false;
+}
+
 
 PropertyWrapper* TypeClass::getStaticProperty(string className, string propName) {
 	for (auto &_class : TypeClass::classInstances) {

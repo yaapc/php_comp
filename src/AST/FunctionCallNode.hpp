@@ -1,8 +1,10 @@
 #pragma once 
 #include "Node.hpp"
 #include "ListNode.hpp"
-#include "../TypeSystem/TypeFunction.hpp"
+//#include "../TypeSystem/TypeFunction.hpp"
 
+
+class TypeFunction;
 class FunctionCallNode : public Node {
 public:
 	string name;

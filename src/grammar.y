@@ -1776,7 +1776,7 @@ reference_variable:
 	| reference_variable open_par expr close_par
 	| T_VARIABLE {
 			$<r.symbol>$ = symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1, $<r.line_no>1, $<r.col_no>1);
-			$<r.node>$ = new VariableNode($<r.symbol>$); 
+			$<r.node>$ = new VariableNode(symbolsParser->getCurrentScope(), $<r.str>1); 
 	    }
 	| '$' open_par expr close_par
 ;

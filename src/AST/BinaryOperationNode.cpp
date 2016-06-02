@@ -3,6 +3,8 @@
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "../TypeSystem/TypeError.hpp"
+
 
 BinaryOperationNode::BinaryOperationNode(char* op, Node *lft, Node *rgt) : left(lft), right(rgt), op_type(op) {
 	  nodeType = nullptr;
@@ -38,7 +40,17 @@ Node* BinaryOperationNode::optmize(OptimizationVistor *optimizationVistor)
 }
 
  bool BinaryOperationNode::type_checking() {
-		if (strcmp(op_type, "==") == 0){
+		if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
+			//this for second passes, if the current node is free of TypeError no need to re type_check it
+			this->right->type_checking();
+			this->left->type_checking();
+			return true; // pass it this time
+		}
+	 
+		this->right->type_checking();
+		this->left->type_checking();
+
+	    if (strcmp(op_type, "==") == 0){
 			this->nodeType = left->getNodeType()->opEqual(this->right->getNodeType()->getTypeId());
 			return true;
 		}

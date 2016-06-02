@@ -4,9 +4,11 @@
 #include "TypesTable.h"
 #include "TypeError.hpp"
 #include <string>
+#include "../AST/FunctionCallNode.hpp"
 
 //static declaration
 vector<TypeFunction*> TypeFunction::functionInstances;
+vector<FunctionCallNode*> TypeFunction::errorFunctionCalls;
 
 TypeExpression* TypeFunction::buildFunction(FunctionDefineNode* functionNode, Function* functionSymbol) {
 
@@ -96,13 +98,14 @@ TypeExpression* TypeFunction::buildConstructor(Method* methodSym) {
 }
 
 
-TypeExpression* TypeFunction::getInstance(string signature) {
+TypeExpression* TypeFunction::getInstance(string signature, FunctionCallNode* funcCallNode) {
 	for (auto functionType : TypeFunction::functionInstances) {
 		for (auto &functionSign : functionType->getSignatures()) {
 			if(functionSign == signature)
 				return functionType;
 		}	
 	}
+	TypeFunction::errorFunctionCalls.push_back(funcCallNode);
 	return new TypeError("function with signature: " + signature + " is undefined.");
 }
 
@@ -175,5 +178,25 @@ bool TypeFunction::compareSignatures(vector<string> sign, vector<string> otherSi
 		if (cleanedString == otherCleaned)
 			return true;
 	}
+	return false;
+}
+
+bool TypeFunction::tryReDefine() {
+	int first, later;
+	first = later = TypeFunction::errorFunctionCalls.size();
+	while (true) {
+		later = first;
+		for (int i = 0; i < TypeFunction::errorFunctionCalls.size(); i++) {
+			auto& classCallNode = TypeFunction::errorFunctionCalls.at(i);
+			if (classCallNode->type_checking()) {
+				TypeFunction::errorFunctionCalls.erase(TypeFunction::errorFunctionCalls.begin() + i);
+				first--;
+			}
+		}
+		if (first == later)
+			break;
+	}
+	if (first == 0)
+		return true;
 	return false;
 }

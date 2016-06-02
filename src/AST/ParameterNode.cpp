@@ -44,6 +44,11 @@ void ParameterNode::print(ostream &os) {
 }
 
 bool ParameterNode::type_checking() {
+	if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
+		//this for second passes, if the current node is free of TypeError no need to re type_check it
+		return true; // pass it this time
+	}
+
 	if (strcmp(this->parSym->getVariableType(), "int") == 0) {
 		this->nodeType = TypesTable::getInstance()->getType(INTEGER_TYPE_ID);
 		return true;

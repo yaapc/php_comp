@@ -79,7 +79,7 @@ Symbol* SymbolsParser::lookUpSymbol(char* name,int lineNo,int colNo){
 	}
 	int errId = this->errRecovery->errQ->enqueue(lineNo, colNo, "Undefined", name);
 	//if a symbol not found, insert an error symbol for forward declaration
-	this->insertSymbol(new ErrorSymbol(name, colNo, lineNo, errId));
+	this->insertSymbol(new ErrorSymbol("Undefined" , colNo, lineNo, errId));
 	
 	return nullptr;
 	
@@ -101,7 +101,7 @@ Symbol* SymbolsParser::lookUpSymbol(Scope* scope, char* name, int lineNo, int co
 	}
 	int errId = this->errRecovery->errQ->enqueue(lineNo, colNo, "Undefined", name);
 	//if a symbol not found, insert an error symbol for forward declaration
-	this->insertSymbol(new ErrorSymbol(name, colNo, lineNo, errId));
+	this->insertSymbol(new ErrorSymbol("undefined", colNo, lineNo, errId));
 
 	return nullptr;
 }

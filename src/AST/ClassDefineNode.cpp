@@ -38,7 +38,14 @@ void ClassDefineNode::extractInfo() {
 }
 
 bool ClassDefineNode::type_checking() {
+	if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
+		//this for second passes, if the current node is free of TypeError no need to re type_check it
+		this->body->type_checking();
+		return true; // pass it this time
+	}
+
 	this->nodeType = TypesTable::getInstance()->buildClassType(this, this->classSymbol);
+	this->body->type_checking();//called implicity in buildClassType
 	return true;
 }
 

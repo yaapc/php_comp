@@ -13,6 +13,12 @@ ClassMethodNode::ClassMethodNode(Symbol* methodSym, Node* bodySts, Node* params)
 }
 
 bool ClassMethodNode::type_checking() {
+	if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
+		//this for second passes, if the current node is free of TypeError no need to re type_check it
+		this->bodySts->type_checking();
+		return true; // pass it this time
+	}
+
 	//TODO
 	//build the TypeFunction although the body of the function might have errors.
 	this->nodeType = TypesTable::getInstance()->buildFunctionType(this, this->methodSym);

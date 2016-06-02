@@ -66,6 +66,7 @@ public:
 
 	MethodWrapper* lookupMembers(string memberStr, string methodSign);
 
+	static bool tryReDefine();
 private:
 	
 	/* a vector of properties that this TypeClass has*/
@@ -101,6 +102,11 @@ private:
 
 	void makeSize();
 
+	/*
+		this vector holds the ClassDefineNodes that defines classes which extends undefined classes
+	*/
+	static vector<ClassDefineNode*> errorTypeClasses;
+	
 };
 
 

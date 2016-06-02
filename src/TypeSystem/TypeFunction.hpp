@@ -7,7 +7,9 @@
 #include "../AST/ClassMethodNode.hpp"
 #include "../SymbolTable/Symbol.h"
 #include <vector>
+//#include "../AST/FunctionCallNode.hpp"
 
+class FunctionCallNode;
 
 class TypeFunction : public TypeExpression {
 public:
@@ -34,7 +36,7 @@ public:
 	 * This method is responsable for looking for a given signature of @FunctionType in the @functionInstances.
 	 * if none is found, it will return a TypeError as not defined.
 	 */
-	static TypeExpression* getInstance(string signature);
+	static TypeExpression* getInstance(string signature, FunctionCallNode* funCallNode);
 
 	TypeExpression* getReturnTypeExpression(); // get the TypeExpression of the return value of the function
 
@@ -56,6 +58,9 @@ public:
 	string getUniqueName();
 
 	static bool compareSignatures(vector<string> signature, vector<string> otherSignature);
+
+	static vector<FunctionCallNode*> errorFunctionCalls;
+	static bool tryReDefine();
 
 private:
 	TypeFunction(vector<string> functionSign, string functionName, string uniqueName);

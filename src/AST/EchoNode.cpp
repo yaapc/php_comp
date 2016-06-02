@@ -6,11 +6,17 @@
 #include "ListNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "../TypeSystem/TypeError.hpp"
 
 EchoNode::EchoNode(Node* node) : expression(node) {
 }
 
 bool EchoNode::type_checking() {
+	//this for second passes, if the current node is free of TypeError no need to re type_check it
+	if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
+		return true; // pass it this time
+	}
+
 	return this->expression->type_checking();
 }
 
