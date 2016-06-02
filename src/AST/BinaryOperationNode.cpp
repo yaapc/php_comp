@@ -77,6 +77,7 @@ Node* BinaryOperationNode::optmize(OptimizationVistor *optimizationVistor)
 
 		if (strcmp(op_type, "<=") == 0){
 			this->nodeType = left->getNodeType()->opLessOrEq(this->right->getNodeType()->getTypeId());
+			return true;
 		}
 
 		if (strcmp(op_type, "+") == 0) {

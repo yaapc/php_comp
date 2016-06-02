@@ -1,6 +1,8 @@
 #pragma once
 #include "StaticCallNode.hpp"
 #include "../TypeSystem/TypeError.hpp"
+#include "../Code Generator/CodeGeneratorVistor.hpp"
+#include "../Code Generator/OptimizationVistor.hpp"
 
 StaticCallNode::StaticCallNode(string className, string varNode) {
 	this->className = className;
@@ -42,6 +44,12 @@ bool StaticCallNode::type_checking() {
 	return true;
 }
 
-void StaticCallNode::generate_code() {
-	//TODO
+void StaticCallNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
+{
+	codeGneratorVistor->visit(this);
+}
+
+Node* StaticCallNode::optmize(OptimizationVistor *optimizationVistor)
+{
+	return optimizationVistor->visit(this);
 }

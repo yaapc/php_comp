@@ -58,11 +58,54 @@ string GlobalFrame::getAddress(string name)
 		return to_string(offset)+reg;
 	}
 
+	if (statics.find(name) != statics.end()) {
+    	int offset = statics[name];
+		return to_string(offset)+reg;
+	}
+
 	if (parentFrame){
 		return parentFrame->getAddress(name);
 	}
 	cout << "This error should not be possible here, can not find symbol you're looking for." << endl;
 	return nullptr;
+}
+
+int GlobalFrame::addStatic(Node *node)
+{
+
+	ClassMemNode *classMemNode		= static_cast<ClassMemNode*>(node);
+	DataMember *staticDataMember	= classMemNode->getMemSymbol();
+
+	//get the size of variable in Bytes
+	int varSize  = classMemNode->getNodeType()->getSize();
+	statics[staticDataMember->getUniqeName()] = frameSize;
+	
+	AsmGenerator::comment(staticDataMember->getUniqeName() + " in global scoop address "+to_string(frameSize)+" from gp");
+
+	if (classMemNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID){
+		AsmGenerator::li("t0",staticDataMember->getInitialValue().int_val);
+		AsmGenerator::sw("t0",to_string(frameSize)+reg);
+	}
+
+	if (classMemNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
+		AsmGenerator::li("t0",staticDataMember->getInitialValue().bool_val == true ? 1:0);
+		AsmGenerator::sw("t0",to_string(frameSize)+reg);
+	}
+	if (classMemNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
+		AsmGenerator::f_li("f0",staticDataMember->getInitialValue().float_val);
+		AsmGenerator::ss("f0",to_string(frameSize)+reg);
+	}
+
+	if (classMemNode->getNodeType()->getTypeId() == STRING_TYPE_ID){
+		string s0 = "s0";
+		AsmGenerator::la(s0,AsmGenerator::store_string_literal(staticDataMember->getInitialValue().string_val));
+		AsmGenerator::sw(s0,to_string(frameSize)+reg);
+	}
+
+	// Move Global Pointer
+	frameSize += varSize;
+
+	return frameSize-varSize;
 }
 
 ScopeFrame::ScopeFrame(Frame *parent,bool isFunction)
@@ -152,6 +195,11 @@ string ScopeFrame::getAddress(string name)
 	return nullptr;
 }
 
+int ScopeFrame::addStatic(Node *node)
+{
+	return 0;
+}
+
 FunctionFrame::FunctionFrame(Frame *parent,ListNode *parametersNodes)
 {
 	paramtersOffset			= 0;
@@ -205,6 +253,11 @@ string FunctionFrame::getAddress(string name)
 	return nullptr;
 }
 
+int FunctionFrame::addStatic(Node *node)
+{
+	return 0;
+}
+
 ObjectFrame::ObjectFrame(Frame *parent,TypeClass *classType)
 {
 	this->classType		= classType;
@@ -229,7 +282,12 @@ string ObjectFrame::getAddress(string name)
 			return to_string(offset) + "($a3)";
 		}
 		return to_string(offset) + "($" + thisReg + ")";
-	} 
+	}
+
+	if (statics.find(name) != statics.end()){
+		int offset = statics[name];
+		return to_string(offset) + "($gp)";
+	}
 
 	if (parentFrame) {
 		return parentFrame->getAddress(name);
@@ -239,10 +297,17 @@ string ObjectFrame::getAddress(string name)
 	return nullptr;
 }
 
-void ObjectFrame::addFunction(Node *node)
+int ObjectFrame::addStatic(Node *node)
 {
-
+	if (parentFrame){
+		int globalOffset = parentFrame->addStatic(node);
+		ClassMemNode *classMemNode		= static_cast<ClassMemNode*>(node);
+		DataMember *staticDataMember	= classMemNode->getMemSymbol();
+		statics[staticDataMember->getNameWithout()] = globalOffset;
+	}
+	return 0;
 }
+
 
 void ObjectFrame::fillFrame(TypeClass* typeClass)
 {
@@ -253,7 +318,7 @@ void ObjectFrame::fillFrame(TypeClass* typeClass)
 		{
 			PropertyWrapper* propertyWrapper = dynamic_cast<PropertyWrapper*>(memberWrapper);
 			
-			string propertyName		= propertyWrapper->getUniqueName(); // TODO replace getUniqueName with !!
+			string propertyName		= propertyWrapper->getNameWithout();
 			int propertySize		= propertyWrapper->getSize();
 			locals[propertyName]	= memberOffset;
 			memberOffset			= memberOffset + propertySize;

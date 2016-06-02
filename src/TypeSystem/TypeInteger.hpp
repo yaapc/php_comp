@@ -3,6 +3,7 @@
 #define TYPE_INTEGER_H
 
 #include "TypeExpression.hpp"
+#include "TypesTable.h"
 
 /*
  * A Singleton Class of Integer Type.
@@ -35,7 +36,7 @@ public:
 
 	TypeExpression* opEqual(int secondTypeId);
 
-	bool equivelantTo(int secondTypeId);
+	int equivelantTo(int secondTypeId);
 	
 	//overriding virtual method
 	int getTypeId();

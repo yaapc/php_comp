@@ -24,3 +24,4 @@ class ClassCallNode;
 class NewNode;
 class BreakNode;
 class ContinueNode;
+class StaticCallNode;

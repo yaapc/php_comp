@@ -10,8 +10,6 @@ extern bool GC;
 class CodeGneratorVistor
 {
 public:
-	int symbolIDS;
-
 	string returnLabel;
 
 	string continueLabel;
@@ -48,6 +46,7 @@ public:
 	virtual void visit(NewNode			*newNode);
 	virtual void visit(BreakNode 		*breakNode);
 	virtual void visit(ContinueNode 	*continueNode);
+	virtual void visit(StaticCallNode 	*staticCallNode);
 
 	//Helper Methods
 	string	getClassMemberAddress(ClassCallNode*,string);

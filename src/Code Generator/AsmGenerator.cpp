@@ -141,7 +141,7 @@ string AsmGenerator::store_string_literal(string value)
 		getline(cmt,line);
 		c+= line;
 		while (getline(cmt, line)){
-		c+= line + "\\n";
+			c+= "\\n" + line;
 		}
 		c+="\"";
 		

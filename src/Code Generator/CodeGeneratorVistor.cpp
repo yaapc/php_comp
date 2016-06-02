@@ -10,7 +10,6 @@
 void CodeGneratorVistor::generate(ListNode *ast)
 {
 	currentFrame	= new GlobalFrame();
-	symbolIDS		= 0;
 	AsmGenerator::initialize_file();
 	ast->generate_code(this);
 	AsmGenerator::write_file();
@@ -186,45 +185,40 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 	string t1 = "t1";
 	string t2 = "t2";
 
-	//AsmGenerator::comment("<Binary Operation Left node");
+
 	binaryOperationNode->left->generate_code(this);
-	//AsmGenerator::comment("Binary Operation Left node/>");
 
-	//AsmGenerator::comment("<Binary Operation right node");
 	binaryOperationNode->right->generate_code(this);
-	//AsmGenerator::comment("Binary Operation right node/>");
-
 
 	AsmGenerator::comment("<Binary Operation Calculation");
 	if (binaryOperationNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID){ //Integer
 
-		AsmGenerator::pop(t1); //get the result of right and put it in reg t1
-		AsmGenerator::pop(t0); //get the result of left and put it in reg t0
-
+		AsmGenerator::pop(t1); 
+		AsmGenerator::pop(t0); 
 		
 		if (*(binaryOperationNode->op_type) == '+'){
-			AsmGenerator::binary_operation(t0, t0, t1, 1); //perform add and put the result in t0
-			AsmGenerator::push(t0); //push t0 (the result) into stack
+			AsmGenerator::binary_operation(t0, t0, t1, 1); 
+			AsmGenerator::push(t0);
 		}
 
 		if (*(binaryOperationNode->op_type) == '-'){
-			AsmGenerator::binary_operation(t0, t0, t1, 2); //perform minus and put the result in t0
-			AsmGenerator::push(t0); //push t0 (the result) into stack
+			AsmGenerator::binary_operation(t0, t0, t1, 2);
+			AsmGenerator::push(t0); 
 		}
 
 		if (*(binaryOperationNode->op_type) == '*'){
-			AsmGenerator::binary_operation(t0, t0, t1, 3); //perform mult and put the result in t0
-			AsmGenerator::push(t0); //push t0 (the result) into stack
+			AsmGenerator::binary_operation(t0, t0, t1, 3); 
+			AsmGenerator::push(t0); 
 		}
 
 		if (*(binaryOperationNode->op_type) == '/'){
-			AsmGenerator::binary_operation(t0, t0, t1, 4); //perform div and put the result in t0
-			AsmGenerator::push(t0); //push t0 (the result) into stack
+			AsmGenerator::binary_operation(t0, t0, t1, 4); 
+			AsmGenerator::push(t0); 
 		}
 
 		if (*(binaryOperationNode->op_type) == '%'){
-			AsmGenerator::binary_operation(t0, t0, t1, 5); //perform reminder and put the result in t0
-			AsmGenerator::push(t0); //push t0 (the result) into stack
+			AsmGenerator::binary_operation(t0, t0, t1, 5); 
+			AsmGenerator::push(t0); 
 		}
 
 		
@@ -232,59 +226,142 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 
 	if (binaryOperationNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){ //Boolean
 
-		AsmGenerator::pop(t1); //get the result of right and put it in reg t1
-		AsmGenerator::pop(t0); //get the result of left and put it in reg t0
+		if (binaryOperationNode->left->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID && 
+			binaryOperationNode->right->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID ){
+		
+			AsmGenerator::pop(t1);
+			AsmGenerator::pop(t0); 
 
-		if(strcmp(binaryOperationNode->op_type, "&&") == 0){
-			AsmGenerator::binary_operation(t0, t0, t1, 6); //perform and operation and put the result in t0
-			AsmGenerator::push(t0); //push t0 (the result) into stack
+			if(strcmp(binaryOperationNode->op_type, "&&") == 0){
+				AsmGenerator::binary_operation(t0, t0, t1, 6); 
+				AsmGenerator::push(t0); 
+			}
+
+			if (strcmp(binaryOperationNode->op_type, "||") == 0){
+				AsmGenerator::binary_operation(t0, t0, t1, 7); 
+				AsmGenerator::push(t0);
+			}
 		}
 
-		if (strcmp(binaryOperationNode->op_type, "||") == 0){
-			AsmGenerator::binary_operation(t0, t0, t1, 7); // perform in operation and put the result in t0
-			AsmGenerator::push(t0); //push t0 (the result) into stack
+
+
+		if (binaryOperationNode->left->getNodeType()->getTypeId() == INTEGER_TYPE_ID && 
+			binaryOperationNode->right->getNodeType()->getTypeId() == INTEGER_TYPE_ID ){
+
+			AsmGenerator::pop(t1);
+			AsmGenerator::pop(t0); 
+
+
+			if (strcmp(binaryOperationNode->op_type, "==") == 0){
+				AsmGenerator::equal_operation(t2,t0,t1,false); 
+				AsmGenerator::push(t2); 
+			}
+
+			if (strcmp(binaryOperationNode->op_type, "!=") == 0){
+				AsmGenerator::equal_operation(t2,t0,t1,true);
+				AsmGenerator::push(t2);
+			}
+
+			if (strcmp(binaryOperationNode->op_type, "<") == 0){
+				AsmGenerator::less_than_operation(t2, t0, t1);  
+				AsmGenerator::push(t2);						
+
+			}
+
+			if (strcmp(binaryOperationNode->op_type, ">") == 0){
+				AsmGenerator::less_than_operation(t2, t1, t0); 
+				AsmGenerator::push(t2);						
+			}
+
+			if (strcmp(binaryOperationNode->op_type, ">=") == 0){
+				AsmGenerator::greater_or_equal_operation(t2, t0, t1); 
+				AsmGenerator::push(t2);	
+			}
+
+			if (strcmp(binaryOperationNode->op_type, "<=") == 0){
+				AsmGenerator::greater_or_equal_operation(t2, t1, t0); 
+				AsmGenerator::push(t2);	
+			}
+
 		}
 
+		if (binaryOperationNode->left->getNodeType()->getTypeId() == FLOAT_TYPE_ID ||  
+			binaryOperationNode->right->getNodeType()->getTypeId() == FLOAT_TYPE_ID ){
+		
+			string f0 = "f0";
+			string f1 = "f1";
 
-	if (strcmp(binaryOperationNode->op_type, "==") == 0){
-			AsmGenerator::equal_operation(t2,t0,t1,false); //perform bne and put the result in t2 (true 1 or false 0)
-			AsmGenerator::push(t2); //push t2 (the result) into stack
+
+			if (binaryOperationNode->left->getNodeType()->getTypeId() == INTEGER_TYPE_ID){ // convert int to float
+				AsmGenerator::f_pop(f1);
+				AsmGenerator::pop(t0);
+				AsmGenerator::add_instruction("mtc1 $t0, $f0");
+				AsmGenerator::add_instruction("cvt.s.w $f0, $f0");
+			}else
+			if(binaryOperationNode->right->getNodeType()->getTypeId() == INTEGER_TYPE_ID ){// convert int to float
+				AsmGenerator::pop(t0);
+				AsmGenerator::add_instruction("mtc1 $t0, $f1");
+				AsmGenerator::add_instruction("cvt.s.w $f1, $f1");
+				AsmGenerator::f_pop(f0);
+			}else{
+				AsmGenerator::f_pop(f1);
+				AsmGenerator::f_pop(f0);
+			}
+
+			if (strcmp(binaryOperationNode->op_type, "==") == 0){
+				AsmGenerator::f_equal_operation(t2,f0,f1,false);
+				AsmGenerator::push(t2);
+			}
+
+			if (strcmp(binaryOperationNode->op_type, "!=") == 0){
+				AsmGenerator::f_equal_operation(t2,f0,f1,true);
+				AsmGenerator::push(t2);
+			}
+
+			if (strcmp(binaryOperationNode->op_type, "<") == 0){
+				AsmGenerator::f_less_than_operation(t2, f0, f1);
+				AsmGenerator::push(t2);
+			}
+
+			if (strcmp(binaryOperationNode->op_type, ">") == 0){
+				AsmGenerator::f_greater_than_operation(t2, f0, f1);
+				AsmGenerator::push(t2);
+			}
+
+			if (strcmp(binaryOperationNode->op_type, ">=") == 0){
+				AsmGenerator::f_greater_or_equal_operation(t2, f0, f1);
+				AsmGenerator::push(t2);
+			}
+
+			if (strcmp(binaryOperationNode->op_type, "<=") == 0){
+				AsmGenerator::f_less_or_equal_operation(t2, f0, f1);
+				AsmGenerator::push(t2);
+			}
 		}
 
-		if (strcmp(binaryOperationNode->op_type, "!=") == 0){
-			AsmGenerator::equal_operation(t2,t0,t1,true); //perform bne and put the result in t2 (true 1 or false 0)
-			AsmGenerator::push(t2);//push t2 (the result) into stack
-		}
-
-		if (strcmp(binaryOperationNode->op_type, "<") == 0){
-			AsmGenerator::less_than_operation(t2, t0, t1);  //perform slt and put the result in t2 (true 1 or false 0)
-			AsmGenerator::push(t2);						//push t2 (the result) into stack
-
-		}
-
-		if (strcmp(binaryOperationNode->op_type, ">") == 0){
-			AsmGenerator::less_than_operation(t2, t1, t0); //perform slt and put the result in t2 (true 1 or false 0)
-			AsmGenerator::push(t2);						//push t2 (the result) into stack
-		}
-
-		if (strcmp(binaryOperationNode->op_type, ">=") == 0){
-			AsmGenerator::greater_or_equal_operation(t2, t0, t1); //perform greater or equal and put the result in t2 (true 1 or false 0)
-			AsmGenerator::push(t2);						//push t2 (the result) into stack
-		}
-
-		if (strcmp(binaryOperationNode->op_type, "<=") == 0){
-			AsmGenerator::greater_or_equal_operation(t2, t1, t0); //perform slt and put the result in t2
-			AsmGenerator::push(t2);						//push t2 (the result) into stack
-		}
+		
 	
 	}
 
 	if (binaryOperationNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){ //Float
 		string f0 = "f0";
 		string f1 = "f1";
-		string t2 = "t2";
-		AsmGenerator::f_pop(f1);
-		AsmGenerator::f_pop(f0);
+
+		if (binaryOperationNode->left->getNodeType()->getTypeId() == INTEGER_TYPE_ID){ // convert int to float
+			AsmGenerator::f_pop(f1);
+			AsmGenerator::pop(t0);
+			AsmGenerator::add_instruction("mtc1 $t0, $f0");
+			AsmGenerator::add_instruction("cvt.s.w $f0, $f0");
+		}else
+		if(binaryOperationNode->right->getNodeType()->getTypeId() == INTEGER_TYPE_ID ){// convert int to float
+			AsmGenerator::pop(t0);
+			AsmGenerator::add_instruction("mtc1 $t0, $f1");
+			AsmGenerator::add_instruction("cvt.s.w $f1, $f1");
+			AsmGenerator::f_pop(f0);
+		}else{
+			AsmGenerator::f_pop(f1);
+			AsmGenerator::f_pop(f0);
+		}
 
 		if (*(binaryOperationNode->op_type) == '+'){
 			AsmGenerator::f_binary_operation(f0,f0,f1,1);
@@ -304,36 +381,6 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 		if (*(binaryOperationNode->op_type) == '/'){
 			AsmGenerator::f_binary_operation(f0,f0,f1,4);
 			AsmGenerator::f_push(f0);
-		}
-
-		if (strcmp(binaryOperationNode->op_type, "==") == 0){
-			AsmGenerator::f_equal_operation(t2,f0,f1,false);
-			AsmGenerator::push(t2);
-		}
-
-		if (strcmp(binaryOperationNode->op_type, "!=") == 0){
-			AsmGenerator::f_equal_operation(t2,f0,f1,true);
-			AsmGenerator::push(t2);
-		}
-
-		if (strcmp(binaryOperationNode->op_type, "<") == 0){
-			AsmGenerator::f_less_than_operation(t2, f0, f1);
-			AsmGenerator::push(t2);
-		}
-
-		if (strcmp(binaryOperationNode->op_type, ">") == 0){
-			AsmGenerator::f_greater_than_operation(t2, f0, f1);
-			AsmGenerator::push(t2);
-		}
-
-		if (strcmp(binaryOperationNode->op_type, ">=") == 0){
-			AsmGenerator::f_greater_or_equal_operation(t2, f0, f1);
-			AsmGenerator::push(t2);
-		}
-
-		if (strcmp(binaryOperationNode->op_type, "<=") == 0){
-			AsmGenerator::f_less_or_equal_operation(t2, f0, f1);
-			AsmGenerator::push(t2);
 		}
 	}
 
@@ -389,13 +436,14 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 			string t1 = "t1";
 			string t3 = "t3";
 
-			string begin_loop_label		= "concat_begin" + AsmGenerator::if_temp_label_count;
-			string finish_loop_leble	= "concat_end"   + AsmGenerator::if_temp_label_count;
+			string begin_loop_label		= "concat_begin" + to_string(AsmGenerator::if_temp_label_count);
+			string finish_loop_leble	= "concat_end"   + to_string(AsmGenerator::if_temp_label_count);
 			AsmGenerator::if_temp_label_count++;
 
 	
 			AsmGenerator::pop(s1); //integer type
 			AsmGenerator::pop(s0);// string type
+
 			AsmGenerator::move("a0",s0); // copy address of string into a0
 			AsmGenerator::jal(AsmGenerator::strlen_functoion_name); // calculate length of string - result in $v1
 			AsmGenerator::add_instruction("addi $t0,$v1,5"); // calculate new string length N = stringlenth + 4 (integer) + 1 (null terminator) 
@@ -422,7 +470,6 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 		}		
 
 
-		//Todo Ask Bassel
 		if (binaryOperationNode->left->getNodeType()->getTypeId() == INTEGER_TYPE_ID)
 		{
 			string s0 = "s0";
@@ -430,21 +477,26 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 			string t0 = "t0";
 			string t1 = "t1";
 			string t3 = "t3";
-			string begin_loop_label		= "concat_begin" + AsmGenerator::if_temp_label_count;
-			string finish_loop_leble	= "concat_end"   + AsmGenerator::if_temp_label_count;
+			string begin_loop_label		= "concat_begin" + to_string(AsmGenerator::if_temp_label_count);
+			string finish_loop_leble	= "concat_end"   + to_string(AsmGenerator::if_temp_label_count);
 			AsmGenerator::if_temp_label_count++;
-			AsmGenerator::pop(s0);
-			AsmGenerator::pop(s1);
+
+			AsmGenerator::pop(s0); //string 
+			AsmGenerator::pop(s1); // integer
+
 			AsmGenerator::move("a0",s0);
 			AsmGenerator::jal(AsmGenerator::strlen_functoion_name);
 			AsmGenerator::add_instruction("addi $t0,$v1,5");
 			AsmGenerator::sbrk(t0,t1);
-			AsmGenerator::move(t1,"v0");
+
 			AsmGenerator::move(t3,"v0");
+
 			AsmGenerator::move("a0",s1);
-			AsmGenerator::move("a1","v0");
+			AsmGenerator::move("a1","t1");
 			AsmGenerator::jal(AsmGenerator::int_to_asci_functoion_name);
-			AsmGenerator::add_instruction("addi $t1,$t1,4");
+
+			AsmGenerator::add_instruction("addi $t1,$t1,1");
+
 			AsmGenerator::add_label(begin_loop_label);
 			AsmGenerator::add_instruction("lb $t0 0($s0)");
 			AsmGenerator::add_instruction("beq  $t0 $0 "+finish_loop_leble);
@@ -454,6 +506,7 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 			AsmGenerator::add_instruction("b "+begin_loop_label);
 			AsmGenerator::add_label(finish_loop_leble);
 			AsmGenerator::add_instruction("sb $0 0($t1)");
+
 			AsmGenerator::push(t3);
 		}
 
@@ -606,7 +659,9 @@ void CodeGneratorVistor::visit(ForNode *forNode)
 	}
 	AsmGenerator::comment("For Body/>");
 
-
+	if (GC){
+		collectRefVariablesGarbage(currentFrame);
+	}
 
 	AsmGenerator::add_label(continueLabel);
 
@@ -765,10 +820,16 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 		functionCallNode->argumentsList->generate_code(this);
 	AsmGenerator::comment("ArgumentList/>");
 
-	int arguemtnsSize	= functionCallNode->argumentsList->nodes.size();
+	ListNode *argumentsList = static_cast<ListNode*>(functionCallNode->argumentsList);
+
+	int arguemtnsSize;
+	if (argumentsList){
+		arguemtnsSize = argumentsList->nodes.size();
+	}else{
+		arguemtnsSize = 0;
+	}
 	int parameterSize	= functionType->getParamsTEs().size();
 	int diffSize		= parameterSize - arguemtnsSize;	// number of enabeld default parameters
-
 	//Make some space for enabeld default parameters
 	for(int i = 0 ; i < diffSize ; i++){
 		string t0 = "t0";
@@ -778,6 +839,7 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 		AsmGenerator::push(t0);
 	}
 
+
 	string functionName = functionType->getUniqueName();
 
 	AsmGenerator::jal(functionName);
@@ -785,7 +847,7 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 	if (functionCallNode->argumentsList){
 		AsmGenerator::comment("<Clear Arguments");
 		int argumentsSize = 0; // in bytes 
-		for(auto &node : functionCallNode->argumentsList->nodes){
+		for(auto &node : argumentsList->nodes){
 			//TODO replace fixed size with size from type System
 			int argSize = 4;
 			argumentsSize+= argSize;
@@ -873,7 +935,6 @@ void CodeGneratorVistor::visit(FunctionDefineNode *functionDefineNode)
 
 void CodeGneratorVistor::visit(ParameterNode *parameterNode)
 {
-	parameterNode->parSym->setId(symbolIDS++);
 	AsmGenerator::comment("<ParameterNode " + parameterNode->parSym->getNameWithout());
 
 	// if paramter is default we have to load it value and store it in proper address
@@ -944,9 +1005,12 @@ void CodeGneratorVistor::visit(ClassDefineNode	*classDefineNode)
 
 void CodeGneratorVistor::visit(ClassMemNode	*classMemNode)
 {
-	//TODO generate code for inilizeing
 	string memberName = classMemNode->getMemSymbol()->getName();
 	AsmGenerator::comment("<Declare member "+memberName+" />");
+
+	if (classMemNode->getMemSymbol()->isStatic){
+		currentFrame->addStatic(classMemNode);
+	}
 }
 
 void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
@@ -1065,10 +1129,17 @@ void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 				classCallNode->argumentsList->generate_code(this);
 		AsmGenerator::comment("ArgumentList/>");
 
-		int arguemtnsSize	= classCallNode->argumentsList->nodes.size();
+		ListNode *argumentsList = static_cast<ListNode*>(classCallNode->argumentsList);
+
+		int arguemtnsSize;
+		if (argumentsList){
+			arguemtnsSize = argumentsList->nodes.size();
+		}else{
+			arguemtnsSize = 0;
+		}
+
 		int parameterSize	= functionType->getParamsTEs().size();
 		int diffSize		= parameterSize - arguemtnsSize;	// number of enabeld default parameters
-
 		//Make some space for enabeld default parameters
 		for(int i = 0 ; i < diffSize ; i++){
 			string t0 = "t0";
@@ -1084,10 +1155,10 @@ void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 		AsmGenerator::lw(s1,probertyAddress);
 		AsmGenerator::add_instruction("jalr $"+s1);
 
-		if (classCallNode->argumentsList){
+		if (argumentsList){
 			AsmGenerator::comment("<Clear Arguments");
 			int argumentsSize = 0; // in bytes 
-			for(auto &node : classCallNode->argumentsList->nodes){
+			for(auto &node :argumentsList->nodes){
 				//TODO replace fixed size with size from type System
 				int argSize = 4;
 				argumentsSize+= argSize;
@@ -1259,6 +1330,40 @@ void CodeGneratorVistor::visit(ContinueNode *continueNode)
 	AsmGenerator::comment("<ContinueNode");
 	AsmGenerator::add_instruction("b "+continueLabel);
 	AsmGenerator::comment("ContinueNode/>");
+}
+
+void CodeGneratorVistor::visit(StaticCallNode 	*staticCallNode)
+{
+	PropertyWrapper *staticProperty = staticCallNode->propWrapper;
+	AsmGenerator::comment("<Static Variable Node "+staticProperty->getName());
+	string s0 = "s0";
+
+	string variableAddress = currentFrame->getAddress(staticProperty->getUniqueName());
+
+	if (staticProperty->getTypeExpr()->getTypeId() == INTEGER_TYPE_ID	|| 
+		staticProperty->getTypeExpr()->getTypeId()  == BOOLEAN_TYPE_ID){
+		// In primitive types we care about value so we have to load it
+		AsmGenerator::lw(s0,variableAddress); 		//Get value from memory address and put the value in s0
+		AsmGenerator::push(s0);
+	}
+
+	if (staticProperty->getTypeExpr()->getTypeId()  == STRING_TYPE_ID){
+		AsmGenerator::lw(s0,variableAddress); 		//Get memory address and put in s0
+		AsmGenerator::push(s0);
+
+	}
+		
+	if (staticProperty->getTypeExpr()->getTypeId()  == FLOAT_TYPE_ID){
+		//float literals are stored in data so we only load the address of those literals
+		AsmGenerator::ls("f0",variableAddress);	//Get value from memory address and put the value in s0	
+		AsmGenerator::f_push("f0");
+	}
+
+	if (staticProperty->getTypeExpr()->getTypeId() == CLASS_TYPE_ID){
+		AsmGenerator::lw(s0,variableAddress); 		//Get memory address and put in s0
+		AsmGenerator::push(s0);
+	}
+	AsmGenerator::comment("Static Variable Node/>");
 }
 
 string CodeGneratorVistor::getClassMemberAddress(ClassCallNode*  classCallNode,string thisReg)

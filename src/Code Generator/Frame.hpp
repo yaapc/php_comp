@@ -10,11 +10,15 @@
 
 class Frame {
 public:
-	virtual void addLocal(Node *) = 0;
+	virtual void addLocal(Node *)		= 0;
 
-	virtual string getAddress(string) = 0;
+	virtual string getAddress(string)	= 0;
+
+	virtual int addStatic(Node *)		= 0;
 
 	map<string, int> locals;
+
+	map<string, int> statics;
 
 	vector<string> objectsLocals;
 
@@ -35,6 +39,8 @@ public:
 	virtual void addLocal(Node *);
 
 	virtual string getAddress(string);
+
+	virtual int addStatic(Node *);
 };
 
 class ScopeFrame : public Frame{
@@ -44,6 +50,8 @@ public:
 	virtual void addLocal(Node *);
 
 	virtual string getAddress(string);
+
+	virtual int addStatic(Node *);
 
 	bool isFunction;
 };
@@ -63,6 +71,8 @@ public:
 
 	map<string, int> arguments;
 
+	virtual int addStatic(Node *);
+
 	int paramtersOffset;
 
 };
@@ -76,9 +86,9 @@ public:
 
 	virtual void addLocal(Node *);
 
-	virtual void addFunction(Node *);
-
 	virtual string getAddress(string);
+
+	virtual int addStatic(Node *);
 
 	virtual void fillFrame(TypeClass*);
 

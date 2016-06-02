@@ -67,8 +67,8 @@ TypeExpression* TypeExpression::opSqrBrackets(int secondTypeId) {
 	return new TypeError(TypeSystemHelper::getTypeName(this->getTypeId()) + "  Type doesn't support [] operation");
 }
 
-bool TypeExpression::equivelantTo(int secondTypeId) {
-	return false;
+int TypeExpression::equivelantTo(int secondTypeId) {
+	return ERROR_TYPE_ID;
 }
 
 int TypeExpression::getSize() {

@@ -14,7 +14,7 @@ public:
 
 	TypeExpression* opEqual(int secondTypeId);
 
-	bool equivelantTo(int secondTypeId);
+	int equivelantTo(int secondTypeId);
 
 	int getTypeId();
 

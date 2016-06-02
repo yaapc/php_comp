@@ -15,80 +15,76 @@ TypeInteger* TypeInteger::getInstance() {
 // overrided Operations' Methods that Integer Type can be applied to , goes here:
 // + - * /
 TypeExpression* TypeInteger::opPlus(int secondTypeId) {
-	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
 	if (this->equivelantTo(secondTypeId))
-		return TypeInteger::getInstance();
+		return TypesTable::getInstance()->getType(secondTypeId);
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
 }
 
 TypeExpression* TypeInteger::opMinus(int secondTypeId) {
-	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
-	if (secondTypeId == INTEGER_TYPE_ID)
-		return TypeInteger::getInstance();
+	if (this->equivelantTo(secondTypeId))
+		return TypesTable::getInstance()->getType(secondTypeId);
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
 }
 
 TypeExpression* TypeInteger::opMult(int secondTypeId) {
-	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
-	if (secondTypeId == INTEGER_TYPE_ID)
-		return TypeInteger::getInstance();
+	if (this->equivelantTo(secondTypeId))
+		return TypesTable::getInstance()->getType(secondTypeId);
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
 }
 
 TypeExpression* TypeInteger::opDiv(int secondTypeId) {
-	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
-	if (secondTypeId == INTEGER_TYPE_ID)
-		return TypeInteger::getInstance();
+	if (this->equivelantTo(secondTypeId))
+		return TypesTable::getInstance()->getType(secondTypeId);
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
 }
 
 TypeExpression* TypeInteger::opMod(int secondTypeId) {
-	//TODO: replace condition with this->equivalentTo(secondTypeId) to enable implicit casting
-	if (secondTypeId == INTEGER_TYPE_ID)
-		return TypeInteger::getInstance();
+	if (this->equivelantTo(secondTypeId))
+		return TypesTable::getInstance()->getType(secondTypeId);
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support aggregate operation");
 }
 
 TypeExpression* TypeInteger::opGreaterThan(int secondTypeId) {
-	if (secondTypeId == INTEGER_TYPE_ID)
+	if (secondTypeId == INTEGER_TYPE_ID || secondTypeId == FLOAT_TYPE_ID)
 		return TypeBoolean::getInstance();
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support > operation");
 }
 
 // <
 TypeExpression* TypeInteger::opLessThan(int secondTypeId) {
-	if (secondTypeId == INTEGER_TYPE_ID)
+	if (secondTypeId == INTEGER_TYPE_ID || secondTypeId == FLOAT_TYPE_ID)
 		return TypeBoolean::getInstance();
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support < operation");
 }
 
 // >=
 TypeExpression* TypeInteger::opGreaterOrEq(int secondTypeId) {
-	if (secondTypeId == INTEGER_TYPE_ID)
+	if (secondTypeId == INTEGER_TYPE_ID || secondTypeId == FLOAT_TYPE_ID)
 		return TypeBoolean::getInstance();
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support >= operation");
 }
 
 // <=
 TypeExpression* TypeInteger::opLessOrEq(int secondTypeId) {
-	if (secondTypeId == INTEGER_TYPE_ID)
+	if (secondTypeId == INTEGER_TYPE_ID || secondTypeId == FLOAT_TYPE_ID)
 		return TypeBoolean::getInstance();
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + "  Type doesn't support <= operation");
 }
 
 TypeExpression* TypeInteger::opEqual(int secondTypeId) {
-	if (secondTypeId == INTEGER_TYPE_ID)
+	if (secondTypeId == INTEGER_TYPE_ID || secondTypeId == FLOAT_TYPE_ID)
 		return TypeBoolean::getInstance();
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + " Type doesn't support == operation");
 }
 
-bool TypeInteger::equivelantTo(int secondTypeId) {
-	if (secondTypeId == STRING_TYPE_ID || 
-		secondTypeId == INTEGER_TYPE_ID	||
-		secondTypeId == FLOAT_TYPE_ID)
-		return true;
-
-	return false;
+int TypeInteger::equivelantTo(int secondTypeId) {
+	if (secondTypeId == INTEGER_TYPE_ID)
+		return INTEGER_TYPE_ID;
+	if (secondTypeId == FLOAT_TYPE_ID)
+		return FLOAT_TYPE_ID;
+	if (secondTypeId == STRING_TYPE_ID)
+		return STRING_TYPE_ID;
+	return ERROR_TYPE_ID;
 }
 
 

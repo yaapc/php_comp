@@ -1425,8 +1425,8 @@ expr:
 	| T_INC variable
 	| variable T_DEC
 	| T_DEC variable
-	| expr T_BOOLEAN_OR expr
-	| expr T_BOOLEAN_AND expr
+	| expr T_BOOLEAN_OR expr { $<r.node>$ = new BinaryOperationNode("||", $<r.node>1, $<r.node>3); }
+	| expr T_BOOLEAN_AND expr{ $<r.node>$ = new BinaryOperationNode("&&", $<r.node>1, $<r.node>3); }
 	| expr T_LOGICAL_OR expr
 	| expr T_LOGICAL_AND expr
 	| expr T_LOGICAL_XOR expr
