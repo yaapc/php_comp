@@ -64,6 +64,10 @@ int main(int argc, char** argv) {
 
 	//Check AST types 
 	tree->type_checking(); cout << "TypeChecking Pass\n";
+	TypeClass::tryReDefine();
+	TypeFunction::tryReDefine();
+	tree->type_checking(); cout << "Second TypeChecking Pass\n";
+
 
 	//Optimize AST
 	optimizationVistor.optmize(tree);
