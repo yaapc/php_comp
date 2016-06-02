@@ -6,6 +6,11 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 
+ListNode::ListNode()
+{
+	nodeType = nullptr;
+}
+
 ListNode* ListNode::add_node(Node* node) {
     nodes.push_back(node);
     return this;

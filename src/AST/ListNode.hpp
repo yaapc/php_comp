@@ -10,6 +10,8 @@ class ListNode : public Node {
 public:
 	vector<Node*> nodes;
 
+	ListNode();
+
 	ListNode* add_node(Node* node);
 
 	ListNode* add_nodes(const vector<Node*>& nodes_list);
