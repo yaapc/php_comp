@@ -5,13 +5,16 @@
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
-ClassDefineNode::ClassDefineNode(Symbol* classSym, Node* classBody) {
+ClassDefineNode::ClassDefineNode(Symbol* classSym, Node* classBody, int line, int col) {
 	this->classSymbol = dynamic_cast<Class*>(classSym);
 	this->body = dynamic_cast<ListNode*>(classBody);	
 	this->nodeType = nullptr;
 	//now extract info
 	this->extractInfo();
+	this->line = line;
+	this->col = col;
 }
 
 /*
@@ -73,4 +76,9 @@ void ClassDefineNode::print(ostream &os) {
 	os << self << "->" << int(body) << endl;
 	if (body) body->print(os);
 
+}
+
+
+void ClassDefineNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

@@ -6,14 +6,17 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypesTable.h"
 
 
-ParameterNode::ParameterNode(Symbol* parSym,Node *defaultValueNode,bool isDefault) {
+ParameterNode::ParameterNode(Symbol* parSym,Node *defaultValueNode,bool isDefault, int line, int col) {
 	this->nodeType = nullptr; // VS-2015
 	this->defaultValueNode = defaultValueNode;
 	this->isDefault = isDefault;
 	this->parSym = dynamic_cast<Parameter*>(parSym);
+	this->line = line;
+	this->col = col;
 }
 
 
@@ -76,11 +79,15 @@ bool ParameterNode::type_checking() {
 	this->nodeType = TypesTable::getInstance()->getClassType(type);
 
 	if (this->nodeType == nullptr) { // no type found
-		this->nodeType = new TypeError("Undefined");
+		this->nodeType = new TypeError("Undefined Parameter Type, " + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
 		return false;
 	}
 
 	return true;
+}
+
+void ParameterNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }
 
 #endif

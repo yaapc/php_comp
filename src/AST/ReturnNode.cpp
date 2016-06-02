@@ -2,12 +2,15 @@
 #include "ReturnNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
 
-ReturnNode::ReturnNode(Node *exp) {
+ReturnNode::ReturnNode(Node *exp, int line, int col) {
 	this->returned_node = exp;
 	this->nodeType = nullptr;
+	this->line = line;
+	this->col = col;
 }
 
 void ReturnNode::print(ostream &os) {
@@ -46,4 +49,9 @@ bool ReturnNode::type_checking() {
 		this->nodeType = this->returned_node->getNodeType();
 	}
 	return true;
+}
+
+
+void ReturnNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

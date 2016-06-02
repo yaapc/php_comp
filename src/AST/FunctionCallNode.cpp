@@ -4,14 +4,17 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 //#include "../TypeSystem/TypeFunction.hpp"
 #include <sstream>
 
-FunctionCallNode::FunctionCallNode(string name, Node* argsList) {
+FunctionCallNode::FunctionCallNode(string name, Node* argsList, int line, int col) {
 	this->nodeType = nullptr;
 	this->functionType = nullptr;
 	this->name = name;
 	this->argumentsList = dynamic_cast<ListNode*>(argsList);
+	this->line = line;
+	this->col = col;
 }
 
 void FunctionCallNode::print(ostream &os) {
@@ -63,4 +66,9 @@ string FunctionCallNode::generateCallSignature() {
 Node* FunctionCallNode::optmize(OptimizationVistor *optimizationVistor)
 {
 	return optimizationVistor->visit(this);
+}
+
+
+void FunctionCallNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

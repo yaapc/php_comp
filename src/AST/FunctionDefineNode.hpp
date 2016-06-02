@@ -14,7 +14,7 @@ public:
   Node* bodySts;          // body statements nodes
   ListNode* paramsList;       // a list of parameter nodes
 
-	FunctionDefineNode(Symbol* func, Node* bod, Node* paramsList);
+	FunctionDefineNode(Symbol* func, Node* bod, Node* paramsList, int line, int col);
 
 	virtual void print(ostream &os);
 
@@ -23,6 +23,9 @@ public:
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 	TypeExpression* createReturnType(); // create a TypeExpression represents the return type.
 };

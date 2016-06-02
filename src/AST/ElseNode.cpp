@@ -2,11 +2,14 @@
 #include "ElseNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypesTable.h"
 
-ElseNode::ElseNode(Node *node){
+ElseNode::ElseNode(Node *node, int line, int col){
 	this->body = node;
 	this->body->hasScopeFrame = true;
+	this->line = line;
+	this->col = col;
 }
 
  void ElseNode::print(ostream &os) {
@@ -32,4 +35,9 @@ bool ElseNode::type_checking() {
 	this->nodeType = TypesTable::getInstance()->getType(VOID_TYPE_ID);
 	this->body->type_checking();
 	return true;
+}
+
+
+void ElseNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

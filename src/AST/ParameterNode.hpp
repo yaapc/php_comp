@@ -13,7 +13,7 @@ public :
 
 	Parameter* parSym; // parameter symbol
 
-	ParameterNode(Symbol* parSym,Node *defaultValueNode,bool isDefault);
+	ParameterNode(Symbol* parSym,Node *defaultValueNode,bool isDefault, int line, int col);
 
 	bool type_checking();
 
@@ -22,6 +22,9 @@ public :
 	void print(ostream &os);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 
 };

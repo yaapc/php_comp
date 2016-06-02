@@ -4,6 +4,7 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/AsmGenerator.h"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
 ListNode* ListNode::add_node(Node* node) {
     nodes.push_back(node);
@@ -56,4 +57,8 @@ void ListNode::print(ostream& os) {
 Node* ListNode::optmize(OptimizationVistor *optimizationVistor)
 {
 	return optimizationVistor->visit(this);
+}
+
+void ListNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

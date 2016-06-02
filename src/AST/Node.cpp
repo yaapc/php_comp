@@ -2,9 +2,12 @@
 #include "Node.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
 Node::Node(){
 	hasScopeFrame = false;
+	this->line = 0;
+	this->col = 0;
 }
 
 void Node::print(ostream& os) {
@@ -30,4 +33,7 @@ void Node::print(ostream& os) {
 Node* Node::optmize(OptimizationVistor *optimizationVistor)
 {
 	return this;
+}
+
+void Node::accept(TypeErrorVisitor* errorVisitor) {
 }

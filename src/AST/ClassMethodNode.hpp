@@ -8,7 +8,7 @@ public:
 	Node* bodySts;          // body statements nodes
 	ListNode* paramsList;   // a list of parameter nodes
 
-	ClassMethodNode(Symbol* methodSym, Node* bodySts, Node* paramsList);
+	ClassMethodNode(Symbol* methodSym, Node* bodySts, Node* paramsList, int line, int col);
 
 	virtual void print(ostream &os);
 
@@ -17,5 +17,8 @@ public:
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 };

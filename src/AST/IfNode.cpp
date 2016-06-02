@@ -5,11 +5,14 @@
 #include "../TypeSystem/TypesTable.h"
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
-IfNode::IfNode(Node *cond, Node *bod, Node *el) : condition(cond), else_node(dynamic_cast<ElseNode*>(el)) 
+IfNode::IfNode(Node *cond, Node *bod, Node *el, int line, int col) : condition(cond), else_node(dynamic_cast<ElseNode*>(el))
 {
 	body = bod;
 	body->hasScopeFrame = true;
+	this->col = col;
+	this->line = line;
 }
 
    void IfNode::print(ostream &os) {
@@ -52,7 +55,7 @@ Node* IfNode::optmize(OptimizationVistor *optimizationVistor)
 		  return true;
 	  }
 	  else {
-		  this->nodeType = new TypeError("Expected Boolean Expression for the Condition.");
+		  this->nodeType = new TypeError("Expected Boolean Expression for the Condition. " + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
 		  this->body->type_checking();
 		  this->else_node->type_checking();
 		  return false;
@@ -66,3 +69,6 @@ Node* IfNode::optmize(OptimizationVistor *optimizationVistor)
 	  return this->nodeType;
   }
 
+  void IfNode::accept(TypeErrorVisitor* typeVisitor) {
+	  typeVisitor->visit(this);
+  }

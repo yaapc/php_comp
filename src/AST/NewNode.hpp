@@ -10,7 +10,7 @@ public:
 	ListNode* argumentsList;  // a list of parameter nodes
 	MemberWrapper* constructorWr; // a MethodWrapper represents called constructor 
 
-	NewNode(Node* args,string className);
+	NewNode(Node* args,string className, int line, int col);
 
 	virtual bool type_checking();
 
@@ -21,6 +21,9 @@ public:
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 	/*
 	*	generates a signature of the constructor called.

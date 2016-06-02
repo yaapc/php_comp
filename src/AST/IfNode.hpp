@@ -10,13 +10,16 @@ public:
 	Node *condition, *body;
 	Node *else_node;
 
-	IfNode(Node *cond, Node *bod, Node *el);
+	IfNode(Node *cond, Node *bod, Node *el, int line, int col);
 
 	virtual void print(ostream &os);
 
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 	virtual bool type_checking();
 

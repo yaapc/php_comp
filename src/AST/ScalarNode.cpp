@@ -4,29 +4,39 @@
 #include "../Code Generator/AsmGenerator.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "../TypeSystem/TypeError.hpp"
 
-ScalarNode::ScalarNode(int i) {
+ScalarNode::ScalarNode(int i, int line, int col) {
 	this->nodeType = nullptr;
 	value.type = 1;
 	value.int_val = i;
+	this->line = line;
+	this->col = col;
   }
 
- ScalarNode::ScalarNode(float f){
+ ScalarNode::ScalarNode(float f, int line, int col){
 	this->nodeType = nullptr;
 	value.type = 2;
 	value.float_val = f;
+	this->line = line;
+	this->col = col;
   }
 
-ScalarNode::ScalarNode(bool b) {
+ScalarNode::ScalarNode(bool b, int line, int col) {
 	this->nodeType = nullptr;
 	value.type = 3;
 	value.bool_val = b;
+	this->line = line;
+	this->col = col;
   }
 
-ScalarNode::ScalarNode(string s){
+ScalarNode::ScalarNode(string s, int line, int col){
 	this->nodeType = nullptr;
 	value.type = 5;
 	value.string_val = s;
+	this->line = line;
+	this->col = col;
   }
 
 
@@ -53,7 +63,7 @@ bool ScalarNode::type_checking() {
 				this->nodeType = TypesTable::getInstance()->getType(STRING_TYPE_ID);
 				break;
 			default:
-				this->nodeType = TypesTable::getInstance()->getType(ERROR_TYPE_ID);
+				this->nodeType = new TypeError("Couldn't recognize Scalar Type, " + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
 				break;
 		}	  
     return false;
@@ -75,4 +85,8 @@ void ScalarNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 Node* ScalarNode::optmize(OptimizationVistor *optimizationVistor)
 {
 	return optimizationVistor->visit(this);
+}
+
+void ScalarNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

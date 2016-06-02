@@ -10,7 +10,7 @@ public:
 	string propName;
 	PropertyWrapper* propWrapper;
 
-	StaticCallNode(string className, string propName);
+	StaticCallNode(string className, string propName, int line , int col);
 
 	virtual void print(ostream &os);
 
@@ -19,5 +19,8 @@ public:
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 };

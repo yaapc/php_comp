@@ -3,10 +3,13 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
-StaticCallNode::StaticCallNode(string className, string varNode) {
+StaticCallNode::StaticCallNode(string className, string varNode, int line, int col) {
 	this->className = className;
 	this->propName = varNode;
+	this->line = line;
+	this->col = col;
 }
 
 void StaticCallNode::print(ostream &os) {
@@ -37,7 +40,7 @@ bool StaticCallNode::type_checking() {
 
 	this->propWrapper = TypeClass::getStaticProperty(this->className, this->propName);
 	if (this->propWrapper == nullptr) {
-		this->nodeType = new TypeError("Either " + this->className + " or " + this->propName + " is undefined");
+		this->nodeType = new TypeError("Either " + this->className + " or " + this->propName + " is undefined, " + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
 		return false;
 	}
 	this->nodeType = this->propWrapper->getTypeExpr();
@@ -52,4 +55,8 @@ void StaticCallNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 Node* StaticCallNode::optmize(OptimizationVistor *optimizationVistor)
 {
 	return optimizationVistor->visit(this);
+}
+
+void StaticCallNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

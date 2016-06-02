@@ -1,8 +1,10 @@
 #pragma once
 #include <iostream>
 #include "../TypeSystem/TypeExpression.hpp"
+
 class CodeGneratorVistor;
 class OptimizationVistor;
+class TypeErrorVisitor;
 using namespace std;
 
 class Node {
@@ -19,7 +21,11 @@ public:
 
 	virtual Node* optmize(OptimizationVistor *);
 
+	virtual void accept(TypeErrorVisitor *);
+
 	bool hasScopeFrame;
+
+	int line, col;
 
 protected:
 	TypeExpression* nodeType;

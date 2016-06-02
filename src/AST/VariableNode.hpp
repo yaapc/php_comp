@@ -12,9 +12,9 @@ public:
 	string variableName;
 	Scope* variableScope;
 
-	VariableNode(Symbol *var);
+	VariableNode(Symbol *var, int line, int col);
 
-	VariableNode(Scope* scope, string varName);
+	VariableNode(Scope* scope, string varName, int line, int col);
 
 	virtual void print(ostream &os);
 
@@ -25,4 +25,7 @@ public:
 	virtual bool type_checking();
 
 	virtual TypeExpression* getNodeType();
+
+	virtual void accept(TypeErrorVisitor *);
+
 };

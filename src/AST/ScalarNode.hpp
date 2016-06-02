@@ -52,10 +52,10 @@ class ScalarNode : public Node {
 
 public:
 	Value  value;
-	ScalarNode(int i);
-	ScalarNode(float f);
-	ScalarNode(bool b);
-	ScalarNode(string s);
+	ScalarNode(int i, int line, int col);
+	ScalarNode(float f, int line, int col);
+	ScalarNode(bool b, int line, int col);
+	ScalarNode(string s, int line, int col);
 
 	virtual void print(ostream &os);
 
@@ -66,5 +66,8 @@ public:
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 };

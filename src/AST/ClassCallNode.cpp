@@ -5,22 +5,26 @@
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 #include <sstream>
 
 
-ClassCallNode::ClassCallNode(Node* objectNode, string propertyString) {
+ClassCallNode::ClassCallNode(Node* objectNode, string propertyString, int line, int col) {
 	this->object = dynamic_cast<VariableNode*>(objectNode);
 	this->propertyString = propertyString;
 	this->nodeType = nullptr;
 	this->isMethodCall = false;
+	this->line = line;
 }
 
-ClassCallNode::ClassCallNode(Node* objectNode, string propertyString, Node* argumentsList) {
+ClassCallNode::ClassCallNode(Node* objectNode, string propertyString, Node* argumentsList, int line, int col) {
 	this->object = dynamic_cast<VariableNode*>(objectNode);
 	this->propertyString = propertyString;
 	this->nodeType = nullptr;
 	this->isMethodCall = true;
 	this->argumentsList = dynamic_cast<ListNode*>(argumentsList);
+	this->line = line;
+	this->col = col;
 }
 
 
@@ -78,4 +82,9 @@ string ClassCallNode::generateCallSignature() {
 	}
 	os << ")";
 	return os.str();
+}
+
+
+void ClassCallNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

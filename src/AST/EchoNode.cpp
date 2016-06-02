@@ -6,9 +6,13 @@
 #include "ListNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypeError.hpp"
+#include "../TypeSystem/TypesTable.h"
 
-EchoNode::EchoNode(Node* node) : expression(node) {
+EchoNode::EchoNode(Node* node, int line, int col) : expression(node) {
+	this->line = line;
+	this->col = col;
 }
 
 bool EchoNode::type_checking() {
@@ -16,6 +20,12 @@ bool EchoNode::type_checking() {
 	if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
 		return true; // pass it this time
 	}
+
+	TypeExpression* exprTE = this->expression->getNodeType();
+	if (exprTE != nullptr && dynamic_cast<TypeError*>(exprTE) != nullptr)
+		this->nodeType = TypesTable::getInstance()->getType(VOID_TYPE_ID);
+	else
+		this->nodeType = exprTE; // gets the same error type;
 
 	return this->expression->type_checking();
 }
@@ -42,4 +52,9 @@ void EchoNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 Node* EchoNode::optmize(OptimizationVistor *optimizationVistor)
 {
 	return optimizationVistor->visit(this);
+}
+
+
+void EchoNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

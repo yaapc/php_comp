@@ -10,13 +10,15 @@ public:
   Node *left, *right;
   char* op_type;
 
-  BinaryOperationNode(char* op, Node *lft, Node *rgt);
+  BinaryOperationNode(char* op, Node *lft, Node *rgt, int line, int col);
 
   virtual void print(ostream &os);
 
   virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
   virtual Node* optmize(OptimizationVistor *);
+
+  virtual void accept(TypeErrorVisitor *);
 
   virtual TypeExpression* getType();
 

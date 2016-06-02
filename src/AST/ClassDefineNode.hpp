@@ -17,7 +17,7 @@ public:
 	ClassDefineNode* parent;
 	//TODO: think about inner classes!
 
-	ClassDefineNode(Symbol* classSym, Node* body);
+	ClassDefineNode(Symbol* classSym, Node* body, int line, int col);
 
 
 	virtual void print(ostream &os);
@@ -27,6 +27,9 @@ public:
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 private:
 	void extractInfo(); // extracts class node information from class symbol and body nodes.

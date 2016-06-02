@@ -12,7 +12,7 @@ public:
 	TypeFunction* functionType;
 
 
-	FunctionCallNode(string name, Node* argsList);
+	FunctionCallNode(string name, Node* argsList, int line, int col);
 
 	void print(ostream &os);
 
@@ -28,4 +28,7 @@ public:
 	string generateCallSignature();
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 };

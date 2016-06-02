@@ -4,9 +4,12 @@
 #include "..\TypeSystem\TypesTable.h"
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
-DeclarationNode::DeclarationNode(Symbol *v) : variable(dynamic_cast<Variable*>(v)) {
+DeclarationNode::DeclarationNode(Symbol *v, int line, int col) : variable(dynamic_cast<Variable*>(v)) {
 	nodeType = nullptr;
+	this->line = line;
+	this->col = col;
 }
 
 void DeclarationNode::print(ostream &os) {
@@ -67,9 +70,14 @@ TypeExpression* DeclarationNode::getNodeType() {
 	this->nodeType = TypesTable::getInstance()->getClassType(type);
 
 	if (this->nodeType == nullptr) { // no type found
-		this->nodeType = new TypeError("Undefined");
+		this->nodeType = new TypeError("Variable Type is Undefined." + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
 		return false;
 	}
 
 	return true;
   }
+
+
+ void DeclarationNode::accept(TypeErrorVisitor* typeVisitor) {
+	 typeVisitor->visit(this);
+ }

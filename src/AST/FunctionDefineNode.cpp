@@ -4,14 +4,15 @@
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
-
-FunctionDefineNode::FunctionDefineNode(Symbol* func, Node* bod, Node* paramsList) {
+FunctionDefineNode::FunctionDefineNode(Symbol* func, Node* bod, Node* paramsList, int line, int col) {
     functionSym = dynamic_cast<Function*>(func);
     bodySts = dynamic_cast<ListNode*>(bod);
 	this->paramsList = dynamic_cast<ListNode*>(paramsList);
 	this->nodeType = nullptr;
-	
+	this->line = line;
+	this->col = col;
   }
 
 void FunctionDefineNode::print(ostream &os) {
@@ -56,4 +57,8 @@ void FunctionDefineNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 Node* FunctionDefineNode::optmize(OptimizationVistor *optimizationVistor)
 {
 	return optimizationVistor->visit(this);
+}
+
+void FunctionDefineNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

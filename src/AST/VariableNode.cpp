@@ -6,20 +6,25 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "../SymbolTable/Scope.h"
 #include "../SymbolTable/SymbolsParser.h"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
-VariableNode::VariableNode(Symbol *var) {
+VariableNode::VariableNode(Symbol *var, int line, int col) {
     variable = dynamic_cast<Variable*>(var);
 	nodeType = nullptr;
 	this->variableScope = nullptr;
 	this->variableName = variable->getName();
+	this->line = line;
+	this->col = col;
 	 //  if (!variable) throw "Bad variable";
   }
 
-VariableNode::VariableNode(Scope* scope, string varName) {
+VariableNode::VariableNode(Scope* scope, string varName, int line, int col) {
 	this->variable = nullptr;
 	this->nodeType = nullptr;
 	this->variableScope = scope;
 	this->variableName = varName;
+	this->line = line;
+	this->col = col;
 }
 
 void VariableNode::print(ostream &os) {
@@ -40,14 +45,14 @@ void VariableNode::print(ostream &os) {
 		  //try to find it again		  
 		  //check scope:
 		  if (this->variableScope == nullptr) { 
-			  this->nodeType = new TypeError("Variable " + variableName +" is undefined");
+			  this->nodeType = new TypeError("Variable " + variableName +" is undefined, " + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
 			  return false;
 		  }		  
 		  		  
 		  extern SymbolsParser * symbolsParser;
 		  this->variable = dynamic_cast<Variable*>(symbolsParser->lookUpSymbol(this->variableScope, &this->variableName[0]));
 		  if (this->variable == nullptr) {// it's still not found
-			  this->nodeType = new TypeError("Variable " + variableName + " is undefined");
+			  this->nodeType = new TypeError("Variable " + variableName + " is undefined, " + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
 			  return false;
 		  }
 	  }
@@ -79,7 +84,7 @@ void VariableNode::print(ostream &os) {
 	  this->nodeType = TypesTable::getInstance()->getClassType(type);
 
 	  if (this->nodeType == nullptr) { // no type found
-		  this->nodeType = new TypeError("Undefined");
+		  this->nodeType = new TypeError("Undefined Variable Type, " + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
 		  return false;
 	  }
 
@@ -101,4 +106,8 @@ void VariableNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 Node* VariableNode::optmize(OptimizationVistor *optimizationVistor)
 {
 	return optimizationVistor->visit(this);
+}
+
+void VariableNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

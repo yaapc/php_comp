@@ -13,15 +13,18 @@ public:
 	MemberWrapper* member;
 	ListNode* argumentsList;
 
-	ClassCallNode(Node* objectNode, string propertyString);
+	ClassCallNode(Node* objectNode, string propertyString, int line, int col);
 
-	ClassCallNode(Node* objectNode, string propertyString, Node* argumentsList);
+	ClassCallNode(Node* objectNode, string propertyString, Node* argumentsList, int line ,int col);
 
 	virtual void print(ostream &os);
 
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 	virtual bool type_checking();
 

@@ -4,10 +4,12 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "../TypeSystem/TypeError.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
-
-BinaryOperationNode::BinaryOperationNode(char* op, Node *lft, Node *rgt) : left(lft), right(rgt), op_type(op) {
+BinaryOperationNode::BinaryOperationNode(char* op, Node *lft, Node *rgt, int line, int col) : left(lft), right(rgt), op_type(op) {
 	  nodeType = nullptr;
+	  this->line = line;
+	  this->col = col;
 }
 
 void BinaryOperationNode::print(ostream &os) {
@@ -105,6 +107,11 @@ Node* BinaryOperationNode::optmize(OptimizationVistor *optimizationVistor)
 			return true;
 		}
 				
-		this->nodeType = TypesTable::getInstance()->getType(ERROR_TYPE_ID);
+		this->nodeType = new TypeError("Given operator is Undefind" + string("line:") + to_string(this->line) + string(", col : ") + to_string(this->col));
 		return false;
   }
+
+
+ void BinaryOperationNode::accept(TypeErrorVisitor* typeVisitor) {
+	 typeVisitor->visit(this);
+ }

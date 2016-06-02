@@ -3,13 +3,16 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypesTable.h"
 
-ClassMethodNode::ClassMethodNode(Symbol* methodSym, Node* bodySts, Node* params) {
+ClassMethodNode::ClassMethodNode(Symbol* methodSym, Node* bodySts, Node* params, int line, int col) {
 	this->nodeType = nullptr;
 	this->methodSym = dynamic_cast<Method*>(methodSym);
 	this->bodySts = bodySts;
 	this->paramsList = dynamic_cast<ListNode*>(params);
+	this->line = line;
+	this->col = col;
 }
 
 bool ClassMethodNode::type_checking() {
@@ -49,7 +52,9 @@ void ClassMethodNode::print(ostream &os) {
 		<< endl;
 }
 
-
+void ClassMethodNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
+}
 
 
 

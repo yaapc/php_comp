@@ -6,8 +6,8 @@
 #include "Code Generator/AsmGenerator.h"
 #include "Code Generator\CodeGeneratorVistor.hpp"
 #include "Code Generator\OptimizationVistor.hpp"
+#include "AST/AST_Visitors/TypeErrorVisitor.hpp"
 #include "TypeSystem\TypesTable.h"
-
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -23,8 +23,10 @@ extern void initTypeChecker();
 
 CodeGneratorVistor codeGeneratorVistor;
 OptimizationVistor optimizationVistor;
+TypeErrorVisitor errorsVisitor;
 
 void print_ast(Node *root, std::ostream &os,string name);
+void print_errors_vector(vector<TypeExpression*>);
 
 bool GC				= 1;
 bool withComments	= 1;
@@ -33,6 +35,8 @@ int main(int argc, char** argv) {
 	initSymbolsParser();
 	initTypeChecker();
 	cout << "php-compiler" << endl << endl;
+	
+	/** Syntactic Analysis Phase: **/
 	extern FILE *yyin;
 	if (!(yyin = fopen("index.php", "r"))) {
 		cerr << "index.php not found" << endl;
@@ -58,15 +62,28 @@ int main(int argc, char** argv) {
 
 	//Print errors and symbol table in files
 	symbolsParser->printSymbolTables(); cout << "printSymbolTables\n";
-	errorRec.printErrQueue(); cout << "printErrQueue\n";
+	//errorRec.printErrQueue(); cout << "printErrQueue\n";
+
+	//if (!errorRec.errQ->isEmpty()) {
+		//cout << "\n*There are some Parse Errors,\n*Compilation Halted.\n\n";
+		//errorRec.printErrQueue();
+		//return 0;
+	//}
 
 	TypesTable::buildObjectClass();
 
-	//Check AST types 
+	/** Semantic Analysis Phase: **/
 	tree->type_checking(); cout << "TypeChecking Pass\n";
 	TypeClass::tryReDefine();
 	TypeFunction::tryReDefine();
 	tree->type_checking(); cout << "Second TypeChecking Pass\n";
+
+	errorsVisitor.visit(tree);
+	if (errorsVisitor.errQ.size() > 0) {
+		cout << "\n*There are some Semantic Errors,\n*Compilation Halted.\n\n";
+		print_errors_vector(errorsVisitor.errQ);
+		return 0;
+	}	
 
 
 	//Optimize AST
@@ -78,7 +95,7 @@ int main(int argc, char** argv) {
 	ast_dot_optmized.close();
 	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast_optmized.dot -o ast_optmized.svg", NULL, SW_HIDE);
 
-	//Generate code AST
+	/** Code Generation Phase: **/
 	codeGeneratorVistor.generate(tree);
 
 
@@ -94,4 +111,13 @@ void print_ast(Node *root, std::ostream &os,string name) {
   os << "digraph \""+ name + " AST\" {\n";
   root->print(os);
   os << "}\n";
+}
+
+void print_errors_vector(vector<TypeExpression*> vec) {
+	for (auto &typeE : vec) {
+		cout << "- "
+			<< dynamic_cast<TypeError*>(typeE)->msg
+			<< endl;
+	}
+	cout << endl << endl;
 }

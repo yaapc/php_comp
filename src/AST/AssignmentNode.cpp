@@ -6,10 +6,12 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
-
-AssignmentNode::AssignmentNode(Node *l, Node *r) : lhs(l), rhs(r) {
+AssignmentNode::AssignmentNode(Node *l, Node *r, int line, int col) : lhs(l), rhs(r) {
 	nodeType = nullptr;
+	this->line = line;
+	this->col = col;
 }
 
 void AssignmentNode::print(ostream &os) {
@@ -43,6 +45,7 @@ Node* AssignmentNode::optmize(OptimizationVistor *optimizationVistor)
 
   bool AssignmentNode::type_checking() {
 	  if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
+		  //this for second passes, if the current node is free of TypeError no need to re type_check it
 		  return true; // pass it this time
 	  }
 
@@ -63,7 +66,7 @@ Node* AssignmentNode::optmize(OptimizationVistor *optimizationVistor)
 	  VariableNode* leftVar = dynamic_cast<VariableNode*>(lhs);
 	  if(leftVar != nullptr){
 		  if (leftVar->variable->isConst) {
-			  this->nodeType = new TypeError("lvalue is not modifiable.");
+			  this->nodeType = new TypeError("lvalue is not modifiable. line:" + this->line + string(",col:") + to_string(this->col));
 			  return false;
 		  }
 	  }
@@ -72,7 +75,7 @@ Node* AssignmentNode::optmize(OptimizationVistor *optimizationVistor)
 		  //double check
 		  if (leftObj != nullptr) {
 			  if (leftObj->isMethodCall) {
-				  this->nodeType = new TypeError("lvalue is not modifiable.");
+				  this->nodeType = new TypeError("lvalue is not modifiable. line:" + this->line + string(",col:") + to_string(this->col));
 				  return false;
 			  }
 		  }
@@ -86,7 +89,12 @@ Node* AssignmentNode::optmize(OptimizationVistor *optimizationVistor)
 	  else {
 		  this->nodeType = new TypeError("no suitable conversion exists between " + 
 			  TypeSystemHelper::getTypeName(lhs->getNodeType()->getTypeId()) + " and " + 
-				  TypeSystemHelper::getTypeName(rhs->getNodeType()->getTypeId()));
+				  TypeSystemHelper::getTypeName(rhs->getNodeType()->getTypeId()) + string(". line:") + to_string(this->line) + string(", col : ") + to_string(this->col));
 		  return false;
 	  }
   }
+
+
+void AssignmentNode::accept(TypeErrorVisitor* typeVisitor) {
+	  typeVisitor->visit(this);
+}

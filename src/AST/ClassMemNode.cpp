@@ -5,11 +5,14 @@
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
 
-ClassMemNode::ClassMemNode(Symbol* memberSym) {
+ClassMemNode::ClassMemNode(Symbol* memberSym, int line, int col) {
 	this->memberSym = dynamic_cast<DataMember*>(memberSym);
 	this->nodeType = nullptr;
+	this->line = line;
+	this->col = col;
 }
 
 bool ClassMemNode::type_checking() {
@@ -44,7 +47,7 @@ bool ClassMemNode::type_checking() {
 	this->nodeType = TypesTable::getInstance()->getClassType(type);
 
 	if (this->nodeType == nullptr) { // no type found
-		this->nodeType = new TypeError("Undefined");
+		this->nodeType = new TypeError("Variable Type is Undefined" + string(" line:") + to_string(this->line) + string(", col : ") + to_string(this->col));
 		return false;
 	}
 	return true;
@@ -90,4 +93,9 @@ string ClassMemNode::getName() {
 
 DataMember* ClassMemNode::getMemSymbol() {
 	return this->memberSym;
+}
+
+
+void ClassMemNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

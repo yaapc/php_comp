@@ -206,7 +206,7 @@ start_part:
 optional_inline_html:
 		T_INLINE_HTML {
 			pl.log("inline_html");
-			$<r.node>$ = new EchoNode(new ScalarNode(string($<r.str>1))); }
+			$<r.node>$ = new EchoNode(new ScalarNode(string($<r.str>1),$<r.line_no>1, $<r.col_no>1), $<r.line_no>1, $<r.col_no>1); }
 	| /* empty */ %prec low_prec { $<r.node>$ = nullptr; }
 ;
 
@@ -371,14 +371,14 @@ variable_declaration:
 		{
 			pl.log("initialized variable declaration.", 0); pl.log($<r.str>1);
 			$<r.symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, true, $<r.col_no>1, $<r.line_no>1));
-			$<r.node>$ = (new ListNode())->add_node(new DeclarationNode($<r.symbol>$))
-																	 ->add_node(new AssignmentNode(new VariableNode($<r.symbol>$), $<r.node>3));
+			$<r.node>$ = (new ListNode())->add_node(new DeclarationNode($<r.symbol>$, $<r.line_no>1, $<r.col_no>1))
+																	 ->add_node(new AssignmentNode(new VariableNode($<r.symbol>$, $<r.line_no>1, $<r.col_no>1), $<r.node>3, $<r.line_no>1, $<r.col_no>1));
 		}
 	| T_VARIABLE
 		{
 			pl.log("uninitialized variable declaration.");
 			$<r.symbol>$ = symbolsParser->insertSymbol(new Variable($<r.str>1,VARIABLE, false, $<r.col_no>1, $<r.line_no>1));
-			$<r.node>$ = (new ListNode())->add_node(new DeclarationNode($<r.symbol>$));
+			$<r.node>$ = (new ListNode())->add_node(new DeclarationNode($<r.symbol>$, $<r.line_no>1, $<r.col_no>1));
 		}
 	| T_VARIABLE '='
 		{
@@ -415,28 +415,28 @@ statement:
 		if ($<r.node>4) {
 			IfNode *deepest_if = IfNode::find_deepest_if($<r.node>4);
 			deepest_if->else_node = dynamic_cast<ElseNode*>($<r.node>5);
-			else_node = new ElseNode($<r.node>4);
+			else_node = new ElseNode($<r.node>4, $<r.line_no>1, $<r.col_no>1);
 		} else {
 			else_node = $<r.node>5;
 		}
-		$<r.node>$ = new IfNode($<r.node>2, $<r.node>3, else_node); }
+		$<r.node>$ = new IfNode($<r.node>2, $<r.node>3, else_node, $<r.line_no>1, $<r.col_no>1); }
 	| T_IF parentheses_expr ':' inner_statement_list new_elseif_list new_else_single T_ENDIF ';' {pl.log("if stmt new");}
 	| T_WHILE parentheses_expr while_statement {
 		pl.log("while stmt");
-		$<r.node>$ = new WhileNode($<r.node>2, $<r.node>3); }
+		$<r.node>$ = new WhileNode($<r.node>2, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
 	| do_while_loop {pl.log("do while stmt");}
 	| for_loop {pl.log("for loop stmt");}
 	| switch_start parentheses_expr switch_case_list {pl.log("switch stmt");}
-	| T_BREAK ';' {pl.log("break stmt"); $<r.node>$ = new BreakNode();}
+	| T_BREAK ';' {pl.log("break stmt"); $<r.node>$ = new BreakNode($<r.line_no>1, $<r.col_no>1);}
 	| T_BREAK expr ';' {pl.log("break exp stmt");}
-	| T_CONTINUE ';'{pl.log("contintue stmt");  $<r.node>$ = new ContinueNode();}
+	| T_CONTINUE ';'{pl.log("contintue stmt");  $<r.node>$ = new ContinueNode($<r.line_no>1, $<r.col_no>1);}
 	| T_CONTINUE expr ';' {pl.log("contintue expr stmt");}
-	| T_RETURN ';' {pl.log("return stmt"); $<r.node>$ = new ReturnNode(nullptr);}
-	| T_RETURN expr ';' { pl.log("return expr stmt"); $<r.node>$ = new ReturnNode($<r.node>2); }
+	| T_RETURN ';' {pl.log("return stmt"); $<r.node>$ = new ReturnNode(nullptr, $<r.line_no>1, $<r.col_no>1);}
+	| T_RETURN expr ';' { pl.log("return expr stmt"); $<r.node>$ = new ReturnNode($<r.node>2, $<r.line_no>1, $<r.col_no>1); }
 	| yield_expr ';' {pl.log("yield stmt");}
 	| global_variable_statement {pl.log("global variable stmt");}
 	| static_variable_statement {pl.log("static variable stmt");}
-	| T_ECHO expr_list ';' { pl.log("echo stmt"); $<r.node>$ = new EchoNode($<r.node>2); }
+	| T_ECHO expr_list ';' { pl.log("echo stmt"); $<r.node>$ = new EchoNode($<r.node>2, $<r.line_no>1, $<r.col_no>1); }
 	| T_INLINE_HTML
 	| expr ';' {pl.log("expr stmt");}
 	| T_UNSET '(' variables_list ')' ';'
@@ -487,7 +487,7 @@ optional_ellipsis:
 function_declaration_statement:
 		function_header inner_statement_list close_par {
 			pl.log("function:", 0); pl.log($<r.str>3);
-			$<r.node>$ = new FunctionDefineNode($<r.symbol>1, $<r.node>2, $<r.node>1); }
+			$<r.node>$ = new FunctionDefineNode($<r.symbol>1, $<r.node>2, $<r.node>1, $<r.line_no>1, $<r.col_no>1); }
 ;
 
 function_header:
@@ -533,7 +533,7 @@ class_declaration_statement:
 			pl.log("class_declaration_statement");
 			symbolsParser->finishClassInsertion($<r.str>2, dynamic_cast<Class*>($<r.symbol>1), $<r.scope>4);
 			$<r.symbol>$ = symbolsParser->getCurrentClassSym();
-			$<r.node>$ = new ClassDefineNode($<r.symbol>$, $<r.node>5);
+			$<r.node>$ = new ClassDefineNode($<r.symbol>$, $<r.node>5, $<r.line_no>1, $<r.col_no>1);
 			symbolsParser->popFromClassesStack();
 		}
 	| T_INTERFACE T_STRING interface_extends_list open_par class_statement_list close_par {pl.log("interface:", 0); pl.log($<r.str>2);}
@@ -543,7 +543,7 @@ class_declaration_statement:
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'{\', expecting identifier (T_STRING)","");
 			//symbolsParser->finishClassInsertion("ERR_C_NO_NAME", $<r.str>2, dynamic_cast<Class*>($<r.symbol>1), $<r.scope>4);
 			$<r.symbol>$ = symbolsParser->getCurrentClassSym();
-			$<r.node>$ = new ClassDefineNode($<r.symbol>$, $<r.node>5);
+			$<r.node>$ = new ClassDefineNode($<r.symbol>$, $<r.node>5, $<r.line_no>1, $<r.col_no>1);
 			symbolsParser->popFromClassesStack();
 		}
 ;
@@ -677,24 +677,24 @@ class_statement:
 			pl.log("property declaration list");
 			$<r.symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<r.symbol>3), modifiersTags, arrCounter, $<r.str>2);
 			arrCounter = 0;
-			$<r.node>$ = new ClassMemNode($<r.symbol>$);
+			$<r.node>$ = new ClassMemNode($<r.symbol>$, $<r.line_no>1, $<r.col_no>1);
 		}
 	| member_modifiers T_CONST type class_const_list ';' 
 	    {
 			pl.log("constant list");
 			$<r.symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<r.symbol>4), modifiersTags, arrCounter, $<r.str>3);
 			arrCounter = 0;
-			$<r.node>$ = new ClassMemNode($<r.symbol>$);
+			$<r.node>$ = new ClassMemNode($<r.symbol>$, $<r.line_no>1, $<r.col_no>1);
 		}
 	| method_header	method_body	close_par {	/* optional return type in case of constructor */
 			pl.log("method");
 			$<r.symbol>$ = $<r.symbol>1;
-			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1);
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1, $<r.line_no>1, $<r.col_no>1);
 		}
 	| method_header_abstract ';' 
 	    {
 			$<r.symbol>$ = $<r.symbol>1;
-			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1);	
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1, $<r.line_no>1, $<r.col_no>1);	
 		}
 	| member_modifiers property_declaration_list ';' 
 	    {
@@ -702,7 +702,6 @@ class_statement:
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected type, class member must have type","");
 			$<r.symbol>$ = symbolsParser->finishDataMembersDeclaration(dynamic_cast<DataMember*>($<r.symbol>2), modifiersTags, arrCounter, "Object"); // assume type OBJECT
 			arrCounter = 0;
-			//$<r.node>$ = new ClassMethodNode($<r.symbol>$);
 		}
 	|	method_header_without_name method_body close_par 
 	    {
@@ -710,7 +709,7 @@ class_statement:
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
 			pl.log("error method-no id");
 			$<r.symbol>$ = $<r.symbol>1;
-			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1);
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1, $<r.line_no>1, $<r.col_no>1);
 		}
 	| method_header_without_name_abstract ';' 
 	    {
@@ -718,7 +717,7 @@ class_statement:
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Unexpected \'(\', expecting identifier (T_STRING)","");
 			$<r.symbol>$ = $<r.symbol>1;
 			pl.log("error method-no id");
-			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1);	
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1, $<r.line_no>1, $<r.col_no>1);	
 		}
 	| class_declaration_statement 
 	    {
@@ -842,7 +841,7 @@ for_loop:
 				forLoopFlag = false;
 				symbolsParser->goUp();
 			}
-			$<r.node>$ = new ForNode($<r.node>3, $<r.node>5, $<r.node>7, $<r.node>9);
+			$<r.node>$ = new ForNode($<r.node>3, $<r.node>5, $<r.node>7, $<r.node>9, $<r.line_no>1, $<r.col_no>1);
 		}
 	| for_loop_start '(' for_expr	')' for_statement
 		{
@@ -959,14 +958,14 @@ elseif_list:
 			$<r.node>$ = $<r.node>2;
 		} else {
 			IfNode *deepest_if = IfNode::find_deepest_if($<r.node>1);
-			deepest_if->else_node = new ElseNode($<r.node>2);
+			deepest_if->else_node = new ElseNode($<r.node>2, $<r.line_no>1, $<r.col_no>1);
 			$<r.node>$ = $<r.node>1;
 		}
 	}
 ;
 
 elseif:
-		 T_ELSEIF parentheses_expr statement { $<r.node>$ = new IfNode($<r.node>2, $<r.node>3, nullptr); }
+		 T_ELSEIF parentheses_expr statement { $<r.node>$ = new IfNode($<r.node>2, $<r.node>3, nullptr, $<r.line_no>1, $<r.col_no>1); }
 ;
 
 new_elseif_list:
@@ -980,7 +979,7 @@ new_elseif:
 
 else_single:
 		/* empty */ %prec low_prec { $<r.node>$ = nullptr; }
-	| T_ELSE statement { $<r.node>$ = new ElseNode($<r.node>2);	}
+	| T_ELSE statement { $<r.node>$ = new ElseNode($<r.node>2, $<r.line_no>1, $<r.col_no>1);	}
 ;
 
 new_else_single:
@@ -1117,7 +1116,7 @@ parameter:
 			paramSymbol->setVariableType($<r.str>1);// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 
-			ParameterNode* parNode = new ParameterNode(paramSymbol,nullptr,false);
+			ParameterNode* parNode = new ParameterNode(paramSymbol,nullptr,false, $<r.line_no>1, $<r.col_no>1);
 			$<r.node>$ = parNode;
 		}
 	| optional_ref optional_ellipsis T_VARIABLE
@@ -1128,7 +1127,7 @@ parameter:
 			paramSymbol->setVariableType("Object");// assume type is Object and continue // TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 
-			ParameterNode* parNode = new ParameterNode(paramSymbol,nullptr,false);
+			ParameterNode* parNode = new ParameterNode(paramSymbol,nullptr,false, $<r.line_no>1, $<r.col_no>1);
 			$<r.node>$ = parNode;
 		}
 ;
@@ -1141,7 +1140,7 @@ default_parameter:
 			paramSymbol->setVariableType($<r.str>1);// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 
-			ParameterNode* parNode = new ParameterNode(paramSymbol,$<r.node>6,true);
+			ParameterNode* parNode = new ParameterNode(paramSymbol,$<r.node>6,true, $<r.line_no>1, $<r.col_no>1);
 			$<r.node>$ = parNode;
 		}
 	| optional_ref optional_ellipsis T_VARIABLE '=' static_scalar
@@ -1152,7 +1151,7 @@ default_parameter:
 			paramSymbol->setVariableType("Object"); // assume type is Object and continue// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 
-			ParameterNode* parNode = new ParameterNode(paramSymbol,$<r.node>5,true);
+			ParameterNode* parNode = new ParameterNode(paramSymbol,$<r.node>5,true, $<r.line_no>1, $<r.col_no>1);
 			$<r.node>$ = parNode;
 		}
 	| type optional_ref optional_ellipsis T_VARIABLE '='
@@ -1163,7 +1162,7 @@ default_parameter:
 			paramSymbol->setVariableType($<r.str>1); // assume type is Object and continue// TODO: encapsulate variabelType within the constructor
 			$<r.symbol>$ = paramSymbol;
 
-			ParameterNode* parNode = new ParameterNode(paramSymbol,nullptr,true);
+			ParameterNode* parNode = new ParameterNode(paramSymbol,nullptr,true, $<r.line_no>1, $<r.col_no>1);
 			$<r.node>$ = parNode;
 		}
 ;
@@ -1374,8 +1373,8 @@ expr_or_declaration:
 			symbolsParser->insertSymbol(var);
 			
 			$<r.symbol>$ = var;
-			$<r.node>$ = (new ListNode)->add_node(new DeclarationNode(var))
-																 ->add_node(new AssignmentNode(new VariableNode(var), $<r.node>4));
+			$<r.node>$ = (new ListNode)->add_node(new DeclarationNode(var, $<r.line_no>1, $<r.col_no>1))
+																 ->add_node(new AssignmentNode(new VariableNode(var, $<r.line_no>1, $<r.col_no>1), $<r.node>4, $<r.line_no>1, $<r.col_no>1));
 		}
 	| type T_VARIABLE '='
 		{
@@ -1404,16 +1403,16 @@ expr:
 		}
 	| '(' T_PRIMITIVE ')' expr
 	| list_expr '=' expr
-	| variable '=' expr { $<r.node>$ = new AssignmentNode($<r.node>1, $<r.node>3); }
+	| variable '=' expr { $<r.node>$ = new AssignmentNode($<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
 	| variable '=' '&' variable
 	| variable '=' '&' new_expr
 	| new_expr		%prec _def_val_
 	| T_CLONE expr
-	| variable T_PLUS_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("+", $<r.node>1, $<r.node>3)); }
-	| variable T_MINUS_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("-", $<r.node>1, $<r.node>3)); }
-	| variable T_MUL_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("*", $<r.node>1, $<r.node>3)); }
-	| variable T_DIV_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("/", $<r.node>1, $<r.node>3)); }
-	| variable T_CONCAT_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode(".", $<r.node>1, $<r.node>3)); }
+	| variable T_PLUS_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("+", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1), $<r.line_no>1, $<r.col_no>1); }
+	| variable T_MINUS_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("-", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1), $<r.line_no>1, $<r.col_no>1); }
+	| variable T_MUL_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("*", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1), $<r.line_no>1, $<r.col_no>1); }
+	| variable T_DIV_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode("/", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1), $<r.line_no>1, $<r.col_no>1); }
+	| variable T_CONCAT_EQUAL expr { $<r.node>$ = new AssignmentNode($<r.node>1, new BinaryOperationNode(".", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1), $<r.line_no>1, $<r.col_no>1); }
 	| variable T_MOD_EQUAL expr
 	| variable T_AND_EQUAL expr
 	| variable T_OR_EQUAL expr
@@ -1425,20 +1424,20 @@ expr:
 	| T_INC variable
 	| variable T_DEC
 	| T_DEC variable
-	| expr T_BOOLEAN_OR expr { $<r.node>$ = new BinaryOperationNode("||", $<r.node>1, $<r.node>3); }
-	| expr T_BOOLEAN_AND expr{ $<r.node>$ = new BinaryOperationNode("&&", $<r.node>1, $<r.node>3); }
+	| expr T_BOOLEAN_OR expr { $<r.node>$ = new BinaryOperationNode("||", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
+	| expr T_BOOLEAN_AND expr{ $<r.node>$ = new BinaryOperationNode("&&", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
 	| expr T_LOGICAL_OR expr
 	| expr T_LOGICAL_AND expr
 	| expr T_LOGICAL_XOR expr
 	| expr '|' expr
 	| expr '&' expr
 	| expr '^' expr
-	| expr '+' expr { $<r.node>$ = new BinaryOperationNode("+", $<r.node>1, $<r.node>3); }
-	| expr '.' expr { $<r.node>$ = new BinaryOperationNode("+", $<r.node>1, $<r.node>3); }
-	| expr '-' expr	{ $<r.node>$ = new BinaryOperationNode("-", $<r.node>1, $<r.node>3); }
-	| expr '*' expr { $<r.node>$ = new BinaryOperationNode("*", $<r.node>1, $<r.node>3); }
-	| expr '/' expr { $<r.node>$ = new BinaryOperationNode("/", $<r.node>1, $<r.node>3); }
-	| expr '%' expr { $<r.node>$ = new BinaryOperationNode("%", $<r.node>1, $<r.node>3); }
+	| expr '+' expr { $<r.node>$ = new BinaryOperationNode("+", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
+	| expr '.' expr { $<r.node>$ = new BinaryOperationNode("+", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
+	| expr '-' expr	{ $<r.node>$ = new BinaryOperationNode("-", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
+	| expr '*' expr { $<r.node>$ = new BinaryOperationNode("*", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
+	| expr '/' expr { $<r.node>$ = new BinaryOperationNode("/", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
+	| expr '%' expr { $<r.node>$ = new BinaryOperationNode("%", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
 	| expr T_SL expr
 	| expr T_SR expr
 	| expr T_POW expr
@@ -1448,13 +1447,13 @@ expr:
 	| '~' expr
 	| expr T_IS_IDENTICAL expr
 	| expr T_IS_NOT_IDENTICAL expr
-	| expr T_IS_EQUAL expr { $<r.node>$ = new BinaryOperationNode("==", $<r.node>1, $<r.node>3); }
-	| expr T_IS_NOT_EQUAL expr  { $<r.node>$ = new BinaryOperationNode("!=", $<r.node>1, $<r.node>3); }
+	| expr T_IS_EQUAL expr { $<r.node>$ = new BinaryOperationNode("==", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
+	| expr T_IS_NOT_EQUAL expr  { $<r.node>$ = new BinaryOperationNode("!=", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
 	| expr T_SPACESHIP expr
-	| expr '<' expr { $<r.node>$ = new BinaryOperationNode("<", $<r.node>1, $<r.node>3); }
-	| expr T_IS_SMALLER_OR_EQUAL expr { $<r.node>$ = new BinaryOperationNode("<=", $<r.node>1, $<r.node>3); }
-	| expr '>' expr { $<r.node>$ = new BinaryOperationNode(">", $<r.node>1, $<r.node>3); }
-	| expr T_IS_GREATER_OR_EQUAL expr { $<r.node>$ = new BinaryOperationNode(">=", $<r.node>1, $<r.node>3); }
+	| expr '<' expr { $<r.node>$ = new BinaryOperationNode("<", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
+	| expr T_IS_SMALLER_OR_EQUAL expr { $<r.node>$ = new BinaryOperationNode("<=", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
+	| expr '>' expr { $<r.node>$ = new BinaryOperationNode(">", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
+	| expr T_IS_GREATER_OR_EQUAL expr { $<r.node>$ = new BinaryOperationNode(">=", $<r.node>1, $<r.node>3, $<r.line_no>1, $<r.col_no>1); }
 	| expr T_INSTANCEOF class_name_reference
 	| parentheses_expr
 	/* we need a separate '(' new_expr ')' rule to avoid problems caused by a s/r conflict */
@@ -1518,7 +1517,7 @@ anonymous_class:
 ;
 
 new_expr:
-		T_NEW class_name_reference ctor_arguments { $<r.node>$ = new NewNode($<r.node>3, $<r.str>2); } 
+		T_NEW class_name_reference ctor_arguments { $<r.node>$ = new NewNode($<r.node>3, $<r.str>2, $<r.line_no>1, $<r.col_no>1); } 
 	| T_NEW anonymous_class
 ;
 
@@ -1540,7 +1539,7 @@ function_call:
 		name argument_list 
 		{
 			pl.log("function call");
-			$<r.node>$ = new FunctionCallNode($<r.str>1, $<r.node>2);	
+			$<r.node>$ = new FunctionCallNode($<r.str>1, $<r.node>2, $<r.line_no>1, $<r.col_no>1);	
 		}
 	| class_name_or_var T_PAAMAYIM_NEKUDOTAYIM identifier argument_list {pl.log(":: function call");}
 	| class_name_or_var T_PAAMAYIM_NEKUDOTAYIM open_par expr close_par argument_list
@@ -1603,19 +1602,19 @@ ctor_arguments:
 common_scalar:
 		T_LNUMBER { 
 					$<r.i>$ = $<r.i>1;
-					$<r.node>$ = new ScalarNode($<r.i>1); }
+					$<r.node>$ = new ScalarNode($<r.i>1, $<r.line_no>1, $<r.col_no>1); }
 	| T_DNUMBER   { 
 					$<r.f>$ = $<r.f>1;
-					$<r.node>$ = new ScalarNode($<r.f>1);}
+					$<r.node>$ = new ScalarNode($<r.f>1, $<r.line_no>1, $<r.col_no>1);}
 	| T_TRUE	  { 
 					$<r.i>$ = 1;
-					$<r.node>$ = new ScalarNode(bool(true));}
+					$<r.node>$ = new ScalarNode(bool(true), $<r.line_no>1, $<r.col_no>1);}
 	| T_FALSE	  { 
 					$<r.i>$ = 0;
-					$<r.node>$ = new ScalarNode(bool(false));}
+					$<r.node>$ = new ScalarNode(bool(false), $<r.line_no>1, $<r.col_no>1);}
 	| T_CONSTANT_ENCAPSED_STRING  { 
 					$<r.str>$ = $<r.str>1;
-					$<r.node>$ = new ScalarNode(std::string($<r.str>1));}
+					$<r.node>$ = new ScalarNode(std::string($<r.str>1), $<r.line_no>1, $<r.col_no>1);}
 	| T_LINE
 	| T_FILE
 	| T_DIR
@@ -1723,11 +1722,11 @@ new_expr_array_deref:
 object_access:
 	  variable_or_new_expr T_OBJECT_OPERATOR object_property %prec low_prec 
 	    {
-			$<r.node>$ = new ClassCallNode($<r.node>1, $<r.str>3);
+			$<r.node>$ = new ClassCallNode($<r.node>1, $<r.str>3, $<r.line_no>1, $<r.col_no>1);
 		}
 	| variable_or_new_expr T_OBJECT_OPERATOR object_property argument_list
 	    {
-		    $<r.node>$ = new ClassCallNode($<r.node>1, $<r.str>3, $<r.node>4);
+		    $<r.node>$ = new ClassCallNode($<r.node>1, $<r.str>3, $<r.node>4, $<r.line_no>1, $<r.col_no>1);
 		}
 	| object_access argument_list
 	| object_access '[' dim_offset ']'
@@ -1764,7 +1763,7 @@ static_property_with_arrays:
 	  class_name_or_var T_PAAMAYIM_NEKUDOTAYIM T_VARIABLE {
 			pl.log("static_property_with_arrays", 0);
 			pl.log($<r.str>3);
-			$<r.node>$ = new StaticCallNode($<r.str>1, $<r.str>3);
+			$<r.node>$ = new StaticCallNode($<r.str>1, $<r.str>3, $<r.line_no>1, $<r.col_no>1);
 	  }
 	| class_name_or_var T_PAAMAYIM_NEKUDOTAYIM '$' open_par expr close_par
 	| static_property_with_arrays '[' dim_offset ']'
@@ -1776,7 +1775,7 @@ reference_variable:
 	| reference_variable open_par expr close_par
 	| T_VARIABLE {
 			$<r.symbol>$ = symbolsParser->lookUpSymbol(symbolsParser->getCurrentScope(), $<r.str>1, $<r.line_no>1, $<r.col_no>1);
-			$<r.node>$ = new VariableNode(symbolsParser->getCurrentScope(), $<r.str>1); 
+			$<r.node>$ = new VariableNode(symbolsParser->getCurrentScope(), $<r.str>1, $<r.line_no>1, $<r.col_no>1); 
 	    }
 	| '$' open_par expr close_par
 ;

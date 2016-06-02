@@ -2,13 +2,17 @@
 #include "ForNode.hpp"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 
 
- ForNode::ForNode(Node *initializer, Node *condition, Node *post_statement, Node *body) :
+ ForNode::ForNode(Node *initializer, Node *condition, Node *post_statement, Node *body, int line, int col) :
     initializer(initializer),
     condition(condition),
     post_statement(post_statement),
-    body(body) {}
+    body(body) {
+	 this->line = line;
+	 this->col = col; 
+ }
 
  void ForNode::print(ostream &os) {
     int self = int(this);
@@ -33,4 +37,8 @@ void ForNode::generate_code(CodeGneratorVistor *codeGneratorVistor)
 Node* ForNode::optmize(OptimizationVistor *optimizationVistor)
 {
 	return optimizationVistor->visit(this);
+}
+
+void ForNode::accept(TypeErrorVisitor* typeVisitor) {
+	typeVisitor->visit(this);
 }

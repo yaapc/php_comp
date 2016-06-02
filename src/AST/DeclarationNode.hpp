@@ -7,13 +7,16 @@
 class DeclarationNode : public Node {
 public:
   Variable *variable;
-  DeclarationNode(Symbol *v);
+  DeclarationNode(Symbol *v, int line, int col);
 
 	virtual void print(ostream &os);
 
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 	virtual TypeExpression* getNodeType();
 

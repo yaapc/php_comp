@@ -24,4 +24,7 @@ public:
 
 	virtual Node* optmize(OptimizationVistor *);
 
+	virtual void accept(TypeErrorVisitor *);
+
+
 };

@@ -1,14 +1,16 @@
 #include "NewNode.hpp"
-#include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
+#include "AST_Visitors\TypeErrorVisitor.hpp"
 #include <sstream>
 
-NewNode::NewNode(Node* args,string className) {
+NewNode::NewNode(Node* args,string className, int line, int col) {
 	this->className		= className;
 	this->argumentsList	= dynamic_cast<ListNode*>(args);
 	this->nodeType	= nullptr;
+	this->line = line;
+	this->col = col;
  }
 
 void NewNode::print(ostream &os) {
@@ -40,7 +42,7 @@ bool NewNode::type_checking() {
 	this->nodeType = TypesTable::getInstance()->getClassType(className);
 
 	if (this->nodeType == nullptr) { // no type found
-		this->nodeType = new TypeError("Undefined");
+		this->nodeType = new TypeError("Undefined Class " + this->className + string(", line:") + to_string(this->line) + string(",col:") + to_string(this->col));
 		return false;
 	}
 	//class found, but does it have the given constructor?
@@ -76,4 +78,8 @@ Node* NewNode::optmize(OptimizationVistor *optimizationVistor)
 	 }
 	 os << ")";
 	 return os.str();
+ }
+
+ void NewNode::accept(TypeErrorVisitor* typeVisitor) {
+	 typeVisitor->visit(this);
  }

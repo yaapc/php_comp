@@ -7,7 +7,7 @@ class ReturnNode : public Node {
 public:
 	Node* returned_node;
 
-	ReturnNode(Node *exp);
+	ReturnNode(Node *exp, int line, int col);
 
 	virtual void print(ostream &os);
 
@@ -16,5 +16,8 @@ public:
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 };

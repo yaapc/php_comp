@@ -4,7 +4,7 @@
 
 class ClassMemNode : public Node {
 public:
-	ClassMemNode(Symbol* memSym);
+	ClassMemNode(Symbol* memSym, int line , int col);
 
 	virtual void print(ostream &os);
 
@@ -13,6 +13,9 @@ public:
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
+
+	virtual void accept(TypeErrorVisitor *);
+
 
 	//Symbol interfacing methods:
 	bool isStatic();
