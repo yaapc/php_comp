@@ -202,7 +202,7 @@ int ScopeFrame::addStatic(Node *node)
 
 FunctionFrame::FunctionFrame(Frame *parent,ListNode *parametersNodes)
 {
-	paramtersOffset			= 0;
+	paramtersOffset			= 4;
 	frameSize				= 0;
 	initialFrameSize		= 3*4;	// 4 for $fp and 4 for $ra and $a0
 	this->parentFrame		= parent;
@@ -242,7 +242,8 @@ string FunctionFrame::getAddress(string name)
 
 	if (arguments.find(name) != arguments.end()) {
 		int offset = arguments[name];
-        return to_string((paramtersOffset - 4) - offset)+reg;
+		// :(
+        return to_string((paramtersOffset) - offset)+reg;
     } 
 		
 	if (parentFrame) {
@@ -279,7 +280,9 @@ string ObjectFrame::getAddress(string name)
 		int offset = locals[name];
 
 		if (thisReg.empty()){ // we are in function
-			return to_string(offset) + "($a3)";
+			// :(
+			AsmGenerator::lw("t6","0($fp)");
+			return to_string(offset) + "($t6)";
 		}
 		return to_string(offset) + "($" + thisReg + ")";
 	}

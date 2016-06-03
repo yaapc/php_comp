@@ -49,6 +49,9 @@ public:
 	virtual void visit(StaticCallNode 	*staticCallNode);
 
 	//Helper Methods
+	void fillesClassesFrames();
 	string	getClassMemberAddress(ClassCallNode*,string);
 	void	collectRefVariablesGarbage(Frame *);
+	void	prepareArguments(Node *argumentList,TypeFunction *typeFunctions);
+	void	clearArguments(Node *argumentList);
 };

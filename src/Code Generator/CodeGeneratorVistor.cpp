@@ -11,6 +11,7 @@ void CodeGneratorVistor::generate(ListNode *ast)
 {
 	currentFrame	= new GlobalFrame();
 	AsmGenerator::initialize_file();
+	fillesClassesFrames();
 	ast->generate_code(this);
 	AsmGenerator::write_file();
 }
@@ -815,48 +816,20 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 
 	TypeFunction *functionType = functionCallNode->functionType;
 
-	AsmGenerator::comment("<ArgumentList");
-	if (functionCallNode->argumentsList)
-		functionCallNode->argumentsList->generate_code(this);
-	AsmGenerator::comment("ArgumentList/>");
-
-	ListNode *argumentsList = static_cast<ListNode*>(functionCallNode->argumentsList);
-
-	int arguemtnsSize;
-	if (argumentsList){
-		arguemtnsSize = argumentsList->nodes.size();
-	}else{
-		arguemtnsSize = 0;
-	}
-	int parameterSize	= functionType->getParamsTEs().size();
-	int diffSize		= parameterSize - arguemtnsSize;	// number of enabeld default parameters
-	//Make some space for enabeld default parameters
-	for(int i = 0 ; i < diffSize ; i++){
-		string t0 = "t0";
-		//we will store special value -1005 (maybe special) to know that this parameter is default and it's value should be
-		//taken from function decleration
-		AsmGenerator::li(t0,-1005);
-		AsmGenerator::push(t0);
-	}
-
+	prepareArguments(functionCallNode->argumentsList,functionType);
 
 	string functionName = functionType->getUniqueName();
 
+	// :( first 4 bytes is used by methods, here we don't care about so it'z zero
+	AsmGenerator::push("0");
+
 	AsmGenerator::jal(functionName);
 
-	if (functionCallNode->argumentsList){
-		AsmGenerator::comment("<Clear Arguments");
-		int argumentsSize = 0; // in bytes 
-		for(auto &node : argumentsList->nodes){
-			//TODO replace fixed size with size from type System
-			int argSize = 4;
-			argumentsSize+= argSize;
-		}
-		AsmGenerator::add_instruction("addi $sp, $sp, " + to_string(argumentsSize));
-		AsmGenerator::comment("Clear Arguments/>");
-	}
+	AsmGenerator::pop("0");
 
-	
+
+	clearArguments(functionCallNode->argumentsList);
+
 	if (functionType->getReturnTypeExpression()->getTypeId() != VOID_TYPE_ID){
 		if (functionType->getReturnTypeExpression()->getTypeId() == FLOAT_TYPE_ID){
 			AsmGenerator::f_push("f1");
@@ -865,7 +838,6 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 			AsmGenerator::push("v1");
 		}
 	}
-
 	AsmGenerator::comment("FunctionCallNode/>");
 }
 
@@ -988,18 +960,12 @@ void CodeGneratorVistor::visit(ClassDefineNode	*classDefineNode)
 
 	TypeClass *typeClass		= dynamic_cast<TypeClass*>(classDefineNode->getNodeType());
 
-	currentFrame				= new ObjectFrame(currentFrame,typeClass);
-
-	ObjectFrame* objectFrame	= dynamic_cast<ObjectFrame*>(currentFrame);
-
-	//TODO getName() ?? 
-	objectsFrames[typeClass->getName()] = objectFrame;
+	currentFrame = objectsFrames[typeClass->getName()];
 
 	if (classDefineNode->body)
-		classDefineNode->body->generate_code(this);
+			classDefineNode->body->generate_code(this);
 
-	currentFrame = objectFrame->parentFrame;
-
+	currentFrame = currentFrame->parentFrame;
 	AsmGenerator::comment("Class Define Node/>");
 }
 
@@ -1124,49 +1090,18 @@ void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 
 		TypeFunction *functionType = dynamic_cast<TypeFunction*>(classCallNode->member->getTypeExpr());
 
-		AsmGenerator::comment("<ArgumentList");
-			if (classCallNode->argumentsList)
-				classCallNode->argumentsList->generate_code(this);
-		AsmGenerator::comment("ArgumentList/>");
-
-		ListNode *argumentsList = static_cast<ListNode*>(classCallNode->argumentsList);
-
-		int arguemtnsSize;
-		if (argumentsList){
-			arguemtnsSize = argumentsList->nodes.size();
-		}else{
-			arguemtnsSize = 0;
-		}
-
-		int parameterSize	= functionType->getParamsTEs().size();
-		int diffSize		= parameterSize - arguemtnsSize;	// number of enabeld default parameters
-		//Make some space for enabeld default parameters
-		for(int i = 0 ; i < diffSize ; i++){
-			string t0 = "t0";
-			//we will store special value -1005 (maybe special) to know that this parameter is default and it's value should be
-			//taken from function decleration
-			AsmGenerator::li(t0,-1005);
-			AsmGenerator::push(t0);
-		}
+		prepareArguments(classCallNode->argumentsList,functionType);
 
 		string thisReg = "s0";
 		string probertyAddress	= getClassMemberAddress(classCallNode,thisReg);
-		AsmGenerator::move("a3",thisReg);
+		AsmGenerator::push("s0"); // Push this reg
+
 		AsmGenerator::lw(s1,probertyAddress);
 		AsmGenerator::add_instruction("jalr $"+s1);
 
-		if (argumentsList){
-			AsmGenerator::comment("<Clear Arguments");
-			int argumentsSize = 0; // in bytes 
-			for(auto &node :argumentsList->nodes){
-				//TODO replace fixed size with size from type System
-				int argSize = 4;
-				argumentsSize+= argSize;
-			}
-			AsmGenerator::add_instruction("addi $sp, $sp, " + to_string(argumentsSize));
-			AsmGenerator::comment("Clear Arguments/>");
-		}
+		AsmGenerator::pop("s0"); // Pop this reg
 
+		clearArguments(classCallNode->argumentsList);
 	
 		if (functionType->getReturnTypeExpression()->getTypeId() != VOID_TYPE_ID){
 			if (functionType->getReturnTypeExpression()->getTypeId() == FLOAT_TYPE_ID){
@@ -1185,6 +1120,7 @@ void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 void CodeGneratorVistor::visit(NewNode *newNode)
 {
 	AsmGenerator::comment("<NewNode");
+
 	string s0 = "s0",s1 = "s1",s2 = "s2";
 
 	TypeClass *classType = static_cast<TypeClass*>(newNode->getNodeType());
@@ -1197,8 +1133,6 @@ void CodeGneratorVistor::visit(NewNode *newNode)
 	//syscall to allocate space for object, the address of new allocated memory $s1 (address of object)
 	AsmGenerator::sbrk(s0,s1);
 
-	AsmGenerator::move("a3",s1);
-
 	AsmGenerator::comment("<Fill Object Table");
 	for(auto &memberWrapper :classType->getMembers())
 	{
@@ -1209,28 +1143,31 @@ void CodeGneratorVistor::visit(NewNode *newNode)
 			int propertyOffset					= objectFrame->locals[dataMember->getNameWithout()];
 			string propertyAddress				= to_string(propertyOffset)+"($" + s1 + ")"; // address in object
 
-			if (dataMember->isInit()){
+			int propertyTypeID = propertyWrapper->getTypeExpr()->getTypeId();
 
-				if (propertyWrapper->getTypeExpr()->getTypeId() == INTEGER_TYPE_ID){
+			if (dataMember->isInit()){
+				if (propertyTypeID == INTEGER_TYPE_ID){
 					AsmGenerator::li(s2,dataMember->getInitialValue().int_val);
 					AsmGenerator::sw(s2,propertyAddress);
+					continue;
 				}
 
-				if (propertyWrapper->getTypeExpr()->getTypeId() == BOOLEAN_TYPE_ID){
+				if (propertyTypeID == BOOLEAN_TYPE_ID){
 					AsmGenerator::li(s2,dataMember->getInitialValue().bool_val);
 					AsmGenerator::sw(s2,propertyAddress);
+					continue;
 				}
 
-				if (propertyWrapper->getTypeExpr()->getTypeId() == FLOAT_TYPE_ID){
+				if (propertyTypeID == FLOAT_TYPE_ID){
 					AsmGenerator::f_li("f0",dataMember->getInitialValue().float_val);
 					AsmGenerator::ss("f0",propertyAddress);
+					continue;
 				}
 
-				if (propertyWrapper->getTypeExpr()->getTypeId() == STRING_TYPE_ID){
+				if (propertyTypeID == STRING_TYPE_ID){
 					string t0 = "t0",t1 = "t1";
 
 					string stringAddress = AsmGenerator::store_string_literal(dataMember->getInitialValue().string_val);
-
 
 					AsmGenerator::la(t0,stringAddress);
 					
@@ -1244,16 +1181,17 @@ void CodeGneratorVistor::visit(NewNode *newNode)
 					AsmGenerator::move("a0",s2); // put the address of newly created memory in a0 (the parameter of strcpy function)
 					AsmGenerator::move("a1",t0); // put the address of string literal in a1 (the second parameter of strcpy function)
 					AsmGenerator::jal(AsmGenerator::strcpy_function_name);
+					continue;
 				}
 			}else{
 					
-				if (propertyWrapper->getTypeExpr()->getTypeId() == STRING_TYPE_ID){
+				if (propertyTypeID == STRING_TYPE_ID){
 					// load the address of empty string in s0
 					AsmGenerator::la(s2,AsmGenerator::empty_string_address);
 					// store the address of empty string in variable address
 					AsmGenerator::sw(s2,propertyAddress);
+					continue;
 				}
-
 			}
 		}
 
@@ -1275,46 +1213,23 @@ void CodeGneratorVistor::visit(NewNode *newNode)
 	MethodWrapper * constructorWr	= static_cast<MethodWrapper*>(newNode->constructorWr);
 	TypeFunction *functionType		= static_cast<TypeFunction*>(constructorWr->getTypeExpr());
 
-	AsmGenerator::comment("<ArgumentList");
-	if (newNode->argumentsList)
-		newNode->argumentsList->generate_code(this);
-	AsmGenerator::comment("ArgumentList/>");
-
-	int arguemtnsSize	= newNode->argumentsList->nodes.size();
-	int parameterSize	= functionType->getParamsTEs().size();
-	int diffSize		= parameterSize - arguemtnsSize;	// number of enabeld default parameters
-
-	//Make some space for enabeld default parameters
-	for(int i = 0 ; i < diffSize ; i++)
-	{
-		string t0 = "t0";
-		//we will store special value -1005 (maybe special) to know that this parameter is default and it's value should be
-		//taken from function decleration
-		AsmGenerator::li(t0,-1005);
-		AsmGenerator::push(t0);
-	}
+	prepareArguments(newNode->argumentsList,functionType);
 
 	string constractorName = constructorWr->getLabel();
 
 
+	AsmGenerator::push(s1);	// Push this reg
+
 	AsmGenerator::jal(constractorName);
 
-	if (newNode->argumentsList){
-		AsmGenerator::comment("<Clear Arguments");
-		int argumentsSize = 0; // in bytes 
-		for(auto &node : newNode->argumentsList->nodes){
-			//TODO replace fixed size with size from type System
-			int argSize = 4;
-			argumentsSize+= argSize;
-		}
-		AsmGenerator::add_instruction("addi $sp, $sp, " + to_string(argumentsSize));
-		AsmGenerator::comment("Clear Arguments/>");
-	}
+	AsmGenerator::pop(s1);	// pop this reg
 
+	clearArguments(newNode->argumentsList);
 
 	AsmGenerator::comment("Calling Constructor/>");
 
-	AsmGenerator::push("a3");
+	AsmGenerator::push(s1);
+
 	AsmGenerator::comment("NewNode/>");	
 }
 
@@ -1396,3 +1311,58 @@ void CodeGneratorVistor::collectRefVariablesGarbage(Frame *frame)
 	}
 }
 
+void CodeGneratorVistor::fillesClassesFrames()
+{
+	for(auto classType : TypeClass::classInstances){
+		currentFrame				= new ObjectFrame(currentFrame,classType);
+		ObjectFrame* objectFrame	= dynamic_cast<ObjectFrame*>(currentFrame);
+		objectsFrames[classType->getName()] = objectFrame;
+		currentFrame = objectFrame->parentFrame;
+	}
+}
+
+void CodeGneratorVistor::prepareArguments(Node *argumentsList,TypeFunction *typeFunctions)
+{
+	AsmGenerator::comment("<ArgumentsList");
+	if (argumentsList)
+		argumentsList->generate_code(this);
+	AsmGenerator::comment("ArgumentsList/>");
+
+	ListNode *argsList = static_cast<ListNode*>(argumentsList);
+
+	int arguemtnsSize;
+	if (argsList){
+		arguemtnsSize = argsList->nodes.size();
+	}else{
+		arguemtnsSize = 0;
+	}
+
+	int parameterSize	= typeFunctions->getParamsTEs().size();
+	int diffSize		= parameterSize - arguemtnsSize;	// number of enabeld default parameters
+
+	//Make some space for enabeld default parameters
+	for(int i = 0 ; i < diffSize ; i++)
+	{
+		string t0 = "t0";
+		//we will store special value -1005 (maybe special) to know that this parameter is default and it's value should be
+		//taken from function decleration
+		AsmGenerator::li(t0,-1005);
+		AsmGenerator::push(t0);
+	}
+}
+
+void CodeGneratorVistor::clearArguments(Node *argumentsList)
+{
+	ListNode *argsList = static_cast<ListNode*>(argumentsList);
+	if (argsList){
+		AsmGenerator::comment("<Clear Arguments");
+		int argumentsSize = 0; // in bytes 
+		for(auto &node : argsList->nodes){
+			//TODO replace fixed size with size from type System
+			int argSize = 4;
+			argumentsSize+= argSize;
+		}
+		AsmGenerator::add_instruction("addi $sp, $sp, " + to_string(argumentsSize));
+		AsmGenerator::comment("Clear Arguments/>");
+	}
+}
