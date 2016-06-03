@@ -77,7 +77,11 @@ string ClassCallNode::generateCallSignature() {
 	for (auto &param : this->argumentsList->nodes) {
 		if (!firstParamFlag)
 			os << ",";
-		os << TypeSystemHelper::getTypeName(param->getNodeType()->getTypeId());
+		if (param->getNodeType()->getTypeId() != CLASS_TYPE_ID)
+			os << TypeSystemHelper::getTypeName(param->getNodeType()->getTypeId());
+		else {
+			os << dynamic_cast<TypeClass*>(param->getNodeType())->getName();
+	}
 		firstParamFlag = false;
 	}
 	os << ")";
