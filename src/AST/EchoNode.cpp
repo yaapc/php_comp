@@ -9,7 +9,7 @@
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
-c
+
 EchoNode::EchoNode(Node* node, int line, int col) : expression(node) {
 	this->line = line;
 	this->col = col;

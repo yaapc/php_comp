@@ -49,7 +49,7 @@
 	}
 
 	ListNode *tree = new ListNode();
-	vector<string> requires;
+	vector<string> requires; // a vector of required files
 %}
 
 %nonassoc _def_val_ low_prec
