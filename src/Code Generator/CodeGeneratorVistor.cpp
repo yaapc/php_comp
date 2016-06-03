@@ -963,7 +963,8 @@ void CodeGneratorVistor::visit(ReturnNode *returnNode)
 
 void CodeGneratorVistor::visit(ClassDefineNode	*classDefineNode)
 {
-	AsmGenerator::comment("<Class Define Node");
+	string className = classDefineNode->classSymbol->getName();
+	AsmGenerator::comment("<Class Define Node "+className);
 
 	TypeClass *typeClass		= dynamic_cast<TypeClass*>(classDefineNode->getNodeType());
 
@@ -1058,7 +1059,7 @@ void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
 
 void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
 {
-	AsmGenerator::comment("<Class Call Node");
+	AsmGenerator::comment("<Class Call Node "+classCallNode->propertyString);
 	string thisReg = "s0";
 	string s1 = "s1";
 	string probertyAddress	= getClassMemberAddress(classCallNode,thisReg);
@@ -1151,6 +1152,18 @@ void CodeGneratorVistor::visit(NewNode *newNode)
 			string propertyAddress				= to_string(propertyOffset)+"($" + s1 + ")"; // address in object
 
 			int propertyTypeID = propertyWrapper->getTypeExpr()->getTypeId();
+
+			if (strcmp(dataMember->getName(),"$id")==0){
+				AsmGenerator::li(s2,objectFrame->objectsCount++);
+				AsmGenerator::sw(s2,propertyAddress);
+				continue;
+			}
+
+			if (strcmp(dataMember->getName(),"$tag")==0){
+				AsmGenerator::la(s2,objectFrame->classTagAddress);
+				AsmGenerator::sw(s2,propertyAddress);
+				continue;
+			}
 
 			if (dataMember->isInit()){
 				if (propertyTypeID == INTEGER_TYPE_ID){
