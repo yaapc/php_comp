@@ -183,15 +183,21 @@ TypeExpression* TypeClass::opDot(string memberStr, bool isMethod, string methodS
 	}
 }
 
+
+/* This method tries to redefine classes in @errorTypeClasses.
+   It loops the vector, If maximum of two times It didn't successfully redefine any error class,
+   It breaks;
+ */
 bool TypeClass::tryReDefine() {
 	int first, later;
 	first = later = TypeClass::errorTypeClasses.size();
 	while (true) {
 		later = first;
 		for (int i = 0; i < TypeClass::errorTypeClasses.size(); i++) {
-			auto& classDefineNode = TypeClass::errorTypeClasses.at(i);
-			if (classDefineNode->type_checking()) {
-				TypeClass::errorTypeClasses.erase(errorTypeClasses.begin() + i);
+			ClassDefineNode* classDefineNode = TypeClass::errorTypeClasses.at(i);
+			TypeClass::errorTypeClasses.erase(errorTypeClasses.begin() + i);
+			classDefineNode->type_checking();
+			if (dynamic_cast<TypeError*>(classDefineNode->getNodeType()) == nullptr) {
 				first--;
 			}
 		}		
