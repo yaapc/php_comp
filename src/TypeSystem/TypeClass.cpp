@@ -279,7 +279,11 @@ void TypeClass::makeSize() {
 		size += 4;
 	}
 
-	if (this->getName() == "Object") return; // Object class has no parent so skip next resizing
+	if (this->getName() == "Object") {
+		// :(
+		this->size = size;
+		return; // Object class has no parent so skip next resizing
+	}
 
 	int parentSize = parentClass->getSize();
 	this->size = size + parentSize;

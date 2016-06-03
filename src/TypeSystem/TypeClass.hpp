@@ -67,6 +67,11 @@ public:
 	MethodWrapper* lookupMembers(string memberStr, string methodSign);
 
 	static bool tryReDefine();
+
+	/*
+		A vector of @TypeClass that contains the classes defined through out the code being compiled.
+	*/
+	static vector<TypeClass*> classInstances;
 private:
 	
 	/* a vector of properties that this TypeClass has*/
@@ -81,10 +86,7 @@ private:
 	/* a TypeClass of the parent of this TypeClass*/
 	TypeExpression* parentClass;
 
-	/*
-		A vector of @TypeClass that contains the classes defined through out the code being compiled.
-	*/
-	static vector<TypeClass*> classInstances;
+
 
 	static bool isDefined(string name);
 
