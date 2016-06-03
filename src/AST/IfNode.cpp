@@ -57,8 +57,6 @@ Node* IfNode::optmize(OptimizationVistor *optimizationVistor)
 	  }
 	  else {
 		  this->nodeType = new TypeError("Expected Boolean Expression for the Condition. " + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
-		  this->body->type_checking();
-		  this->else_node->type_checking();
 		  return false;
 	  }
   }
