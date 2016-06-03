@@ -56,7 +56,7 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 		
 		//if it's a static property, then just add it to @staticProps
 		if (prop->isStatic()) {
-			typeClass->staticProps.push_back(prop);
+			typeClass->staticMembers.push_back(prop);
 		}
 		else {
 			typeClass->addToMembers(prop);
@@ -92,8 +92,13 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 			}
 
 			MethodWrapper* methodWrapper = new MethodWrapper(method->getNodeType(), method->methodSym);
-			typeClass->members.push_back(methodWrapper);
-			typeClass->methods.push_back(methodWrapper);
+
+			if (methodWrapper->isStatic()){
+				typeClass->staticMembers.push_back(methodWrapper);
+			}else{
+				typeClass->members.push_back(methodWrapper);
+				typeClass->methods.push_back(methodWrapper);
+			}
 		}
 	}
 
@@ -227,10 +232,10 @@ bool TypeClass::tryReDefine() {
 }
 
 
-PropertyWrapper* TypeClass::getStaticProperty(string className, string propName) {
+MemberWrapper* TypeClass::getStaticProperty(string className, string propName) {
 	for (auto &_class : TypeClass::classInstances) {
 		if (_class->getName() == className) {
-			for (auto &prop : _class->staticProps) {
+			for (auto &prop : _class->staticMembers) {
 				if (prop->getName() == propName)
 					return prop;
 			}
@@ -443,6 +448,11 @@ int MethodWrapper::getWrapperType() {
 TypeFunction* MethodWrapper::getMethodType() {
 	return dynamic_cast<TypeFunction*>(this->getTypeExpr());
 }
+
+bool MethodWrapper::isStatic() {
+	return this->methodSymbol->getStorageModifier() == STATIC_STORAGE;
+}
+
 
 bool MethodWrapper::isDefaultContructor() {
 	return this->methodSymbol->isDefaultConstr;

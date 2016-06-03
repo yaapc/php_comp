@@ -6,11 +6,15 @@
 
 class StaticCallNode : public Node {
 public:
+	Node* argumentsList;
 	string className;
-	string propName;
-	PropertyWrapper* propWrapper;
+	string memberName;
+	bool isMethodCall;
+	MemberWrapper* memberWrapper;
 
 	StaticCallNode(string className, string propName, int line , int col);
+
+	StaticCallNode(string className, string propName,Node *argsList, int line , int col);
 
 	virtual void print(ostream &os);
 

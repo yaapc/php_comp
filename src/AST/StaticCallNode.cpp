@@ -6,11 +6,22 @@
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 
 StaticCallNode::StaticCallNode(string className, string varNode, int line, int col) {
-	this->className = className;
-	this->propName = varNode;
-	this->line = line;
-	this->col = col;
-	this->nodeType = nullptr;
+	this->className		= className;
+	this->memberName		= varNode;
+	this->line			= line;
+	this->col			= col;
+	this->nodeType		= nullptr;
+	this->isMethodCall	= false;
+}
+
+StaticCallNode::StaticCallNode(string className, string varNode,Node *argsList, int line, int col) {
+	this->className		= className;
+	this->memberName	= varNode;
+	this->argumentsList = argsList;
+	this->line			= line;
+	this->col			= col;
+	this->nodeType		= nullptr;
+	this->isMethodCall = true;
 }
 
 void StaticCallNode::print(ostream &os) {
@@ -24,9 +35,9 @@ void StaticCallNode::print(ostream &os) {
 		<< "[label=\"" + this->className + "\"]"
 		<< endl;
 
-	int propInt = int(this->propName.c_str());
+	int propInt = int(this->memberName.c_str());
 	os << propInt
-		<< "[label=\"" + this->propName + "\"]"
+		<< "[label=\"" + this->memberName + "\"]"
 		<< endl;
 	
 	os << self << "->" << classNameInt << endl;
@@ -39,12 +50,12 @@ bool StaticCallNode::type_checking() {
 		return true; // pass it this time
 	}
 
-	this->propWrapper = TypeClass::getStaticProperty(this->className, this->propName);
-	if (this->propWrapper == nullptr) {
-		this->nodeType = new TypeError("Either " + this->className + " or " + this->propName + " is undefined, " + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
+	this->memberWrapper = TypeClass::getStaticProperty(this->className, this->memberName);
+	if (this->memberWrapper == nullptr) {
+		this->nodeType = new TypeError("Either " + this->className + " or " + this->memberName + " is undefined, " + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
 		return false;
 	}
-	this->nodeType = this->propWrapper->getTypeExpr();
+	this->nodeType = this->memberWrapper->getTypeExpr();
 	return true;
 }
 

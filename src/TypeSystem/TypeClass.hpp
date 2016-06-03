@@ -45,7 +45,7 @@ public:
 	*/
 	static TypeExpression* getInstance(string name);
 
-	static PropertyWrapper* getStaticProperty(string name, string propName);
+	static MemberWrapper* getStaticProperty(string name, string propName);
 
 
 	TypeExpression* opDot(string propertyStr, bool isMethod, string methodSign, MemberWrapper*& memWrapper, ClassCallNode* classCallNode);
@@ -89,7 +89,7 @@ private:
 	/* a vector of methods and properties of this TypeClass*/
 	vector<MemberWrapper*> members;
 	/* a vector of static properties of this TypeClass */
-	vector<PropertyWrapper*> staticProps;
+	vector<MemberWrapper*> staticMembers;
 
 	/* a TypeClass of the parent of this TypeClass*/
 	TypeExpression* parentClass; // TODO: rename to parentType
@@ -169,6 +169,8 @@ public:
 	bool isDefaultContructor();
 
 	TypeFunction* getMethodType();
+
+	bool isStatic();
 };
 
 

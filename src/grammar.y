@@ -1549,9 +1549,12 @@ function_call:
 			pl.log("function call");
 			$<r.node>$ = new FunctionCallNode($<r.str>1, $<r.node>2, $<r.line_no>1, $<r.col_no>1);	
 		}
-	| class_name_or_var T_PAAMAYIM_NEKUDOTAYIM identifier argument_list {pl.log(":: function call");}
+	| class_name_or_var T_PAAMAYIM_NEKUDOTAYIM identifier argument_list {
+		$<r.node>$ = new StaticCallNode($<r.str>1, $<r.str>3,$<r.node>4,$<r.line_no>1, $<r.col_no>1);
+		pl.log(":: function call");
+	}
 	| class_name_or_var T_PAAMAYIM_NEKUDOTAYIM open_par expr close_par argument_list
-	| static_property argument_list
+	| static_property argument_list { }
 	| variable_without_objects argument_list
 	| function_call '[' dim_offset ']'
 		/* alternative array syntax missing intentionally */

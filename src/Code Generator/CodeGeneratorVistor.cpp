@@ -996,6 +996,7 @@ void CodeGneratorVistor::visit(ClassMemNode	*classMemNode)
 	if (classMemNode->getMemSymbol()->isStatic){
 		currentFrame->addStatic(classMemNode);
 	}
+	// non static will be processed when object is created
 }
 
 void CodeGneratorVistor::visit(ClassMethodNode *classMethodNode)
@@ -1280,35 +1281,62 @@ void CodeGneratorVistor::visit(ContinueNode *continueNode)
 
 void CodeGneratorVistor::visit(StaticCallNode 	*staticCallNode)
 {
-	PropertyWrapper *staticProperty = staticCallNode->propWrapper;
-	AsmGenerator::comment("<Static Variable Node "+staticProperty->getName());
-	string s0 = "s0";
+	MemberWrapper *memberWrapper = staticCallNode->memberWrapper;
+	int propertyTypeID			  = memberWrapper->getTypeExpr()->getTypeId();
+	AsmGenerator::comment("<Static Variable Node "+memberWrapper->getName());
+	
+	if (staticCallNode->isMethodCall){
+	
+		TypeFunction *functionType = dynamic_cast<TypeFunction*>(memberWrapper->getTypeExpr());
 
-	string variableAddress = currentFrame->getAddress(staticProperty->getUniqueName());
+		prepareArguments(staticCallNode->argumentsList,functionType);
 
-	if (staticProperty->getTypeExpr()->getTypeId() == INTEGER_TYPE_ID	|| 
-		staticProperty->getTypeExpr()->getTypeId()  == BOOLEAN_TYPE_ID){
-		// In primitive types we care about value so we have to load it
-		AsmGenerator::lw(s0,variableAddress); 		//Get value from memory address and put the value in s0
-		AsmGenerator::push(s0);
-	}
 
-	if (staticProperty->getTypeExpr()->getTypeId()  == STRING_TYPE_ID){
-		AsmGenerator::lw(s0,variableAddress); 		//Get memory address and put in s0
-		AsmGenerator::push(s0);
+		MethodWrapper* methodWrapper = dynamic_cast<MethodWrapper*>(memberWrapper);
 
-	}
+		AsmGenerator::push("0");
+
+		AsmGenerator::jal(methodWrapper->getLabel());
+
+		AsmGenerator::pop("0"); 
+
+		clearArguments(staticCallNode->argumentsList);
+	
+		if (functionType->getReturnTypeExpression()->getTypeId() != VOID_TYPE_ID){
+			if (functionType->getReturnTypeExpression()->getTypeId() == FLOAT_TYPE_ID){
+				AsmGenerator::f_push("f1");
+			}
+			else{
+				AsmGenerator::push("v1");
+			}
+		}
+	}else{
+		string s0 = "s0";
+		string variableAddress = currentFrame->getAddress(memberWrapper->getUniqueName());
+
+		if (propertyTypeID == INTEGER_TYPE_ID	|| 
+			propertyTypeID  == BOOLEAN_TYPE_ID){
+			AsmGenerator::lw(s0,variableAddress); 		
+			AsmGenerator::push(s0);
+		}
+
+		if (propertyTypeID  == STRING_TYPE_ID){
+			AsmGenerator::lw(s0,variableAddress); 	
+			AsmGenerator::push(s0);
+		}
 		
-	if (staticProperty->getTypeExpr()->getTypeId()  == FLOAT_TYPE_ID){
-		//float literals are stored in data so we only load the address of those literals
-		AsmGenerator::ls("f0",variableAddress);	//Get value from memory address and put the value in s0	
-		AsmGenerator::f_push("f0");
+		if (propertyTypeID  == FLOAT_TYPE_ID){
+			AsmGenerator::ls("f0",variableAddress);	
+			AsmGenerator::f_push("f0");
+		}
+
+		if (propertyTypeID == CLASS_TYPE_ID){
+			AsmGenerator::lw(s0,variableAddress); 		
+			AsmGenerator::push(s0);
+		}
+		
 	}
 
-	if (staticProperty->getTypeExpr()->getTypeId() == CLASS_TYPE_ID){
-		AsmGenerator::lw(s0,variableAddress); 		//Get memory address and put in s0
-		AsmGenerator::push(s0);
-	}
 	AsmGenerator::comment("Static Variable Node/>");
 }
 
