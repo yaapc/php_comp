@@ -80,6 +80,8 @@ TypeExpression* TypeFunction::buildMethod(ClassMethodNode* methodNode, Method* m
 	return typeFunction;
 }
 
+/* this builds default constructor:
+*/
 TypeExpression* TypeFunction::buildConstructor(Method* methodSym) {
 	//let's build the FunctionType:
 	TypeFunction* typeFunction = new TypeFunction(methodSym->functionSignatures, methodSym->getName()

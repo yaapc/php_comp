@@ -96,10 +96,13 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 	//if no constructor defined, define a default one
 	if (!foundConstruct) {
 		Method* conSym = dynamic_cast<Method*>(classSymbol->getBodyScope()->getSymbolTable()->lookup(classSymbol->getName()));
+		conSym->generateLabel(classSymbol->getName());
+		conSym->generateFunctionSignature();//tell constructor to generate signatures
 		TypeFunction* conType = dynamic_cast<TypeFunction*>(TypeFunction::buildConstructor(conSym));
 		conType->setReturnTypeExpression(typeClass);
 		MethodWrapper* methodWrapper = new MethodWrapper(conType, conSym);
-
+		
+		
 		typeClass->members.push_back(methodWrapper);
 		typeClass->methods.push_back(methodWrapper);
 	}
