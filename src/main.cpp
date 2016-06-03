@@ -64,11 +64,11 @@ int main(int argc, char** argv) {
 	symbolsParser->printSymbolTables(); cout << "printSymbolTables\n";
 	//errorRec.printErrQueue(); cout << "printErrQueue\n";
 
-	//if (!errorRec.errQ->isEmpty()) {
-		//cout << "\n*There are some Parse Errors,\n*Compilation Halted.\n\n";
-		//errorRec.printErrQueue();
-		//return 0;
-	//}
+	if (!errorRec.errQ->isEmpty()) {
+		cout << "\n*There are some Parse Errors,\n*Compilation Halted.\n\n";
+		errorRec.printErrQueue();
+		return 0;
+	}
 
 	TypesTable::buildObjectClass();
 

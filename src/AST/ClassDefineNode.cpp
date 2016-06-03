@@ -11,8 +11,6 @@ ClassDefineNode::ClassDefineNode(Symbol* classSym, Node* classBody, int line, in
 	this->classSymbol = dynamic_cast<Class*>(classSym);
 	this->body = dynamic_cast<ListNode*>(classBody);	
 	this->nodeType = nullptr;
-	//now extract info
-	this->extractInfo();
 	this->line = line;
 	this->col = col;
 }
@@ -46,6 +44,8 @@ bool ClassDefineNode::type_checking() {
 		this->body->type_checking();
 		return true; // pass it this time
 	}
+	//now extract info
+	this->extractInfo();
 
 	this->nodeType = TypesTable::getInstance()->buildClassType(this, this->classSymbol);
 	this->body->type_checking();//called implicity in buildClassType

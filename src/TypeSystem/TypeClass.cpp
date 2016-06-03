@@ -126,7 +126,8 @@ TypeExpression* TypeClass::getInstance(string name) {
 		if (classType->getName() == name)
 			return classType;
 	}
-	return new TypeError(name + " class is undefined");
+	//return new TypeError(name + " class is undefined"); // let the caller handle the unfound event
+	return nullptr;
 }
 
 TypeClass::TypeClass(string name) {
