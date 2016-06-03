@@ -13,6 +13,7 @@ IfNode::IfNode(Node *cond, Node *bod, Node *el, int line, int col) : condition(c
 	body->hasScopeFrame = true;
 	this->col = col;
 	this->line = line;
+	nodeType = nullptr;
 }
 
    void IfNode::print(ostream &os) {

@@ -10,6 +10,7 @@ StaticCallNode::StaticCallNode(string className, string varNode, int line, int c
 	this->propName = varNode;
 	this->line = line;
 	this->col = col;
+	this->nodeType = nullptr;
 }
 
 void StaticCallNode::print(ostream &os) {
