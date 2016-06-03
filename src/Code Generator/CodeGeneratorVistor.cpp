@@ -127,19 +127,26 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 					scopeFrame->objectsLocals.push_back(variableNode->variable->getNameWithout());
 				}
 
-				string endEditingRC = "GC_Finish_RC_Editing_"	+ to_string(AsmGenerator::temp_label_count++);
-
+				string endEditingRC = "GC_Finish_RC_Editing_"	+ to_string(AsmGenerator::temp_label_count);
+				string tempLabel	= "GC_Finish_RC_Editing_temp"	    + to_string(AsmGenerator::temp_label_count++);
 				AsmGenerator::beq(s0,s1,endEditingRC);
 
-				AsmGenerator::move("a1",s1);
-				AsmGenerator::jal(AsmGenerator::increase_rc_function_name);
-
+		
+				AsmGenerator::add_instruction("beq $s0,$0,"+tempLabel); // after decrease if v0 != 0 ( I know that object is freed)
+				AsmGenerator::lw(s0,variableAddress);
 				AsmGenerator::move("a1",s0);
 				AsmGenerator::jal(AsmGenerator::decrease_rc_function_name);
 
 
-				AsmGenerator::add_instruction("beq $v0,$0,"+endEditingRC); // after decrease if v0 != 0 ( I know that object is freed)
-				AsmGenerator::sw("0",variableAddress);						// so i put null in its variabless
+				AsmGenerator::add_instruction("beq $v0,$0,"+tempLabel); // after decrease if v0 != 0 ( I know that object is freed)
+				AsmGenerator::sw("0",variableAddress);						// so i put null in its variable
+
+
+				AsmGenerator::add_label(tempLabel);
+
+				AsmGenerator::move("a1",s1);
+
+				AsmGenerator::jal(AsmGenerator::increase_rc_function_name);
 
 				AsmGenerator::add_label(endEditingRC);
 			}
@@ -1303,7 +1310,6 @@ void CodeGneratorVistor::collectRefVariablesGarbage(Frame *frame)
 		AsmGenerator::lw("a1",varAddress); //store address of ojbect in a0
 		AsmGenerator::jal(AsmGenerator::decrease_rc_function_name);
 
-		
 		string endLebel = "GC_Finish_decress_"	+ to_string(AsmGenerator::temp_label_count++);
 		AsmGenerator::add_instruction("beq $v0,$0,"+endLebel);		// after decrease if v0 != 0 ( I know that object is freed)
 		AsmGenerator::sw("0",varAddress);						// so i put null in its variabless
