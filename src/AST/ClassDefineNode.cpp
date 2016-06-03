@@ -44,8 +44,9 @@ bool ClassDefineNode::type_checking() {
 		this->body->type_checking();
 		return true; // pass it this time
 	}
-	//now extract info
-	this->extractInfo();
+	//if this is the first time to type_checking
+	if(this->nodeType == nullptr)
+		this->extractInfo();//extract info
 
 	this->nodeType = TypesTable::getInstance()->buildClassType(this, this->classSymbol);
 	this->body->type_checking();//called implicity in buildClassType

@@ -47,7 +47,7 @@ bool ClassMemNode::type_checking() {
 	this->nodeType = TypesTable::getInstance()->getClassType(type);
 
 	if (this->nodeType == nullptr) { // no type found
-		this->nodeType = new TypeError("Class " + type + " Type is Undefined" + string(" line:") + to_string(this->line) + string(", col : ") + to_string(this->col));
+		this->nodeType = new TypeError("Class " + type + " is Undefined," + string(" line:") + to_string(this->line) + string(", col : ") + to_string(this->col));
 		return false;
 	}
 	return true;

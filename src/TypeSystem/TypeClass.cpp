@@ -35,9 +35,19 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 
 	//extract properties' types and symbols from @classNode and append them to the TypeClass properties, as a @PropertyWrapper
 	for (int i = 0; i < classNode->classMemNodes.size(); i++) {
+		
 		PropertyWrapper* prop = 
 			new PropertyWrapper(classNode->classMemNodes.at(i)->getNodeType(),
 				classNode->classMemNodes.at(i)->getMemSymbol());
+		
+		//check if there is an error in property definition
+		if (dynamic_cast<TypeError*>(prop->getTypeExpr()) != nullptr) { // there is an error
+			//cancel creating of TypeClass and append the ClassDefineNode to errorClasses so we can 
+			//redefine in future passes
+			TypeClass::errorTypeClasses.push_back(classNode);
+			return prop->getTypeExpr(); // let's just return the TypeError to the ast node for now.
+		}
+		
 		//if it's a static property, then just add it to @staticProps
 		if (prop->isStatic()) {
 			typeClass->staticProps.push_back(prop);
