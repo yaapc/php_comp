@@ -189,9 +189,10 @@ bool TypeFunction::tryReDefine() {
 	while (true) {
 		later = first;
 		for (int i = 0; i < TypeFunction::errorFunctionCalls.size(); i++) {
-			auto& classCallNode = TypeFunction::errorFunctionCalls.at(i);
-			if (classCallNode->type_checking()) {
-				TypeFunction::errorFunctionCalls.erase(TypeFunction::errorFunctionCalls.begin() + i);
+			FunctionCallNode* classCallNode = TypeFunction::errorFunctionCalls.at(i);
+			TypeFunction::errorFunctionCalls.erase(TypeFunction::errorFunctionCalls.begin() + i);
+			classCallNode->type_checking();
+			if (dynamic_cast<TypeError*>(classCallNode->getNodeType()) == nullptr) {				
 				first--;
 			}
 		}
