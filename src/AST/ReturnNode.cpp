@@ -40,10 +40,15 @@ bool ReturnNode::type_checking() {
 		return true; // pass it this time
 	}
 
+	
 	if (this->returned_node == nullptr) { // void return
 		this->nodeType = TypesTable::getInstance()->getType(VOID_TYPE_ID);
 		return true;
 	}
+	
+	// not nullptr, re check it for second passes
+	this->returned_node->type_checking();
+
 	//TODO: check if return TypeExpr is the same as the Return Type of the function defined
 	if (returned_node){
 		this->nodeType = this->returned_node->getNodeType();

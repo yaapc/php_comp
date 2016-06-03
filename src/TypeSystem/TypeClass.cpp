@@ -38,6 +38,7 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 	//extract properties' types and symbols from @classNode and append them to the TypeClass properties, as a @PropertyWrapper
 	for (int i = 0; i < classNode->classMemNodes.size(); i++) {
 		
+		classNode->classMemNodes.at(i)->type_checking(); // let classNode recheck type in cases of second passes
 		PropertyWrapper* prop = 
 			new PropertyWrapper(classNode->classMemNodes.at(i)->getNodeType(),
 				classNode->classMemNodes.at(i)->getMemSymbol());
