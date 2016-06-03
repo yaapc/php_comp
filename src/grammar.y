@@ -33,7 +33,10 @@
 	 */
 	void initSymbolsParser(){
 		symbolsParser = new SymbolsParser();
-		symbolsParser->insertSymbol(new Class("Object", 1, 1, nullptr));
+		/* Object Symbol used to be inited here...
+		 * Requesta De Pache :(
+		 * symbolsParser->insertSymbol(new Class("Object", 1, 1, nullptr));
+		 */		
 	}
 
 	/**

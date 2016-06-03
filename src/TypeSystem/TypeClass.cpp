@@ -18,19 +18,21 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 	//***  build the type:
 	TypeClass* typeClass = new TypeClass(classSymbol->getName());
 
-	//get base class TypeClass
-	TypeExpression* instance = TypeClass::getInstance(classSymbol->getInhertedFrom());
-	//check if base class exists
-	if (instance->getTypeId() == ERROR_TYPE_ID) { // it's a TypeError
-		TypeClass::errorTypeClasses.push_back(classNode);
-		return instance; //cancel creating of type 
-	}
+	if (strcmp(classSymbol->getName(), "Object") != 0 ) { // if we are not building Object Class, then we must have a base class to inherit from 
+		//get base class TypeClass
+		TypeExpression* instance = TypeClass::getInstance(classSymbol->getInhertedFrom());
+		//check if base class exists
+		if (instance == nullptr){ // base class not defined... might yet.
+			TypeClass::errorTypeClasses.push_back(classNode);
+			return new TypeError(classSymbol->getInhertedFrom() + " class is undefined"); //cancel creating of type 
+		}
 
-	TypeClass* baseType = dynamic_cast<TypeClass*>(instance);
-	typeClass->parentClass = baseType;
-	//append all members of base class to the current class:
-	for (auto &member : baseType->getMembers()) {
-		typeClass->addToMembers(member);
+		TypeClass* baseType = dynamic_cast<TypeClass*>(instance);
+		typeClass->parentClass = baseType;
+		//append all members of base class to the current class:
+		for (auto &member : baseType->getMembers()) {
+			typeClass->addToMembers(member);
+		}
 	}
 
 	//extract properties' types and symbols from @classNode and append them to the TypeClass properties, as a @PropertyWrapper
@@ -276,6 +278,9 @@ void TypeClass::makeSize() {
 	for(auto methoed: this->methods){
 		size += 4;
 	}
+
+	if (this->getName() == "Object") return; // Object class has no parent so skip next resizing
+
 	int parentSize = parentClass->getSize();
 	this->size = size + parentSize;
 }

@@ -44,6 +44,13 @@ int main(int argc, char** argv) {
 	}
 	yyparse();
 
+	if (!(yyin = fopen("Object.php", "r"))) {
+		cerr << "Object.php not found" << endl;
+		return 1;
+	}
+
+	yyparse();
+
 	//Draw Complate AST
 	ofstream ast_dot("ast.dot");
 	print_ast(tree, ast_dot,"Complate");
@@ -69,8 +76,6 @@ int main(int argc, char** argv) {
 		errorRec.printErrQueue();
 		return 0;
 	}
-
-	TypesTable::buildObjectClass();
 
 	/** Semantic Analysis Phase: **/
 	tree->type_checking(); cout << "TypeChecking Pass\n";
