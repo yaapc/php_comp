@@ -9,6 +9,8 @@ grammar.hpp
 grammar.output
 *.txt
 *.php
+!/samples/*.php
+!/Object.php
 *.dot
 *.svg
 *.asm
