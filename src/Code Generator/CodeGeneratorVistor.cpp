@@ -105,7 +105,7 @@ void CodeGneratorVistor::visit(AssignmentNode *assignmentNode)
 		}
 	}
 
-	if (assignmentNode->getNodeType()->getTypeId() == CLASS_TYPE_ID)
+	if (assignmentNode->getNodeType()->getTypeId() > TYPES_COUNTER)
 	{
 		string s0 = "s0";
 		string s1 = "s1";			 
@@ -347,8 +347,8 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 			}
 		}
 
-		if (binaryOperationNode->left->getNodeType()->getTypeId() == CLASS_TYPE_ID ||  
-			binaryOperationNode->right->getNodeType()->getTypeId() == CLASS_TYPE_ID ){
+		if (binaryOperationNode->left->getNodeType()->getTypeId() > TYPES_COUNTER ||  
+			binaryOperationNode->right->getNodeType()->getTypeId() > TYPES_COUNTER ){
 			string t0 = "t0";
 			string t1 = "t1";
 
@@ -568,7 +568,7 @@ void CodeGneratorVistor::visit(VariableNode *variableNode)
 		AsmGenerator::f_push("f0");
 	}
 
-	if (variableNode->getNodeType()->getTypeId()== CLASS_TYPE_ID){
+	if (variableNode->getNodeType()->getTypeId() > TYPES_COUNTER){
 		AsmGenerator::lw(s0,variableAddress); 		//Get memory address and put in s0
 		AsmGenerator::push(s0);
 	}
@@ -1099,7 +1099,7 @@ void CodeGneratorVistor::visit(ClassCallNode *classCallNode)
  			AsmGenerator::f_push("f0");
 		}
 
-		if (propertyTypeID == CLASS_TYPE_ID){ 
+		if (propertyTypeID > TYPES_COUNTER){ 
 			AsmGenerator::lw(s1,probertyAddress);
 			AsmGenerator::push(s1);
 		}
@@ -1330,7 +1330,7 @@ void CodeGneratorVistor::visit(StaticCallNode 	*staticCallNode)
 			AsmGenerator::f_push("f0");
 		}
 
-		if (propertyTypeID == CLASS_TYPE_ID){
+		if (propertyTypeID > TYPES_COUNTER){
 			AsmGenerator::lw(s0,variableAddress); 		
 			AsmGenerator::push(s0);
 		}

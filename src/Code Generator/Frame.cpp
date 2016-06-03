@@ -42,7 +42,7 @@ void GlobalFrame::addLocal(Node *node)
 		
 	}
 
-	if (declarationNode->getNodeType()->getTypeId() == CLASS_TYPE_ID){
+	if (declarationNode->getNodeType()->getTypeId() >TYPES_COUNTER ){
 		varSize = 4; // pointer to object 
 		AsmGenerator::sw("0",to_string(frameSize)+reg);
 	}
@@ -152,7 +152,7 @@ void ScopeFrame::addLocal(Node *node)
 			objectsLocals.push_back(declarationNode->variable->getNameWithout());
 		}
 
-		if (declarationNode->getNodeType()->getTypeId() == CLASS_TYPE_ID){
+		if (declarationNode->getNodeType()->getTypeId() > TYPES_COUNTER){
 			varSize = 4; // pointer to object 
 			AsmGenerator::sw("0",to_string(frameSize)+reg);
 			//instead of add objects local here, i add it in assigment node so 
