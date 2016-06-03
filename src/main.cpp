@@ -20,6 +20,7 @@ extern SymbolsParser * symbolsParser;
 extern TypeChecker * typeChecker;
 extern ListNode *tree;
 extern void initTypeChecker();
+extern vector<string> requires;
 
 CodeGneratorVistor codeGeneratorVistor;
 OptimizationVistor optimizationVistor;
@@ -51,17 +52,25 @@ int main(int argc, char** argv) {
 
 	yyparse();
 
+	for (auto require : requires) {
+		if (!(yyin = fopen(require.c_str(), "r"))) {
+			cerr << require + " not found" << endl;
+			return 1;
+		}
+		yyparse();
+	}
+
 	//Draw Complate AST
 	ofstream ast_dot("ast.dot");
 	print_ast(tree, ast_dot,"Complate");
 	ast_dot.close();
-	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
+//	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
 	
 	//Draw Symbol Table
 	ofstream dot_file("symbol_table.dot");
 	generate_dot(symbolsParser->getRootScope(), dot_file);
 	dot_file.close();
-	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg symbol_table.dot -o symbol_table.svg", NULL, SW_HIDE);
+	//ShellExecute(NULL, NULL, "dot.exe", "-Tsvg symbol_table.dot -o symbol_table.svg", NULL, SW_HIDE);
 
 	//Check types in symbol tables
 	typeChecker->checkForwardDeclarations(); cout << "checkForwardDeclarations\n";
@@ -98,7 +107,7 @@ int main(int argc, char** argv) {
 	ofstream ast_dot_optmized("ast_optmized.dot");
 	print_ast(tree, ast_dot_optmized,"Optimized");
 	ast_dot_optmized.close();
-	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast_optmized.dot -o ast_optmized.svg", NULL, SW_HIDE);
+	//ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast_optmized.dot -o ast_optmized.svg", NULL, SW_HIDE);
 
 	/** Code Generation Phase: **/
 	codeGeneratorVistor.generate(tree);
