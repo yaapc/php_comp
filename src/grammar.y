@@ -49,6 +49,7 @@
 	}
 
 	ListNode *tree = new ListNode();
+	vector<string> requires; // a vector of required files
 %}
 
 %nonassoc _def_val_ low_prec
@@ -1469,8 +1470,8 @@ expr:
 	| T_INCLUDE expr
 	| T_INCLUDE_ONCE expr
 	| T_EVAL parentheses_expr
-	| T_REQUIRE expr
-	| T_REQUIRE_ONCE expr
+	| T_REQUIRE expr 
+	| T_REQUIRE_ONCE expr {pl.log("require_once",0);pl.log($<r.str>2);requires.push_back($<r.str>2);}
 	| T_INT_CAST expr
 	| T_DOUBLE_CAST expr
 	| T_STRING_CAST expr
@@ -1480,7 +1481,7 @@ expr:
 	| T_UNSET_CAST expr
 	| T_EXIT exit_expr
 	| '@' expr
-	| scalar
+	| scalar {pl.log($<r.str>1);}
 	| array_expr
 	| scalar_dereference
 	| '`' backticks_expr '`'
@@ -1492,7 +1493,11 @@ expr:
 ;
 
 parentheses_expr:
-		'(' expr ')' { $<r.node>$ = $<r.node>2; }
+		'(' expr ')' { 
+		 pl.log("par expr");
+		 $<r.str>$ = $<r.str>3;
+		 $<r.node>$ = $<r.node>2;
+	 }
 	| '(' yield_expr ')'
 ;
 

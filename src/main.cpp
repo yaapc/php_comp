@@ -20,6 +20,7 @@ extern SymbolsParser * symbolsParser;
 extern TypeChecker * typeChecker;
 extern ListNode *tree;
 extern void initTypeChecker();
+extern vector<string> requires; // a vector of require_once strings
 
 CodeGneratorVistor codeGeneratorVistor;
 OptimizationVistor optimizationVistor;
@@ -44,12 +45,14 @@ int main(int argc, char** argv) {
 	}
 	yyparse();
 
-	if (!(yyin = fopen("Object.php", "r"))) {
-		cerr << "Object.php not found" << endl;
-		return 1;
+	//parse required files
+	for (auto require : requires) {
+		if (!(yyin = fopen(require.c_str(), "r"))) {
+			cerr << require + " not found" << endl;
+			return 1;
+		}
+		yyparse();
 	}
-
-	yyparse();
 
 	//Draw Complate AST
 	ofstream ast_dot("ast.dot");
