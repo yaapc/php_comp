@@ -347,6 +347,17 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 			}
 		}
 
+		if (binaryOperationNode->left->getNodeType()->getTypeId() == CLASS_TYPE_ID ||  
+			binaryOperationNode->right->getNodeType()->getTypeId() == CLASS_TYPE_ID ){
+			string t0 = "t0";
+			string t1 = "t1";
+
+			AsmGenerator::pop(t1); 
+			AsmGenerator::pop(t0); 
+
+			AsmGenerator::equal_operation(t2,t0,t1,false); 
+			AsmGenerator::push(t2); 
+		}
 		
 	
 	}

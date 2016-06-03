@@ -52,6 +52,7 @@ public:
 	int getSize();
 	vector<MemberWrapper*> getMembers();
 
+	TypeExpression* opEqual(int secondTypeId);
 
 	//TODO: bool equivelantTo(int secondTypeId);
 

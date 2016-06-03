@@ -1,7 +1,8 @@
 #pragma once
-
-#include "TypeClass.hpp"
+#include "TypeInteger.hpp"
+#include "TypeBoolean.hpp"
 #include "TypeError.hpp"
+#include "TypeClass.hpp"
 
 //static defination
 vector<TypeClass*> TypeClass::classInstances;
@@ -135,6 +136,12 @@ TypeClass* TypeClass::buildObjectClass() {
 	return object;
 }
 
+
+TypeExpression* TypeClass::opEqual(int secondTypeId) {
+	if (secondTypeId == CLASS_TYPE_ID)
+		return TypeBoolean::getInstance();
+	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + " Type doesn't support == operation");
+}
 
 //search @classInstances for a decalred class with name @name
 TypeExpression* TypeClass::getInstance(string name) {
