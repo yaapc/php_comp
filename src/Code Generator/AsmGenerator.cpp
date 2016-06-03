@@ -893,14 +893,14 @@ void AsmGenerator::my_sbrk()
 		AsmGenerator::add_label("Begin_Loop_GL");	
 			AsmGenerator::beq("t0","0","Allocate_New_Memory"); // if garbage Block is Null (Either first sbrk Or we are in the last block of GL), So Allocate new Memory
 			AsmGenerator::lw("t1","4($t0)");					// else get the size of garbage block
-			AsmGenerator::add_instruction("ble $a1,$t1,Found_Grabage_Block"); // if the size is enough, reuse this block
+			AsmGenerator::add_instruction("ble $a0,$t1,Found_Grabage_Block"); // if the size is enough, reuse this block
 			AsmGenerator::lw("t0","0($t0)");					 // else get the next garbage block address to go back to loop begin
 		AsmGenerator::add_instruction("b Begin_Loop_GL");
 
 
 		AsmGenerator::add_label("Found_Grabage_Block"); // if we got to here, we have a garbage block we can reuse it t0 is the address of the block
 			AsmGenerator::add_instruction("addi $t0,$t0,12");
-			AsmGenerator::move("v1","t0");
+			AsmGenerator::move("v0","t0");
 			AsmGenerator::add_instruction("b End_Sbrk_label");
 
 		AsmGenerator::add_label("Allocate_New_Memory");

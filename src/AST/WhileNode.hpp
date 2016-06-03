@@ -18,5 +18,5 @@ public:
 
 	virtual void accept(TypeErrorVisitor *);
 
-
+	virtual bool type_checking();
 };

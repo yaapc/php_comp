@@ -29,7 +29,7 @@ TypeErrorVisitor errorsVisitor;
 void print_ast(Node *root, std::ostream &os,string name);
 void print_errors_vector(vector<TypeExpression*>);
 
-bool GC				= 1;
+bool GC				= 0;
 bool withComments	= 1;
 
 int main(int argc, char** argv) {
@@ -39,6 +39,13 @@ int main(int argc, char** argv) {
 	
 	/** Syntactic Analysis Phase: **/
 	extern FILE *yyin;
+	if (!(yyin = fopen("Object.php", "r"))) {
+		cerr << "Object.php not found" << endl;
+		return 1;
+	}
+	yyparse();
+
+
 	if (!(yyin = fopen("index.php", "r"))) {
 		cerr << "index.php not found" << endl;
 		return 1;
