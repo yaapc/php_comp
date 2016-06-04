@@ -49,10 +49,9 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 		
 		//check if there is an error in property definition
 		if (dynamic_cast<TypeError*>(prop->getTypeExpr()) != nullptr) { // there is an error
-			//cancel creating of TypeClass and append the ClassDefineNode to errorClasses so we can 
+			//DON't cancel creating of TypeClass but append the ClassDefineNode to errorClasses so we can 
 			//redefine in future passes
 			TypeClass::errorTypeClasses.push_back(classNode);
-			return prop->getTypeExpr(); // let's just return the TypeError to the ast node for now.
 		}
 		
 		//if it's a static property, then just add it to @staticProps
