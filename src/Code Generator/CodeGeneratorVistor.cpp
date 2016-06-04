@@ -1425,7 +1425,7 @@ void CodeGneratorVistor::clearArguments(Node *argumentsList)
 void CodeGneratorVistor::cleanUnusedValue(Node *node)
 {
 	bool foundFunctionOrMethodCall = false;
-	TypeFunction *functionType;
+	TypeFunction *functionType = nullptr;
 	if (FunctionCallNode *funCall = dynamic_cast<FunctionCallNode*>(node))
 	{
 		functionType = funCall->functionType;
