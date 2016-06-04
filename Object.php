@@ -5,8 +5,8 @@ class Object {
   string  $tag = "Object";
   function Object(){}
   
-  function to_string() : void {
-    echo $tag+"@"+$id;
+  function toString() : string {
+    return $tag+"@"+$id;
   }
 }
 

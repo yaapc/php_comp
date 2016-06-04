@@ -1295,11 +1295,11 @@ void CodeGneratorVistor::visit(StaticCallNode 	*staticCallNode)
 
 		MethodWrapper* methodWrapper = dynamic_cast<MethodWrapper*>(memberWrapper);
 
-		//AsmGenerator::push("0");
+		AsmGenerator::push("0");
 
 		AsmGenerator::jal(methodWrapper->getLabel());
 
-		//AsmGenerator::pop("0"); 
+		AsmGenerator::pop("0"); 
 
 		clearArguments(staticCallNode->argumentsList);
 	
