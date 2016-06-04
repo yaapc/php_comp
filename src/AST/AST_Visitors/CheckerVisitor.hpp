@@ -4,6 +4,8 @@ class TypeExpression;
 
 class CheckerVisitor {
 public:
+
+	CheckerVisitor();
 	virtual void visit(AssignmentNode *assignmentNode, TypeExpression* context);
 	virtual void visit(BinaryOperationNode *binaryOperationNode, TypeExpression* context);
 	virtual void visit(DeclarationNode *declarationNode, TypeExpression* context);
@@ -31,7 +33,7 @@ public:
 
 
 private:
-	bool doesReturn = false;
+	bool doesReturn;
 
 };
 

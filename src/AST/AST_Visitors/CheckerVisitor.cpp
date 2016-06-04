@@ -6,6 +6,8 @@
 #include "../../TypeSystem/TypeError.hpp"
 #include "../../TypeSystem/TypeFunction.hpp"
 
+CheckerVisitor::CheckerVisitor() : doesReturn(false) {}
+
 void CheckerVisitor::visit(AssignmentNode* assNode, TypeExpression* context) {
 	assNode->lhs->accept(this, context);
 	assNode->rhs->accept(this, context);
