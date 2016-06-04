@@ -31,7 +31,7 @@ CheckerVisitor checkerVisitor;
 void print_ast(Node *root, std::ostream &os,string name);
 void print_errors_vector(vector<TypeExpression*>);
 
-bool GC				= 1;
+bool GC				= 0;
 bool withComments	= 1;
 
 int main(int argc, char** argv) {

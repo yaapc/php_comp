@@ -2,7 +2,7 @@
 
   class A{
      static int     $x  = 50;
-     static float   $y  = 17.0;
+     static float   $y  = 6.45;
      static string  $z  = "1";
    
      int $a;
@@ -11,16 +11,19 @@
         $a = $paramter;
         $x += 10;
         $y *= 2.0;
-        $z += $paramter;
+        $z = $z + "@";
+        
+        echo $z;
      }
-
   }
 
     A $a;
     int $i = 0;
 
-    for (int $i = 0 ; $i < 10 ; $i += 1){
+    while($i <= 15)
+    {
         $a = new A($i);
+        $i+= 1;
     }
 
     echo A::$x;
@@ -30,4 +33,3 @@
 
     echo $a->a;
 ?>
-
