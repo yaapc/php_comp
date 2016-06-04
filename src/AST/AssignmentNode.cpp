@@ -82,7 +82,7 @@ Node* AssignmentNode::optmize(OptimizationVistor *optimizationVistor)
 	  }
 
 	  //TODO: should be implemented with coercion, not equivelantTo !!
-	  if (lhs->getNodeType()->equivelantTo(rhs->getNodeType()->getTypeId())) {
+	  if (rhs->getNodeType()->equivelantTo(lhs->getNodeType()->getTypeId())) {
 		  this->nodeType = lhs->getNodeType();
 		  return true;
 	  }
