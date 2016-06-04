@@ -598,10 +598,6 @@ void CodeGneratorVistor::visit(EchoNode *echoNode)
 						}
 
 						if (node->getNodeType()->getTypeId() == FLOAT_TYPE_ID){ // float
-							//AsmGenerator::pop("t0");
-							//AsmGenerator::ls("f1",0,"t0");
-							//AsmGenerator::f_print_reg("f1");
-
 							AsmGenerator::f_pop("f0");
 							AsmGenerator::f_print_reg("f0");
 						}
@@ -747,6 +743,7 @@ void CodeGneratorVistor::visit(ListNode *listNode)
 	for (auto &node : listNode->nodes) {
 		if (node == nullptr) continue;
 		node->generate_code(this);
+		cleanUnusedValue(node); //Cleaning up unused function return value on stack.
 	}
 	if (listNode->hasScopeFrame){
 		if (GC){
@@ -844,7 +841,6 @@ void CodeGneratorVistor::visit(FunctionCallNode *functionCallNode)
 	AsmGenerator::jal(functionName);
 
 	AsmGenerator::pop("0");
-
 
 	clearArguments(functionCallNode->argumentsList);
 
@@ -1294,11 +1290,11 @@ void CodeGneratorVistor::visit(StaticCallNode 	*staticCallNode)
 
 		MethodWrapper* methodWrapper = dynamic_cast<MethodWrapper*>(memberWrapper);
 
-		AsmGenerator::push("0");
+		//AsmGenerator::push("0");
 
 		AsmGenerator::jal(methodWrapper->getLabel());
 
-		AsmGenerator::pop("0"); 
+		//AsmGenerator::pop("0"); 
 
 		clearArguments(staticCallNode->argumentsList);
 	
@@ -1422,5 +1418,41 @@ void CodeGneratorVistor::clearArguments(Node *argumentsList)
 		}
 		AsmGenerator::add_instruction("addi $sp, $sp, " + to_string(argumentsSize));
 		AsmGenerator::comment("Clear Arguments/>");
+	}
+}
+
+
+void CodeGneratorVistor::cleanUnusedValue(Node *node)
+{
+	bool foundFunctionOrMethodCall = false;
+	TypeFunction *functionType;
+	if (FunctionCallNode *funCall = dynamic_cast<FunctionCallNode*>(node))
+	{
+		functionType = funCall->functionType;
+		foundFunctionOrMethodCall = true;
+	}
+	
+	if (ClassCallNode *classCallNode = dynamic_cast<ClassCallNode*>(node))
+	{
+		if (classCallNode->isMethodCall){
+			functionType = dynamic_cast<TypeFunction*>(classCallNode->member->getTypeExpr());
+			foundFunctionOrMethodCall = true;
+		}
+	}
+
+	if (StaticCallNode *staticClassCallNode = dynamic_cast<StaticCallNode*>(node))
+	{
+		if (staticClassCallNode->isMethodCall){
+			functionType = dynamic_cast<TypeFunction*>(staticClassCallNode->memberWrapper->getTypeExpr());
+			foundFunctionOrMethodCall = true;
+		}
+	}	
+
+	if (foundFunctionOrMethodCall && functionType->getReturnTypeExpression()->getTypeId() != VOID_TYPE_ID) {
+		AsmGenerator::comment("Cleaning up unused function return value on stack.");
+		if (functionType->getReturnTypeExpression()->getTypeId() == FLOAT_TYPE_ID)
+			AsmGenerator::f_pop("f1");
+		else
+			AsmGenerator::pop("v1");
 	}
 }

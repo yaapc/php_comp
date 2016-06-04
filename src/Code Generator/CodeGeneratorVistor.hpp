@@ -54,4 +54,5 @@ public:
 	void	collectRefVariablesGarbage(Frame *);
 	void	prepareArguments(Node *argumentList,TypeFunction *typeFunctions);
 	void	clearArguments(Node *argumentList);
+	void	cleanUnusedValue(Node *);
 };
