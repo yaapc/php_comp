@@ -160,7 +160,7 @@ TypeExpression* TypeClass::getInstance(string name) {
 		if (classType->getName() == name)
 			return classType;
 	}
-	//return new TypeError(name + " class is undefined"); // let the caller handle the unfound event
+	// let the caller handle the unfound event
 	return nullptr;
 }
 
@@ -182,7 +182,7 @@ TypeExpression* TypeClass::opDot(string memberStr, bool isMethod, string methodS
 		PropertyWrapper* prop = this->lookupMembers("$" + memberStr);
 		if (prop == nullptr) { // property not found
 			memWrapper = nullptr;
-			return new TypeError(this->getName() + " doesn't have property " + memberStr + ", remember properties don't need $ to access them.");
+			return nullptr;//let caller set TypeError
 		}
 		else {
 			//TODO: check access context and what so ever....
@@ -194,7 +194,7 @@ TypeExpression* TypeClass::opDot(string memberStr, bool isMethod, string methodS
 		MethodWrapper* method = this->lookupMembers(memberStr, methodSign, classCallNode);
 		if (method == nullptr) { // method not found
 			memWrapper = nullptr;
-			return new TypeError(this->getName() + " doesn't have method " + memberStr + " with signature " + methodSign);
+			return nullptr;//let called set TypeError
 		}
 		else {
 			//TODO: check access context and what so ever....

@@ -47,6 +47,9 @@ bool NewNode::type_checking() {
 	}
 	//class found, but does it have the given constructor?
 	this->nodeType = this->nodeType->opDot(this->className, true, this->generateCallSignature(), this->constructorWr, nullptr);
+	if (nodeType == nullptr)
+		nodeType = new TypeError(this->className + " doesn't have a constructor with the given arguments " + this->generateCallSignature() +
+			" line:" + to_string(this->line) + ",col:" + to_string(this->col));
 	return true;
 }
 

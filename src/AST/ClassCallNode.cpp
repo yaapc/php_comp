@@ -47,9 +47,16 @@ bool ClassCallNode::type_checking() {
 	if (this->isMethodCall) {
 		this->argumentsList->type_checking();
 		this->nodeType = this->object->getNodeType()->opDot(this->propertyString, true, this->generateCallSignature(), member, this);
+		if(this->nodeType == nullptr)
+			this->nodeType = new TypeError(TypeSystemHelper::getTypeName(this->object->getNodeType()) + " doesn't have method " + propertyString +
+				" with signature " + this->generateCallSignature() + " line:" + to_string(this->line) + ",col:" + to_string(this->col));
 	}
-	else
+	else {
 		this->nodeType = this->object->getNodeType()->opDot(this->propertyString, false, "", member, this);
+		if(this->nodeType == nullptr)
+			this->nodeType = new TypeError(TypeSystemHelper::getTypeName(this->object->getNodeType()) + " doesn't have property " + propertyString +
+				", remember properties don't need $ to access them." + " line:" + to_string(this->line) + ",col:" + to_string(this->col));
+	}
 	return true;
 }
 
