@@ -1,9 +1,9 @@
 <?php
 class Integer{
 
-	private static final int $MAX_VALUE = 2147483647;
+	public static final int $MAX_VALUE = 2147483647;
 
-  	private int $v = 0;
+  private int $v = 0;
 
 	public function Integer(int $value =0){
 		$v = $value;

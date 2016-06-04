@@ -1,12 +1,12 @@
 <?php
 
 class Object {
-  int     $id  = 0;
-  string  $tag = "Object";
+  int     $ObjectID  = 0;
+  string  $ClassTAG = "Object";
   function Object(){}
   
-  function toString() : string {
-    return $tag+"@"+$id;
+  public function toString() : string {
+    return $ClassTAG+"@"+$ObjectID;
   }
 }
 

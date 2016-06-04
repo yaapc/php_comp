@@ -612,6 +612,20 @@ void CodeGneratorVistor::visit(EchoNode *echoNode)
 							AsmGenerator::print_reg(t0);
 							
 						}
+
+						if (node->getNodeType()->getTypeId() > 7){
+							VariableNode *variableNode = static_cast<VariableNode*>(node);
+							if (variableNode){
+								string objectaddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
+								AsmGenerator::lw("t1",objectaddress);
+								AsmGenerator::lw("t0","12($t1)");
+								AsmGenerator::push("t1");
+								AsmGenerator::add_instruction("jalr $t0");
+								AsmGenerator::pop("t1");
+								AsmGenerator::print_string("v1");
+							}
+							
+						}
 				}
 				AsmGenerator::la(t0,AsmGenerator::new_line_address);
 				AsmGenerator::print_string(t0);
@@ -1166,13 +1180,13 @@ void CodeGneratorVistor::visit(NewNode *newNode)
 
 			int propertyTypeID = propertyWrapper->getTypeExpr()->getTypeId();
 
-			if (strcmp(dataMember->getName(),"$id")==0){
+			if (strcmp(dataMember->getName(),"$ObjectID")==0){
 				AsmGenerator::li(s2,objectFrame->objectsCount++);
 				AsmGenerator::sw(s2,propertyAddress);
 				continue;
 			}
 
-			if (strcmp(dataMember->getName(),"$tag")==0){
+			if (strcmp(dataMember->getName(),"$ClassTAG")==0){
 				AsmGenerator::la(s2,objectFrame->classTagAddress);
 				AsmGenerator::sw(s2,propertyAddress);
 				continue;
