@@ -5,13 +5,13 @@
       int $size;
       string $type;
     
-      function Screw(int $screwSize,string $screwType){
-        $size = $screwSize;
-        $type = $screwType;
+      function Screw(int $size,string $type){
+        $this->size = $size;
+        $this->type = $type;
       }
       
-      function to_string() : string {
-        return $size + " " + $type;
+      public function toString() : string {
+        return "Screw {$size,$type}";
       }
   }
 
@@ -20,14 +20,14 @@
         int $cylinders;
         Screw $screw;
       
-        function Engine(int $cCount){
-          $cylinders = $cCount;
+        function Engine(int $cylinders){
+          $this->cylinders = $cylinders;
           $screw = new Screw(10,"Slot");
         }    
       
       
-        function to_string() : string {   
-          return $screw->to_string() + " " + $cylinders;
+        public function toString() : string {   
+          return "Engine {"+$screw->toString() +","+ $cylinders+"} ";
         }
     }
 
@@ -39,12 +39,12 @@
           $engine = new Engine(2);
         }
         
-        function to_string() : string {   
-          return $engine->to_string() + " " + $color;
+        public function toString() : string {   
+          return "Car {"+$engine->toString() +","+ $color+"}";
         }
     }
   
   Car $c = new Car();
   
-  echo $c->to_string();
+  echo $c->toString();
 ?>

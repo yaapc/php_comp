@@ -1,15 +1,15 @@
 <?php
 
   class ABC{
-	int $x;
-	function ABC(int $xValue =150){
-		$x = $xValue;
-	}
+	  public int $x;
+	  function ABC(int $xValue =150){
+		  $x = $xValue;
+	  }
   }
   
   function ABCIncremnt(ABC $abc) : ABC {
-	$abc->x += 150;
-	return $abc;
+	  $abc->x += 150;
+	  return $abc;
   }
   
   ABC $abc = new ABC();
