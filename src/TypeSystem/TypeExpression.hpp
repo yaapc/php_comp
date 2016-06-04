@@ -65,7 +65,7 @@ public:
 	virtual int equivelantTo(int secondTypeId);
 
 	virtual int getSize();
-protected:
+
 	//the size of the type
 	int size;
 };

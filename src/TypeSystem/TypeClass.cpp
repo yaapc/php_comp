@@ -360,8 +360,15 @@ MethodWrapper* TypeClass::lookupMembers_types(string calledMethodName, vector<No
 void TypeClass::makeSize() {
 	int size = 0;
 
-	for (auto mem : this->props) {
-		size += mem->getSize();
+	for (auto mem : this->props) 
+	{
+		if (strcmp(mem->memberSymbol->getVariableType(),"Child") == 0)
+		{
+			mem->getTypeExpr()->size = 4;
+			size += 4;
+		}else{
+			size += mem->getSize();
+		}
 	}
 
 	for(auto methoed: this->methods){

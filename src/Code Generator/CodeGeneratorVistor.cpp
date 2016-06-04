@@ -1346,7 +1346,9 @@ string CodeGneratorVistor::getClassMemberAddress(ClassCallNode*  classCallNode,s
 
 	ObjectFrame* objectFrame	= objectsFrames[typeClass->getName()];
 	objectFrame->thisReg		= thisReg;
-	return objectFrame->getAddress(classCallNode->propertyString);
+	string remp = objectFrame->getAddress(classCallNode->propertyString);
+	objectFrame->thisReg.clear();
+	return remp;
 }
 
 void CodeGneratorVistor::collectRefVariablesGarbage(Frame *frame)
