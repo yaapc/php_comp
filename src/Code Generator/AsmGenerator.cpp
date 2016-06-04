@@ -25,7 +25,8 @@ void AsmGenerator::initialize_data()
 	data_stream		<< new_line_address				<< ": .asciiz \"\\n\" \n";
 	data_stream		<< empty_string_address			<< ": .asciiz \"\" \n";
 	data_stream		<< nullptr_message_address		<< ": .asciiz \"Null Pointer Exception.\"\n";
-
+	data_stream		<< div_zero__message_address	<< ": .asciiz \"Divide by Zero Exception.\"\n";
+	data_stream		<< array_out_message_address	<< ": .asciiz \"Array out of bound Exception.\"\n";
 	if (GC){
 		data_stream		<< head_GL_address << ": .word 0 \n";
 		data_stream		<< tail_GL_address << ": .word 0 \n";
@@ -77,6 +78,9 @@ void AsmGenerator::write_functions()
 	AsmGenerator::int_to_asci();
 	AsmGenerator::strcpy();
 	AsmGenerator::nullptr_exception_handler();
+	AsmGenerator::div_zero_exception_handler();
+	AsmGenerator::array_out_exception_handler();
+
 	if (GC){
 		AsmGenerator::increase_rc();
 		AsmGenerator::decrease_rc();
@@ -926,6 +930,25 @@ void AsmGenerator::nullptr_exception_handler()
 	AsmGenerator::write_function();
 }
 
+void AsmGenerator::div_zero_exception_handler()
+{
+	AsmGenerator::initialize_function(div_zero_exception_function_name);
+	AsmGenerator::la("t0",div_zero__message_address);
+	AsmGenerator::print_string("t0");
+	AsmGenerator::system_call(10);
+	AsmGenerator::write_function();
+}
+
+
+void AsmGenerator::array_out_exception_handler()
+{
+	AsmGenerator::initialize_function(array_out_exception_function_name);
+	AsmGenerator::la("t0",array_out_message_address);
+	AsmGenerator::print_string("t0");
+	AsmGenerator::system_call(10);
+	AsmGenerator::write_function();
+}
+
 ofstream AsmGenerator::assembly_code_file;
 stringstream AsmGenerator::data_stream;
 stringstream AsmGenerator::main_stream;
@@ -950,9 +973,14 @@ string AsmGenerator::increase_rc_function_name			= "increase_rc";
 string AsmGenerator::decrease_rc_function_name			= "decrease_rc";
 string AsmGenerator::my_sbrk_function_name				= "my_sbrk";
 string AsmGenerator::nullptr_exception_function_name	= "nullPtr_handle";
+string AsmGenerator::div_zero_exception_function_name	= "div_zero_handle";
+string AsmGenerator::array_out_exception_function_name	= "array_out_handle";
+
 string AsmGenerator::global_label						= "global_";
 string AsmGenerator::new_line_address					= "new_line";
 string AsmGenerator::nullptr_message_address			= "nullptr_message";
+string AsmGenerator::div_zero__message_address			= "div_zero_message";
+string AsmGenerator::array_out_message_address			= "array_out_message";
 string AsmGenerator::empty_string_address				= "empty_string";
 string AsmGenerator::head_GL_address					= "head_GL";
 string AsmGenerator::tail_GL_address					= "tail_GL";

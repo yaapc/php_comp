@@ -40,7 +40,12 @@ Node* OptimizationVistor::visit(BinaryOperationNode *binaryOperationNode)
 				}
 
 				if (*(binaryOperationNode->op_type) == '/'){
-					return new ScalarNode(lhs->value.int_val / rhs->value.int_val, binaryOperationNode->line, binaryOperationNode->col);
+					if (rhs->value.int_val > 0){
+						return new ScalarNode(lhs->value.int_val / rhs->value.int_val, binaryOperationNode->line, binaryOperationNode->col);
+					}
+					{
+						return new ScalarNode(0,binaryOperationNode->line, binaryOperationNode->col);
+					}
 				}
 
 				if (*(binaryOperationNode->op_type) == '%'){
@@ -75,8 +80,14 @@ Node* OptimizationVistor::visit(BinaryOperationNode *binaryOperationNode)
 				if (*(binaryOperationNode->op_type) == '*')
 					return new ScalarNode(lFloat * rFloat, binaryOperationNode->line, binaryOperationNode->col);
 
-				if (*(binaryOperationNode->op_type) == '/')
-					return new ScalarNode(lFloat / rFloat, binaryOperationNode->line, binaryOperationNode->col);
+				if (*(binaryOperationNode->op_type) == '/'){
+					if (rFloat > 0){
+						return new ScalarNode(lFloat / rFloat, binaryOperationNode->line, binaryOperationNode->col);
+					}
+					{
+						return new ScalarNode(0.0f,binaryOperationNode->line, binaryOperationNode->col);
+					}
+				}
 			}	
 	
 		

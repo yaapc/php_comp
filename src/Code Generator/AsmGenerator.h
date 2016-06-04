@@ -163,11 +163,21 @@ public:
 	static string nullptr_exception_function_name;
 	static void nullptr_exception_handler	();
 
+	static string div_zero_exception_function_name;
+	static void div_zero_exception_handler	();
+
+	static string array_out_exception_function_name;
+	static void array_out_exception_handler	();
+
+
 	static string new_line_address;
 	static string empty_string_address;
 	static string head_GL_address; // address of first block of grabage list
 	static string tail_GL_address; // address of first block of grabage list
+
 	static string nullptr_message_address;
+	static string div_zero__message_address;
+	static string array_out_message_address;
 };
 
 

@@ -220,11 +220,13 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 		}
 
 		if (*(binaryOperationNode->op_type) == '/'){
+			AsmGenerator::add_instruction("beq $t1,$0,"+AsmGenerator::div_zero_exception_function_name);
 			AsmGenerator::binary_operation(t0, t0, t1, 4); 
 			AsmGenerator::push(t0); 
 		}
 
 		if (*(binaryOperationNode->op_type) == '%'){
+			AsmGenerator::add_instruction("beq $t1,$0,"+AsmGenerator::div_zero_exception_function_name);
 			AsmGenerator::binary_operation(t0, t0, t1, 5); 
 			AsmGenerator::push(t0); 
 		}
@@ -398,6 +400,9 @@ void CodeGneratorVistor::visit(BinaryOperationNode *binaryOperationNode)
 		}
 
 		if (*(binaryOperationNode->op_type) == '/'){
+			AsmGenerator::add_instruction("mtc1 $zero, $f12");
+			AsmGenerator::add_instruction("c.eq.s $f1,$f12");
+			AsmGenerator::add_instruction("bc1t "+AsmGenerator::div_zero_exception_function_name);
 			AsmGenerator::f_binary_operation(f0,f0,f1,4);
 			AsmGenerator::f_push(f0);
 		}
