@@ -198,6 +198,26 @@ Symbol* SymbolsParser::finishClassInsertion(char* inhertedFrom, Class* classSymb
 		insertSymbol(constructor, scope);
 		classSymbol->addToMethodMembers(constructor);
 	}
+
+	//** "THIS" Symbol Checking:
+	if (scope->getSymbolTable()->lookup("$this") == nullptr) { // there is no symbol called "this"
+		DataMember* thisSym = new DataMember("$this", true, classSymbol->getColNo(), classSymbol->getLineNo());
+		thisSym->isConst = true;
+		thisSym->setVariableType(classSymbol->getName());
+		thisSym->setStorageModifier(DEFAULT_STORAGE);
+		thisSym->setAccessModifier(PRIVATE_ACCESS);
+		scope->getSymbolTable()->insert(thisSym);
+	}
+	else { // there is a symbol called "this", simply override it
+		scope->getSymbolTable()->remove("$this");
+		DataMember* thisSym = new DataMember("$this", true, classSymbol->getColNo(), classSymbol->getLineNo());
+		thisSym->isConst = true;
+		thisSym->setVariableType(classSymbol->getName());
+		thisSym->setStorageModifier(DEFAULT_STORAGE);
+		thisSym->setAccessModifier(PRIVATE_ACCESS);
+		scope->getSymbolTable()->insert(thisSym);
+	}
+
 	classSymbol->setBodyScope(scope);
 	scope->setOwnerSymbol(classSymbol);
 
