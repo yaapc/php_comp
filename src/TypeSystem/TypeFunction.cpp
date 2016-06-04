@@ -5,6 +5,8 @@
 #include "TypeError.hpp"
 #include <string>
 #include "../AST/FunctionCallNode.hpp"
+#include "../AST/ParameterNode.hpp"
+
 
 //static declaration
 vector<TypeFunction*> TypeFunction::functionInstances;
@@ -30,6 +32,7 @@ TypeExpression* TypeFunction::buildFunction(FunctionDefineNode* functionNode, Fu
 	//extract params TypeExpressions and add them to @paramsTE
 	for (auto &paramNode : functionNode->paramsList->nodes) {
 		typeFunction->addToParams(paramNode->getNodeType());
+		typeFunction->paramsSymbols.push_back(dynamic_cast<ParameterNode*>(paramNode)->parSym);//append symbol as well
 	}   
 
 	//extract return type
@@ -107,8 +110,43 @@ TypeExpression* TypeFunction::getInstance(string signature, FunctionCallNode* fu
 				return functionType;
 		}	
 	}
+
+	//lookup using Types:
+	TypeExpression* fallbackExpr = TypeFunction::getInstance_types(funcCallNode->name, dynamic_cast<ListNode*>(funcCallNode->argumentsList)->nodes);
+	if (fallbackExpr != nullptr)
+		return fallbackExpr;
+
 	TypeFunction::errorFunctionCalls.push_back(funcCallNode);
 	return new TypeError("function with signature: " + signature + " is undefined.");
+}
+
+TypeExpression* TypeFunction::getInstance_types(string callerName, vector<Node*> callerArgs) {
+	for (auto functionType : TypeFunction::functionInstances) {
+		if (functionType->getFunctionName() == callerName) {
+			int masterArgs = functionType->getParamsTEs().size();
+			int slaveArgs = callerArgs.size();
+			int i = 0;
+			bool diff = false;
+			while (i < slaveArgs) {
+				if (i == masterArgs) {
+					return nullptr;
+				}
+				if (callerArgs.at(i)->getNodeType()->equivelantTo(functionType->getParamsTEs().at(i)->getTypeId())) {
+					i++;
+				}
+				else {
+					diff = true;
+					break;
+				}
+			}
+			if (!diff && (i == masterArgs || functionType->paramsSymbols.at(i + 1)->isDefault)) {
+				return functionType;
+			}
+			else
+				return nullptr;
+		}
+	}
+	return nullptr;
 }
 
 bool TypeFunction::isDeclared(string name) {

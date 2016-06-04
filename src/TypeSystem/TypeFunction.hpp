@@ -38,6 +38,9 @@ public:
 	 */
 	static TypeExpression* getInstance(string signature, FunctionCallNode* funCallNode);
 
+	static TypeExpression* getInstance_types(string callerName, vector<Node*> callerArgs);
+
+
 	TypeExpression* getReturnTypeExpression(); // get the TypeExpression of the return value of the function
 
 	void setReturnTypeExpression(TypeExpression* returnType);
@@ -89,6 +92,8 @@ private:
 	  a TypeFunction may have multiple signatures, see @Function Symbol for more info. 
 	*/
 	vector<string> signatures;
+
+	vector<Parameter*> paramsSymbols;
 
 	string functionName;
 
