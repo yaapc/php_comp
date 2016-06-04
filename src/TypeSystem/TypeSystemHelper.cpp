@@ -8,6 +8,6 @@ string TypeSystemHelper::getTypeName(int typeId) {
 	case FLOAT_TYPE_ID: return "float";
 	case STRING_TYPE_ID: return "string";
 	case CLASS_TYPE_ID: return "class";//TODO: get class name
-	default: return "TS_HELPER_ERROR";
+	default: return "Undefined";
 	}
 }

@@ -73,6 +73,10 @@ public:
 		A vector of @TypeClass that contains the classes defined through out the code being compiled.
 	*/
 	static vector<TypeClass*> classInstances;
+
+	/*a counter for built classes */
+	static int idsCounter;
+
 private:
 	
 	/* a vector of properties that this TypeClass has*/
@@ -85,7 +89,7 @@ private:
 	vector<PropertyWrapper*> staticProps;
 
 	/* a TypeClass of the parent of this TypeClass*/
-	TypeExpression* parentClass;
+	TypeExpression* parentClass; // TODO: rename to parentType
 
 
 
@@ -110,6 +114,7 @@ private:
 	*/
 	static vector<ClassDefineNode*> errorTypeClasses;
 	
+	int typeId;
 };
 
 

@@ -7,6 +7,7 @@
 //static defination
 vector<TypeClass*> TypeClass::classInstances;
 vector<ClassDefineNode*> TypeClass::errorTypeClasses;
+int TypeClass::idsCounter = TYPES_COUNTER;
 
 TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSymbol) {
 	
@@ -115,6 +116,10 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 
 	//all members added, tell typeClass to resize itself:
 	typeClass->makeSize();
+
+	//set id
+	typeClass->typeId = TypeClass::idsCounter + 1;
+	TypeClass::idsCounter++;
 
 	return typeClass;
 }
@@ -240,7 +245,7 @@ int TypeClass::getSize() {
 }
 
 int TypeClass::getTypeId() {
-	return CLASS_TYPE_ID;
+	return typeId;
 }
 
 
@@ -307,9 +312,12 @@ void TypeClass::makeSize() {
 }
 
 int TypeClass::equivelantTo(int secondTypeId){
-	//TODO
-	if(this->getTypeId() == secondTypeId)
+	
+	if (this->getTypeId() == secondTypeId)
 		return secondTypeId;
+    else if (this->parentClass->equivelantTo(secondTypeId))
+		return secondTypeId;
+
 	return ERROR_TYPE_ID;	
 }
 

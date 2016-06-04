@@ -33,6 +33,7 @@ bool FunctionCallNode::type_checking() {
 		return true; // pass it this time
 	}
 
+	this->argumentsList->type_checking();
 	TypeExpression* type = TypeFunction::getInstance(this->generateCallSignature(), this);
 	TypeFunction* functionType = dynamic_cast<TypeFunction*>(type);
 	if (functionType != nullptr) {
@@ -56,7 +57,7 @@ string FunctionCallNode::generateCallSignature() {
 	for (auto &param : argsList->nodes) {
 		if (!firstParamFlag)
 			os << ",";		
-		if (param->getNodeType()->getTypeId() != CLASS_TYPE_ID)
+		if (param->getNodeType()->getTypeId() < CLASS_TYPE_ID)
 			os << TypeSystemHelper::getTypeName(param->getNodeType()->getTypeId());
 		else {
 			os << dynamic_cast<TypeClass*>(param->getNodeType())->getName();
