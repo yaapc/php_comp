@@ -1,4 +1,6 @@
 #include "TypeSystemHelper.hpp"
+#include "TypeExpression.hpp"
+#include "TypeClass.hpp"
 
 string TypeSystemHelper::getTypeName(int typeId) {
 	switch (typeId) {
@@ -12,3 +14,12 @@ string TypeSystemHelper::getTypeName(int typeId) {
 	default: return "Undefined";
 	}
 }
+
+string TypeSystemHelper::getTypeName(TypeExpression* type) {
+	if (type->getTypeId() > CLASS_TYPE_ID)
+		return dynamic_cast<TypeClass*>(type)->getName();
+	return TypeSystemHelper::getTypeName(type->getTypeId());
+}
+
+
+

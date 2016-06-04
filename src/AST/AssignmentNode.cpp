@@ -88,8 +88,8 @@ Node* AssignmentNode::optmize(OptimizationVistor *optimizationVistor)
 	  }
 	  else {
 		  this->nodeType = new TypeError("no suitable conversion exists between " + 
-			  TypeSystemHelper::getTypeName(lhs->getNodeType()->getTypeId()) + " and " + 
-				  TypeSystemHelper::getTypeName(rhs->getNodeType()->getTypeId()) + string(". line:") + to_string(this->line) + string(", col : ") + to_string(this->col));
+			  TypeSystemHelper::getTypeName(lhs->getNodeType()) + " and " + 
+				  TypeSystemHelper::getTypeName(rhs->getNodeType()) + string(". line:") + to_string(this->line) + string(", col : ") + to_string(this->col));
 		  return false;
 	  }
   }

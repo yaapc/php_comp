@@ -6,9 +6,12 @@
 #include <string>
 using namespace std;
 
+class TypeExpression;
+
 class TypeSystemHelper {
 public:
 	static string getTypeName(int typeId);
+	static string getTypeName(TypeExpression* type);
 };
 
 
