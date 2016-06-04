@@ -20,6 +20,7 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 	
 	//***  build the type:
 	TypeClass* typeClass = new TypeClass(classSymbol->getName());
+	typeClass->parentClass = nullptr;
 
 	if (strcmp(classSymbol->getName(), "Object") != 0 ) { // if we are not building Object Class, then we must have a base class to inherit from 
 		//get base class TypeClass
@@ -360,9 +361,10 @@ int TypeClass::equivelantTo(int secondTypeId){
 	
 	if (this->getTypeId() == secondTypeId)
 		return secondTypeId;
-    else if (this->parentClass->equivelantTo(secondTypeId))
+	else
+		if (parentClass 
+			&& parentClass->equivelantTo(secondTypeId))
 		return secondTypeId;
-
 	return ERROR_TYPE_ID;	
 }
 
