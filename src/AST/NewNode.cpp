@@ -46,7 +46,7 @@ bool NewNode::type_checking() {
 		return false;
 	}
 	//class found, but does it have the given constructor?
-	this->nodeType = this->nodeType->opDot(this->className, true, this->generateCallSignature(), this->constructorWr);
+	this->nodeType = this->nodeType->opDot(this->className, true, this->generateCallSignature(), this->constructorWr, nullptr);
 	return true;
 }
 

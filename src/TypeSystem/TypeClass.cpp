@@ -3,6 +3,7 @@
 #include "TypeBoolean.hpp"
 #include "TypeError.hpp"
 #include "TypeClass.hpp"
+#include "../AST/ClassCallNode.hpp"
 
 //static defination
 vector<TypeClass*> TypeClass::classInstances;
@@ -167,7 +168,7 @@ TypeClass::TypeClass(string name) {
 //ex: obj.x  x is the name of the property we want to access, it doesn't have
 //an id, and we don't know what type it is.
 //additionally, it should have an access context.
-TypeExpression* TypeClass::opDot(string memberStr, bool isMethod, string methodSign, MemberWrapper*& memWrapper) {
+TypeExpression* TypeClass::opDot(string memberStr, bool isMethod, string methodSign, MemberWrapper*& memWrapper, ClassCallNode* classCallNode) {
 
 	if (!isMethod) { // calling a member
 		//properties have '$' in their symbol's name,
@@ -185,10 +186,10 @@ TypeExpression* TypeClass::opDot(string memberStr, bool isMethod, string methodS
 		}
 	}
 	else { // calling a method
-		MethodWrapper* method = this->lookupMembers(memberStr, methodSign);
+		MethodWrapper* method = this->lookupMembers(memberStr, methodSign, classCallNode);
 		if (method == nullptr) { // method not found
 			memWrapper = nullptr;
-			return new TypeError(this->getName() + " doesn't have method " + memberStr);
+			return new TypeError(this->getName() + " doesn't have method " + memberStr + " with signature " + methodSign);
 		}
 		else {
 			//TODO: check access context and what so ever....
@@ -266,7 +267,9 @@ PropertyWrapper* TypeClass::lookupMembers(string memberStr) {
 	return nullptr;
 }
 
-MethodWrapper* TypeClass::lookupMembers(string memberStr, string methodSign) {
+MethodWrapper* TypeClass::lookupMembers(string memberStr, string methodSign, ClassCallNode* classCallNode) {
+	//TODO: there are a lot of redundencies in this method...
+
 	//first search current class methods:
 	for (auto member : this->methods) {
 		if (member->getName() == memberStr) {
@@ -274,6 +277,13 @@ MethodWrapper* TypeClass::lookupMembers(string memberStr, string methodSign) {
 				if(this->getName()+ "_" + methodSign == sign)
 					return dynamic_cast<MethodWrapper*>(member);
 		}
+	}
+
+	//fallback to searching with Types
+	if (classCallNode != nullptr) { // not a NewNode
+		MethodWrapper* wrapper = this->lookupMembers_types(memberStr, dynamic_cast<ListNode*>(classCallNode->argumentsList)->nodes);
+		if (wrapper != nullptr)
+			return wrapper;
 	}
 
 	//if not found in current class methods,
@@ -284,6 +294,36 @@ MethodWrapper* TypeClass::lookupMembers(string memberStr, string methodSign) {
 			for (auto sign : dynamic_cast<TypeFunction*>(member->getTypeExpr())->getSignatures())
 				if (parent->getName() + "_" + methodSign == sign)
 					return dynamic_cast<MethodWrapper*>(member);
+		}
+	}
+	return nullptr;
+}
+
+MethodWrapper* TypeClass::lookupMembers_types(string calledMethodName, vector<Node*> args){
+	for (auto methodWrapper : this->members) {
+		if (methodWrapper->getName() == calledMethodName && methodWrapper->getWrapperType() == MemberWrapper::METHOD_WRAPPER) {
+			TypeFunction* methodType = dynamic_cast<TypeFunction*>(methodWrapper->getTypeExpr());
+			int masterArgs = methodType->getParamsTEs().size();
+			int slaveArgs = args.size();
+			int i = 0;
+			bool diff = false;
+			while (i < slaveArgs) {
+				if (i == masterArgs) {
+					return nullptr;
+				}
+				if (args.at(i)->getNodeType()->equivelantTo(methodType->getParamsTEs().at(i)->getTypeId())) {
+					i++;
+				}
+				else {
+					diff = true;
+					break;
+				}
+			}
+			if (!diff && (i == masterArgs || methodType->paramsSymbols.at(i + 1)->isDefault)) {
+				return dynamic_cast<MethodWrapper*>(methodWrapper);
+			}
+			else
+				return nullptr;
 		}
 	}
 	return nullptr;

@@ -12,6 +12,7 @@
 class MemberWrapper;//forward declaration
 class MethodWrapper;
 class PropertyWrapper;
+class ClassCallNode;
 
 class TypeClass : public TypeExpression {
 public:
@@ -47,7 +48,7 @@ public:
 	static PropertyWrapper* getStaticProperty(string name, string propName);
 
 
-	TypeExpression* opDot(string propertyStr, bool isMethod, string methodSign, MemberWrapper*& memWrapper);
+	TypeExpression* opDot(string propertyStr, bool isMethod, string methodSign, MemberWrapper*& memWrapper, ClassCallNode* classCallNode);
 
 	int getSize();
 	vector<MemberWrapper*> getMembers();
@@ -65,7 +66,9 @@ public:
 
 	PropertyWrapper* lookupMembers(string memberStr);
 
-	MethodWrapper* lookupMembers(string memberStr, string methodSign);
+	MethodWrapper* lookupMembers(string memberStr, string methodSign, ClassCallNode* classCallNode);
+
+	MethodWrapper* lookupMembers_types(string calledMethodName, vector<Node*> args);
 
 	static bool tryReDefine();
 

@@ -120,9 +120,9 @@ TypeExpression* TypeFunction::getInstance(string signature, FunctionCallNode* fu
 	return new TypeError("function with signature: " + signature + " is undefined.");
 }
 
-TypeExpression* TypeFunction::getInstance_types(string callerName, vector<Node*> callerArgs) {
+TypeExpression* TypeFunction::getInstance_types(string calledName, vector<Node*> callerArgs) {
 	for (auto functionType : TypeFunction::functionInstances) {
-		if (functionType->getFunctionName() == callerName) {
+		if (functionType->getFunctionName() == calledName) {
 			int masterArgs = functionType->getParamsTEs().size();
 			int slaveArgs = callerArgs.size();
 			int i = 0;

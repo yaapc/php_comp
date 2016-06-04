@@ -65,6 +65,8 @@ public:
 	static vector<FunctionCallNode*> errorFunctionCalls;
 	static bool tryReDefine();
 
+	vector<Parameter*> paramsSymbols;
+
 private:
 	TypeFunction(vector<string> functionSign, string functionName, string uniqueName);
 
@@ -92,8 +94,6 @@ private:
 	  a TypeFunction may have multiple signatures, see @Function Symbol for more info. 
 	*/
 	vector<string> signatures;
-
-	vector<Parameter*> paramsSymbols;
 
 	string functionName;
 

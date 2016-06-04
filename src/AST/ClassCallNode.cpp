@@ -44,10 +44,12 @@ bool ClassCallNode::type_checking() {
 	}
 
 	this->object->type_checking();
-	if(this->isMethodCall)
-		this->nodeType = this->object->getNodeType()->opDot(this->propertyString, true, this->generateCallSignature(), member);
+	if (this->isMethodCall) {
+		this->argumentsList->type_checking();
+		this->nodeType = this->object->getNodeType()->opDot(this->propertyString, true, this->generateCallSignature(), member, this);
+	}
 	else
-		this->nodeType = this->object->getNodeType()->opDot(this->propertyString, false, "", member);
+		this->nodeType = this->object->getNodeType()->opDot(this->propertyString, false, "", member, this);
 	return true;
 }
 
@@ -77,7 +79,7 @@ string ClassCallNode::generateCallSignature() {
 	for (auto &param : this->argumentsList->nodes) {
 		if (!firstParamFlag)
 			os << ",";
-		if (param->getNodeType()->getTypeId() != CLASS_TYPE_ID)
+		if (param->getNodeType()->getTypeId() < CLASS_TYPE_ID)
 			os << TypeSystemHelper::getTypeName(param->getNodeType()->getTypeId());
 		else {
 			os << dynamic_cast<TypeClass*>(param->getNodeType())->getName();

@@ -1,12 +1,13 @@
 #include "TypeExpression.hpp"
 #include "TypeError.hpp"
+#include "../AST/ClassCallNode.hpp"
 
 
 TypeExpression::TypeExpression() {
 	this->size = 0;
 }
 
-TypeExpression* TypeExpression::opDot(string propertyStr, bool isMethod, string methodSign, MemberWrapper*& memWrapper) {
+TypeExpression* TypeExpression::opDot(string propertyStr, bool isMethod, string methodSign, MemberWrapper*& memWrapper, ClassCallNode* classCallNode) {
 	return new TypeError(TypeSystemHelper::getTypeName(this->getTypeId()) + " Type doesn't support -> operation");
 }
 

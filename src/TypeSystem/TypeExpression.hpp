@@ -11,6 +11,7 @@
 using namespace std;
 
 class MemberWrapper;
+class ClassCallNode;
 /*
  * this class will be the interface for all the possible types ( simple and compound ) and defining thier uniform processing.
  */
@@ -32,7 +33,7 @@ public:
      * the naming convention of the methods is: op[Operation Name]
 	 */
 
-	virtual TypeExpression* opDot(string propertyStr, bool isMethod, string methodSign, MemberWrapper*& wrapper);
+	virtual TypeExpression* opDot(string propertyStr, bool isMethod, string methodSign, MemberWrapper*& wrapper, ClassCallNode* classCallNode);
 
 	virtual TypeExpression* opPlus(int secondTypeId);
 
