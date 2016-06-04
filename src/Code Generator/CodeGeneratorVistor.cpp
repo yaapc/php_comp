@@ -1359,7 +1359,14 @@ string CodeGneratorVistor::getClassMemberAddress(ClassCallNode*  classCallNode,s
 {
 	TypeClass *typeClass		= dynamic_cast<TypeClass*>(classCallNode->object->getNodeType());
 
-	string objectAddress		= currentFrame->getAddress(classCallNode->object->variable->getNameWithout());
+
+	string varName = classCallNode->object->variable->getNameWithout();
+	string objectAddress;
+	if (varName.compare("this")== 0){
+		objectAddress = "0($fp)";
+	}else{
+		objectAddress = currentFrame->getAddress(varName);
+	}
 
 	AsmGenerator::lw(thisReg,objectAddress);
 
