@@ -553,28 +553,38 @@ void CodeGneratorVistor::visit(VariableNode *variableNode)
 	AsmGenerator::comment("<Variable Node "+variableNode->variable->getNameWithout());
 	string s0 = "s0";
 
-	string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
-
+	
 	if (variableNode->getNodeType()->getTypeId() == INTEGER_TYPE_ID	|| variableNode->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID){
+		string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
 		// In primitive types we care about value so we have to load it
 		AsmGenerator::lw(s0,variableAddress); 		//Get value from memory address and put the value in s0
 		AsmGenerator::push(s0);
 	}
 
 	if (variableNode->getNodeType()->getTypeId()== STRING_TYPE_ID){
+		string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
 		AsmGenerator::lw(s0,variableAddress); 		//Get memory address and put in s0
 		AsmGenerator::push(s0);
 
 	}
 		
 	if (variableNode->getNodeType()->getTypeId() == FLOAT_TYPE_ID){
+		string variableAddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
 		//float literals are stored in data so we only load the address of those literals
 		AsmGenerator::ls("f0",variableAddress);	//Get value from memory address and put the value in s0	
 		AsmGenerator::f_push("f0");
 	}
 
-	if (variableNode->getNodeType()->getTypeId() > TYPES_COUNTER){
-		AsmGenerator::lw(s0,variableAddress); 		//Get memory address and put in s0
+	if (variableNode->getNodeType()->getTypeId() == CLASS_TYPE_ID || variableNode->getNodeType()->getTypeId() > TYPES_COUNTER){
+
+		string varName = variableNode->variable->getNameWithout();
+		string objectAddress;
+		if (varName.compare("this")== 0){
+			objectAddress = "0($fp)";
+		}else{
+			objectAddress = currentFrame->getAddress(varName);
+		}
+		AsmGenerator::lw(s0,objectAddress); 		//Get memory address and put in s0
 		AsmGenerator::push(s0);
 	}
 
@@ -615,9 +625,10 @@ void CodeGneratorVistor::visit(EchoNode *echoNode)
 
 						if (node->getNodeType()->getTypeId() > 7){
 							VariableNode *variableNode = static_cast<VariableNode*>(node);
-							if (variableNode){
-								string objectaddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
-								AsmGenerator::lw("t1",objectaddress);
+							if (variableNode)
+							{
+								//string objectaddress = currentFrame->getAddress(variableNode->variable->getNameWithout());
+								AsmGenerator::pop("t1");
 								AsmGenerator::lw("t0","12($t1)");
 								AsmGenerator::push("t1");
 								AsmGenerator::add_instruction("jalr $t0");
