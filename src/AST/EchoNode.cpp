@@ -21,6 +21,7 @@ EchoNode::EchoNode(Node* node, int line, int col) : expression(node) {
 bool EchoNode::type_checking() {
 	//this for second passes, if the current node is free of TypeError no need to re type_check it
 	if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
+		this->expression->type_checking();
 		return true; // pass it this time
 	}
 

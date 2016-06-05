@@ -40,6 +40,7 @@ Node* ClassCallNode::optmize(OptimizationVistor *optimizationVistor)
 bool ClassCallNode::type_checking() {
 	if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
 		//this for second passes, if the current node is free of TypeError no need to re type_check it
+		object->type_checking();
 		return true; // pass it this time
 	}
 
