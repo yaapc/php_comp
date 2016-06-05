@@ -13,6 +13,7 @@
       function  MotorBike(){}
       
       function move() : void {
+        echo $this;
         echo "MotorBike can move !!";
       }
   }
@@ -22,6 +23,7 @@
       function  Track(){}
       
       function move() : void {
+        echo $this;
         echo "Track can move !!";
      }
    }
@@ -30,6 +32,7 @@
    
       function  Bicycle(){}
       function move() : void {
+        echo $this->toString();
         echo "Bicycle can move !!";
      }
   }
@@ -57,6 +60,6 @@
     
     $v->move();
     $i+=1;
+    echo "------------------------------------------";
   }
 ?>
-

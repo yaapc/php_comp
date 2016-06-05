@@ -5,15 +5,13 @@
      static float   $y  = 6.45;
      static string  $z  = "1";
    
-     int $a;
+     public int $a;
 
      function A(int $paramter){
         $a = $paramter;
         $x += 10;
         $y *= 2.0;
         $z = $z + "@";
-        
-        echo $z;
      }
   }
 
