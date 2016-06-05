@@ -65,7 +65,9 @@ TypeExpression* TypeFunction::buildMethod(ClassMethodNode* methodNode, Method* m
 
 	//extract params TypeExpressions and add them to @paramsTE
 	for (auto &paramNode : methodNode->paramsList->nodes) {
+		paramNode->type_checking();
 		typeFunction->addToParams(paramNode->getNodeType());
+		typeFunction->paramsSymbols.push_back(dynamic_cast<ParameterNode*>(paramNode)->parSym);//append symbol as well
 	}
 
 	//extract return type: 
@@ -97,6 +99,7 @@ TypeExpression* TypeFunction::buildMethod(ClassMethodNode* methodNode, Method* m
 	//extract params TypeExpressions and add them to @paramsTE
 	for (auto &paramNode : methodNode->paramsList->nodes) {
 		typeFunction->addToParams(paramNode->getNodeType());
+		typeFunction->paramsSymbols.push_back(dynamic_cast<ParameterNode*>(paramNode)->parSym);//append symbol as well
 	}
 
 	//extract return type: 

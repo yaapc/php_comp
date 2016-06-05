@@ -75,6 +75,12 @@ void CheckerVisitor::visit(VariableNode* node, TypeExpression* context) {
 	//Static and Dynamic members check:
 	if (dynamic_cast<TypeFunction*>(context) != nullptr && this->classTracker != nullptr) {
 		// we are in class method definition
+		TypeFunction* typeFunction = dynamic_cast<TypeFunction*>(context);
+		for(auto param : typeFunction->paramsSymbols){
+			if(strcmp(param->getName(), node->variableName.c_str()) == 0)
+				return;                          // we have the variable in the params of the function
+		}
+
 		if (dynamic_cast<TypeFunction*>(context)->isStaticMethod && !node->variable->isStatic) {
 			node->setNodeType(new TypeError("Can't access non-statics in static contexts. line:" + to_string(node->line) + ". col:" + to_string(node->col)));
 			return;
@@ -195,6 +201,9 @@ void CheckerVisitor::visit(ClassCallNode* node, TypeExpression* context) {
 	if (context != nullptr && node->object->getNodeType()->getTypeId() == context->getTypeId()) {// are we in exactly the same context?
 		return; // no access problems
 	}
+
+	if(context != nullptr && node->object->variableName.compare("$this") == 0)
+		return;
 
 	//here we are in a different context than definition
 	if (node->member->accessModifier == PRIVATE_ACCESS){
