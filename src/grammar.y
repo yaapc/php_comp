@@ -705,7 +705,7 @@ class_statement:
 	| method_header	method_body	close_par {	/* optional return type in case of constructor */
 			pl.log("method");
 			$<r.symbol>$ = $<r.symbol>1;
-			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1, $<r.line_no>1, $<r.col_no>1);
+			$<r.node>$ = new ClassMethodNode($<r.symbol>$, $<r.node>2, $<r.node>1, $<r.line_no>2, $<r.col_no>2);
 		}
 	| method_header_abstract ';' 
 	    {
