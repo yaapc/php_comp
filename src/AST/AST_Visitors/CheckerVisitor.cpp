@@ -48,6 +48,12 @@ void CheckerVisitor::visit(ListNode* listNode, TypeExpression* context) {
 
 void CheckerVisitor::visit(ReturnNode* node, TypeExpression* context) {
 	doesReturn = true;
+	if (dynamic_cast<TypeFunction*>(context)->isConstructorFT) {
+		node->setNodeType(new TypeError("Constructors should not return a value. line: " + to_string(node->line) + ". col:" + to_string(node->col)));
+		return;
+	}
+
+
 	if (node->returned_node == nullptr) // returning void 
 		if (dynamic_cast<TypeFunction*>(context)->getReturnTypeExpression()->getTypeId() == VOID_TYPE_ID)
 			return;
@@ -77,6 +83,12 @@ void CheckerVisitor::visit(FunctionCallNode* node, TypeExpression* context) {
 }
 
 void CheckerVisitor::visit(FunctionDefineNode* node, TypeExpression* context) {
+	node->bodySts->accept(this, node->getNodeType());
+
+	if (dynamic_cast<TypeFunction*>(node->getNodeType())->getReturnTypeExpression()->getTypeId() == VOID_TYPE_ID)//no need to check return paths
+		return;	
+
+
 	//return type checking:
 	doesReturn = false;
 	node->bodySts->accept(this, node->getNodeType());
@@ -128,6 +140,41 @@ void CheckerVisitor::visit(ClassMemNode* node, TypeExpression* context) {
 
 void CheckerVisitor::visit(ClassMethodNode* node, TypeExpression* context) {
 	node->bodySts->accept(this, node->getNodeType());
+
+	if (node->methodSym->isConstructor || dynamic_cast<TypeFunction*>(node->getNodeType())->getReturnTypeExpression()->getTypeId() == VOID_TYPE_ID ) //no need to check return paths
+		return;
+
+	//return type checking:
+	doesReturn = false;
+	node->bodySts->accept(this, node->getNodeType());
+
+	//test  1:
+	for (auto bodyNode : dynamic_cast<ListNode*>(node->bodySts)->nodes) {
+		if (dynamic_cast<ReturnNode*>(bodyNode) != nullptr)
+			doesReturn = true;
+	}
+	//test 2:
+	//look for any if/else node if they return a value of not
+	for (auto bodyNode : dynamic_cast<ListNode*>(node->bodySts)->nodes) {
+		if (dynamic_cast<IfNode*>(bodyNode) != nullptr) {
+			IfNode* ifNode = dynamic_cast<IfNode*>(bodyNode);
+			if (ifNode->else_node != nullptr) { // it has an else
+				ifNode->accept(this, node->getNodeType());
+				bool ifDoesReturn = doesReturn;
+				doesReturn = false;
+				ifNode->else_node->accept(this, node->getNodeType());
+				if (ifDoesReturn && doesReturn)
+					doesReturn = true; // it really does return
+				else
+					doesReturn = false;
+			}
+		}
+	}
+
+	if (!doesReturn)
+		node->setNodeType(new TypeError("function " + node->methodSym->getLabel() + ": Not all paths return a value. line:" + to_string(node->line) + ".col: " + to_string(node->col)));
+
+	doesReturn = false;
 }
 
 void CheckerVisitor::visit(ClassCallNode* node, TypeExpression* context) {

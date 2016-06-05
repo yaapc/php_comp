@@ -48,6 +48,7 @@ TypeExpression* TypeFunction::buildFunction(FunctionDefineNode* functionNode, Fu
 	//everything is ok
 	//now let's resize according to the new params
 	typeFunction->resize();
+	typeFunction->isConstructorFT = false; // not a constructor
 
 	//and finally, add it to the FunctionType's we have:
 	TypeFunction::functionInstances.push_back(typeFunction);
@@ -80,6 +81,7 @@ TypeExpression* TypeFunction::buildMethod(ClassMethodNode* methodNode, Method* m
 	//everything is ok
 	//now let's resize according to the new params
 	typeFunction->resize();
+	typeFunction->isConstructorFT = methodSymbol->isConstructor; // not a constructor
 
 	return typeFunction;
 }
@@ -113,6 +115,7 @@ TypeExpression* TypeFunction::buildMethod(ClassMethodNode* methodNode, Method* m
 	//everything is ok
 	//now let's resize according to the new params
 	typeFunction->resize();
+	typeFunction->isConstructorFT = methodSymbol->isConstructor;
 
 	return typeFunction;
 }
@@ -132,6 +135,7 @@ TypeExpression* TypeFunction::buildConstructor(Method* methodSym) {
 	//everything is ok
 	//now let's resize according to the new params
 	typeFunction->resize();
+	typeFunction->isConstructorFT = true;
 
 	return typeFunction;
 }

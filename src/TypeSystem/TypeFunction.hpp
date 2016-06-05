@@ -69,6 +69,8 @@ public:
 
 	vector<Parameter*> paramsSymbols;
 
+	bool isConstructorFT;// is constructor Function Type?
+
 private:
 	TypeFunction(vector<string> functionSign, string functionName, string uniqueName);
 
