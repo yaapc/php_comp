@@ -3,7 +3,7 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
-
+#include "AST_Visitors\CheckerVisitor.hpp"
 
  ForNode::ForNode(Node *initializer, Node *condition, Node *post_statement, Node *body, int line, int col) :
     initializer(initializer),
@@ -41,4 +41,8 @@ Node* ForNode::optmize(OptimizationVistor *optimizationVistor)
 
 void ForNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void ForNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

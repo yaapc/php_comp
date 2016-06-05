@@ -16,6 +16,8 @@ public:
 
   virtual void accept(TypeErrorVisitor *);
 
+  virtual void accept(CheckerVisitor*, TypeExpression*);
+
   virtual bool type_checking();
 
   virtual TypeExpression* getNodeType();

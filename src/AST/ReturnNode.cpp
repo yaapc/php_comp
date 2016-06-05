@@ -5,6 +5,7 @@
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 ReturnNode::ReturnNode(Node *exp, int line, int col) {
 	this->returned_node = exp;
@@ -59,4 +60,8 @@ bool ReturnNode::type_checking() {
 
 void ReturnNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void ReturnNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

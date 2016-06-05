@@ -3,6 +3,7 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 BreakNode::BreakNode(int line, int col){
 	this->line = line;
@@ -28,4 +29,8 @@ Node* BreakNode::optmize(OptimizationVistor *optimizationVistor)
 
 void BreakNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void BreakNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

@@ -5,6 +5,7 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypesTable.h"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 ClassMethodNode::ClassMethodNode(Symbol* methodSym, Node* bodySts, Node* params, int line, int col) {
 	this->nodeType = nullptr;
@@ -56,7 +57,9 @@ void ClassMethodNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
 }
 
-
+void ClassMethodNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
+}
 
 
 

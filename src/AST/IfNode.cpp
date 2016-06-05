@@ -6,6 +6,7 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 IfNode::IfNode(Node *cond, Node *bod, Node *el, int line, int col) : condition(cond), else_node(dynamic_cast<ElseNode*>(el))
 {
@@ -70,4 +71,8 @@ Node* IfNode::optmize(OptimizationVistor *optimizationVistor)
 
   void IfNode::accept(TypeErrorVisitor* typeVisitor) {
 	  typeVisitor->visit(this);
+  }
+
+  void IfNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	  visitor->visit(this, context);
   }

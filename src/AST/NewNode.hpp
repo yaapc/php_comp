@@ -23,7 +23,7 @@ public:
 	virtual Node* optmize(OptimizationVistor *);
 
 	virtual void accept(TypeErrorVisitor *);
-
+	virtual void accept(CheckerVisitor*, TypeExpression*);
 
 	/*
 	*	generates a signature of the constructor called.

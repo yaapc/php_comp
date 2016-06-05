@@ -6,6 +6,7 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypeError.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 ScalarNode::ScalarNode(int i, int line, int col) {
 	this->nodeType = nullptr;
@@ -89,4 +90,9 @@ Node* ScalarNode::optmize(OptimizationVistor *optimizationVistor)
 
 void ScalarNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+
+void ScalarNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

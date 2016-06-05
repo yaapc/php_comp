@@ -7,6 +7,7 @@
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 //#include "../TypeSystem/TypeFunction.hpp"
 #include <sstream>
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 FunctionCallNode::FunctionCallNode(string name, Node* argsList, int line, int col) {
 	this->nodeType = nullptr;
@@ -57,7 +58,7 @@ string FunctionCallNode::generateCallSignature() {
 	for (auto &param : argsList->nodes) {
 		if (!firstParamFlag)
 			os << ",";		
-		if (param->getNodeType()->getTypeId() < CLASS_TYPE_ID)
+		if (param->getNodeType()->getTypeId() < 8)
 			os << TypeSystemHelper::getTypeName(param->getNodeType()->getTypeId());
 		else {
 			os << dynamic_cast<TypeClass*>(param->getNodeType())->getName();
@@ -76,4 +77,8 @@ Node* FunctionCallNode::optmize(OptimizationVistor *optimizationVistor)
 
 void FunctionCallNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void FunctionCallNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

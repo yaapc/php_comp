@@ -25,7 +25,7 @@ public:
 	virtual Node* optmize(OptimizationVistor *);
 
 	virtual void accept(TypeErrorVisitor *);
-
+	virtual void accept(CheckerVisitor*, TypeExpression*);
 
 	TypeExpression* createReturnType(); // create a TypeExpression represents the return type.
 };

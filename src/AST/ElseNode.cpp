@@ -4,6 +4,7 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypesTable.h"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 ElseNode::ElseNode(Node *node, int line, int col){
 	this->body = node;
@@ -40,4 +41,8 @@ bool ElseNode::type_checking() {
 
 void ElseNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void ElseNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

@@ -27,5 +27,5 @@ public:
 	virtual TypeExpression* getNodeType();
 
 	virtual void accept(TypeErrorVisitor *);
-
+	virtual void accept(CheckerVisitor*, TypeExpression*);
 };

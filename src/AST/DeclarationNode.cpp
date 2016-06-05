@@ -5,6 +5,7 @@
 #include "../TypeSystem/TypeError.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 DeclarationNode::DeclarationNode(Symbol *v, int line, int col) : variable(dynamic_cast<Variable*>(v)) {
 	nodeType = nullptr;
@@ -80,4 +81,8 @@ TypeExpression* DeclarationNode::getNodeType() {
 
  void DeclarationNode::accept(TypeErrorVisitor* typeVisitor) {
 	 typeVisitor->visit(this);
+ }
+
+ void DeclarationNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	 visitor->visit(this, context);
  }

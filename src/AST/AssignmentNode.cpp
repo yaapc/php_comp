@@ -7,6 +7,8 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
+
 
 AssignmentNode::AssignmentNode(Node *l, Node *r, int line, int col) : lhs(l), rhs(r) {
 	nodeType = nullptr;
@@ -97,4 +99,8 @@ Node* AssignmentNode::optmize(OptimizationVistor *optimizationVistor)
 
 void AssignmentNode::accept(TypeErrorVisitor* typeVisitor) {
 	  typeVisitor->visit(this);
+}
+
+void AssignmentNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

@@ -4,6 +4,7 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 #include <sstream>
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 NewNode::NewNode(Node* args,string className, int line, int col) {
 	this->className		= className;
@@ -85,4 +86,8 @@ Node* NewNode::optmize(OptimizationVistor *optimizationVistor)
 
  void NewNode::accept(TypeErrorVisitor* typeVisitor) {
 	 typeVisitor->visit(this);
+ }
+
+ void NewNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	 visitor->visit(this, context);
  }

@@ -80,6 +80,8 @@ public:
 	/*a counter for built classes */
 	static int idsCounter;
 
+	int getAccessMod(string memString);
+
 private:
 	
 	/* a vector of properties that this TypeClass has*/
@@ -132,9 +134,9 @@ public:
 	TypeExpression* getTypeExpr();
 	void setTypeExpr(TypeExpression* te);
 	int getSize();
+	int accessModifier;
 private:
 	TypeExpression* type;
-	int accessModifier;
 };
 
 class PropertyWrapper : public MemberWrapper {

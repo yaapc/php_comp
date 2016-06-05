@@ -4,6 +4,7 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypesTable.h"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 WhileNode::WhileNode(Node *condition, Node *body, int line, int col) : condition(condition) {
 	this->body = body;
@@ -54,4 +55,9 @@ void WhileNode::accept(TypeErrorVisitor* typeVisitor) {
 		  this->body->type_checking();
 		  return false;
 	  }
+  }
+
+
+  void WhileNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	  visitor->visit(this, context);
   }

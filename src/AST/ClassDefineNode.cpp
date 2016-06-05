@@ -6,6 +6,7 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 ClassDefineNode::ClassDefineNode(Symbol* classSym, Node* classBody, int line, int col) {
 	this->classSymbol = dynamic_cast<Class*>(classSym);
@@ -82,4 +83,8 @@ void ClassDefineNode::print(ostream &os) {
 
 void ClassDefineNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void ClassDefineNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

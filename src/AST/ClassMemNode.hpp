@@ -15,7 +15,7 @@ public:
 	virtual Node* optmize(OptimizationVistor *);
 
 	virtual void accept(TypeErrorVisitor *);
-
+	virtual void accept(CheckerVisitor*, TypeExpression*);
 
 	//Symbol interfacing methods:
 	bool isStatic();

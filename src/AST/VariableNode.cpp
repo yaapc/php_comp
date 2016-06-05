@@ -7,6 +7,7 @@
 #include "../SymbolTable/Scope.h"
 #include "../SymbolTable/SymbolsParser.h"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 VariableNode::VariableNode(Symbol *var, int line, int col) {
     variable = dynamic_cast<Variable*>(var);
@@ -110,4 +111,8 @@ Node* VariableNode::optmize(OptimizationVistor *optimizationVistor)
 
 void VariableNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void VariableNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

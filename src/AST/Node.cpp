@@ -3,6 +3,7 @@
 #include "../TypeSystem/TypesTable.h"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 Node::Node(){
 	hasScopeFrame = false;
@@ -26,6 +27,10 @@ void Node::print(ostream& os) {
 	  return this->nodeType;
   }
 
+  void Node::setNodeType(TypeExpression* type) {
+	  this->nodeType = type;
+  }
+
   void Node::generate_code(CodeGneratorVistor *codeGneratorVistor){
 
   }
@@ -36,4 +41,9 @@ Node* Node::optmize(OptimizationVistor *optimizationVistor)
 }
 
 void Node::accept(TypeErrorVisitor* errorVisitor) {
+}
+
+
+void Node::accept(CheckerVisitor* visitor, TypeExpression* context) {
+
 }

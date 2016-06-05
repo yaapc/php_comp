@@ -3,6 +3,7 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 ContinueNode::ContinueNode(int line, int col){
 	this->line = line;
@@ -28,4 +29,8 @@ Node* ContinueNode::optmize(OptimizationVistor *optimizationVistor)
 
 void ContinueNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void ContinueNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

@@ -5,6 +5,8 @@
 #include "../Code Generator/AsmGenerator.h"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
+
 
 ListNode::ListNode()
 {
@@ -28,7 +30,7 @@ ListNode* ListNode::add_node(Node* node) {
     for (auto node : nodes) {
       //result = result &&  node->type_checking();
 	  //TODO: remove the condition when all nodes has implemented type_check()
-	  if(node != nullptr)
+	  if(node != nullptr && node->getNodeType() == nullptr)
 			node->type_checking();
     }
     return result;
@@ -66,4 +68,8 @@ Node* ListNode::optmize(OptimizationVistor *optimizationVistor)
 
 void ListNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void ListNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

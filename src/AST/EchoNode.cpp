@@ -9,6 +9,7 @@
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "../TypeSystem/TypesTable.h"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 EchoNode::EchoNode(Node* node, int line, int col) : expression(node) {
 	this->line = line;
@@ -59,4 +60,8 @@ Node* EchoNode::optmize(OptimizationVistor *optimizationVistor)
 
 void EchoNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void EchoNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

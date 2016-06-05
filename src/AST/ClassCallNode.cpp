@@ -7,7 +7,7 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 #include <sstream>
-
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 ClassCallNode::ClassCallNode(Node* objectNode, string propertyString, int line, int col) {
 	this->object = dynamic_cast<VariableNode*>(objectNode);
@@ -100,4 +100,8 @@ string ClassCallNode::generateCallSignature() {
 
 void ClassCallNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void ClassCallNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

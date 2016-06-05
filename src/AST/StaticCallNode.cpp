@@ -4,6 +4,7 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 StaticCallNode::StaticCallNode(string className, string varNode, int line, int col) {
 	this->className		= className;
@@ -71,4 +72,8 @@ Node* StaticCallNode::optmize(OptimizationVistor *optimizationVistor)
 
 void StaticCallNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void StaticCallNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

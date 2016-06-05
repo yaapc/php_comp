@@ -66,7 +66,7 @@ void TypeErrorVisitor::visit(ListNode *listNode) {
 	if (nType != nullptr && dynamic_cast<TypeError*>(nType) != nullptr) { // we have a TypeError
 		this->errQ.push_back(nType);
 	}
-	for (auto& node : listNode->nodes)
+	for (auto node : listNode->nodes)
 		node->accept(this);
 }
 

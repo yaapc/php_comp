@@ -264,6 +264,13 @@ void TypeClass::addToMembers(MemberWrapper* memberType) {
 }
 
 PropertyWrapper* TypeClass::lookupMembers(string memberStr) {
+	//first search in class props
+	for (auto member : this->props) {
+		if (member->getName() == memberStr) {
+			return dynamic_cast<PropertyWrapper*>(member);
+		}
+	}
+	//if not found search on base class scope
 	for (auto member : this->members) {
 		if (member->getName() == memberStr) {
 			return dynamic_cast<PropertyWrapper*>(member);
@@ -375,6 +382,16 @@ void TypeClass::addToProps(PropertyWrapper* prop) {
 	this->props.push_back(prop);
 }
 
+int TypeClass::getAccessMod(string memString) {
+	int size = this->members.size();
+	for (int i = 0; i < size; i++) {
+		MemberWrapper* mem = this->members.at(i);
+		if (mem->getName() == memString)
+			return mem->getAccessModifier();
+	}	
+}
+
+
 //==============
 //WRAPPERS:
 //==============
@@ -398,6 +415,7 @@ int MemberWrapper::getSize() {
 PropertyWrapper::PropertyWrapper(TypeExpression* te, DataMember* dm){
 	this->setTypeExpr(te);
 	this->memberSymbol = dm;
+	this->accessModifier = this->memberSymbol->getAccessModifier();
 }
 
 string PropertyWrapper::getUniqueName() {
@@ -428,6 +446,7 @@ MethodWrapper::MethodWrapper(TypeExpression* type, Method* method) {
 	this->setTypeExpr(type);
 	this->methodSymbol = method;
 	this->returnType = dynamic_cast<TypeFunction*>(type)->getReturnTypeExpression();
+	this->accessModifier = this->methodSymbol->getAccessModifier();
 }
 
 string MethodWrapper::getUniqueName() {

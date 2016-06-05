@@ -5,6 +5,7 @@
 class CodeGneratorVistor;
 class OptimizationVistor;
 class TypeErrorVisitor;
+class CheckerVisitor;
 using namespace std;
 
 class Node {
@@ -17,11 +18,14 @@ public:
 
     virtual TypeExpression* getNodeType();
 
+	virtual void setNodeType(TypeExpression* type);
+
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
 	virtual Node* optmize(OptimizationVistor *);
 
 	virtual void accept(TypeErrorVisitor *);
+	virtual void accept(CheckerVisitor*, TypeExpression*);
 
 	bool hasScopeFrame;
 

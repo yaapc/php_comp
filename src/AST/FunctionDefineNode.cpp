@@ -5,6 +5,7 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 FunctionDefineNode::FunctionDefineNode(Symbol* func, Node* bod, Node* paramsList, int line, int col) {
     functionSym = dynamic_cast<Function*>(func);
@@ -61,4 +62,8 @@ Node* FunctionDefineNode::optmize(OptimizationVistor *optimizationVistor)
 
 void FunctionDefineNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void FunctionDefineNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

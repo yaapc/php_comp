@@ -6,7 +6,7 @@
 #include "../Code Generator/CodeGeneratorVistor.hpp"
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
-
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 ClassMemNode::ClassMemNode(Symbol* memberSym, int line, int col) {
 	this->memberSym = dynamic_cast<DataMember*>(memberSym);
@@ -98,4 +98,8 @@ DataMember* ClassMemNode::getMemSymbol() {
 
 void ClassMemNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
+}
+
+void ClassMemNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
 }

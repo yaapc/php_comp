@@ -8,7 +8,7 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "../TypeSystem/TypesTable.h"
-
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 ParameterNode::ParameterNode(Symbol* parSym,Node *defaultValueNode,bool isDefault, int line, int col) {
 	this->nodeType = nullptr; // VS-2015
@@ -89,5 +89,10 @@ bool ParameterNode::type_checking() {
 void ParameterNode::accept(TypeErrorVisitor* typeVisitor) {
 	typeVisitor->visit(this);
 }
+
+void ParameterNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	visitor->visit(this, context);
+}
+
 
 #endif

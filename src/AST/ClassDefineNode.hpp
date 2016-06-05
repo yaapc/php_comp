@@ -29,7 +29,7 @@ public:
 	virtual Node* optmize(OptimizationVistor *);
 
 	virtual void accept(TypeErrorVisitor *);
-
+	virtual void accept(CheckerVisitor*, TypeExpression*);
 
 private:
 	void extractInfo(); // extracts class node information from class symbol and body nodes.

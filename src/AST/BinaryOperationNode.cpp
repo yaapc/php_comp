@@ -5,6 +5,7 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "../TypeSystem/TypeError.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
+#include "AST_Visitors\CheckerVisitor.hpp"
 
 BinaryOperationNode::BinaryOperationNode(char* op, Node *lft, Node *rgt, int line, int col) : left(lft), right(rgt), op_type(op) {
 	  nodeType = nullptr;
@@ -114,4 +115,8 @@ Node* BinaryOperationNode::optmize(OptimizationVistor *optimizationVistor)
 
  void BinaryOperationNode::accept(TypeErrorVisitor* typeVisitor) {
 	 typeVisitor->visit(this);
+ }
+
+ void BinaryOperationNode::accept(CheckerVisitor* visitor, TypeExpression* context) {
+	 visitor->visit(this, context);
  }
