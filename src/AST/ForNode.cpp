@@ -12,6 +12,7 @@
     condition(condition),
     post_statement(post_statement),
     body(body) {
+	 this->nodeType = nullptr;
 	 this->line = line;
 	 this->col = col; 
  }
@@ -39,8 +40,11 @@
 		 this->post_statement->type_checking();
 		 return true; // pass it this time
 	 }
+	 if (condition)
 	 this->condition->type_checking();
+	 if (initializer)
 	 this->initializer->type_checking();
+	 if (post_statement)
 	 this->post_statement->type_checking();
 	 this->nodeType = TypesTable::getInstance()->getType(VOID_TYPE_ID);
  }
