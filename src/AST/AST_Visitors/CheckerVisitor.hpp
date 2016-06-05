@@ -34,6 +34,6 @@ public:
 
 private:
 	bool doesReturn;
-
+	TypeExpression* classTracker;
 };
 

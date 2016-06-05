@@ -6,7 +6,7 @@
 #include "../../TypeSystem/TypeError.hpp"
 #include "../../TypeSystem/TypeFunction.hpp"
 
-CheckerVisitor::CheckerVisitor() : doesReturn(false) {}
+CheckerVisitor::CheckerVisitor() : doesReturn(false), classTracker(nullptr) {}
 
 void CheckerVisitor::visit(AssignmentNode* assNode, TypeExpression* context) {
 	assNode->lhs->accept(this, context);
@@ -72,6 +72,15 @@ void CheckerVisitor::visit(ScalarNode* node, TypeExpression* context) {
 
 void CheckerVisitor::visit(VariableNode* node, TypeExpression* context) {
 
+	//Static and Dynamic members check:
+	if (dynamic_cast<TypeFunction*>(context) != nullptr && this->classTracker != nullptr) {
+		// we are in class method definition
+		if (dynamic_cast<TypeFunction*>(context)->isStaticMethod && !node->variable->isStatic) {
+			node->setNodeType(new TypeError("Can't access non-statics in static contexts. line:" + to_string(node->line) + ". col:" + to_string(node->col)));
+			return;
+		}
+	}
+
 }
 
 void CheckerVisitor::visit(WhileNode* node, TypeExpression* context) {
@@ -129,9 +138,11 @@ void CheckerVisitor::visit(ParameterNode* node, TypeExpression* context) {
 void CheckerVisitor::visit(ClassDefineNode* node, TypeExpression* context) {
 	//pre visit
 	TypeExpression* newContext = node->getNodeType();
+	this->classTracker = newContext;
 	//visit
 	node->body->accept(this, newContext);
 	//post visit
+	this->classTracker = nullptr;
 }
 
 void CheckerVisitor::visit(ClassMemNode* node, TypeExpression* context) {

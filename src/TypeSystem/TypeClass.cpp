@@ -110,6 +110,7 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 
 			if (methodWrapper->isStatic()){
 				typeClass->staticMembers.push_back(methodWrapper);
+				methodWrapper->getMethodType()->isStaticMethod = true;
 			}else{
 				typeClass->members.push_back(methodWrapper);
 				typeClass->methods.push_back(methodWrapper);

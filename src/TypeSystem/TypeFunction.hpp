@@ -70,7 +70,7 @@ public:
 	vector<Parameter*> paramsSymbols;
 
 	bool isConstructorFT;// is constructor Function Type?
-
+	bool isStaticMethod;
 private:
 	TypeFunction(vector<string> functionSign, string functionName, string uniqueName);
 
