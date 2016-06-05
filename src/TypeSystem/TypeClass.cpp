@@ -477,3 +477,7 @@ bool MethodWrapper::isStatic() {
 bool MethodWrapper::isDefaultContructor() {
 	return this->methodSymbol->isDefaultConstr;
 }
+
+TypeExpression* MethodWrapper::getReturnType() {
+	return this->returnType;
+}

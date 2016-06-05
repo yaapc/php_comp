@@ -56,7 +56,10 @@ bool StaticCallNode::type_checking() {
 		this->nodeType = new TypeError("Either " + this->className + " or " + this->memberName + " is undefined, " + string(" line:") + to_string(this->line) + string(",col:") + to_string(this->col));
 		return false;
 	}
-	this->nodeType = this->memberWrapper->getTypeExpr();
+	if (this->isMethodCall)
+		this->nodeType = dynamic_cast<MethodWrapper*>(this->memberWrapper)->getReturnType();
+	else
+		this->nodeType = this->memberWrapper->getTypeExpr();
 	return true;
 }
 

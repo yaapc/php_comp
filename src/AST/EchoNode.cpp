@@ -24,6 +24,7 @@ bool EchoNode::type_checking() {
 		return true; // pass it this time
 	}
 
+	this->expression->type_checking();
 	TypeExpression* exprTE = this->expression->getNodeType();
 	if (exprTE != nullptr && dynamic_cast<TypeError*>(exprTE) != nullptr)
 		this->nodeType = TypesTable::getInstance()->getType(VOID_TYPE_ID);

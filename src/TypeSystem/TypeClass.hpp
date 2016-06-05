@@ -172,6 +172,8 @@ public:
 
 	TypeFunction* getMethodType();
 
+	TypeExpression* getReturnType();
+
 	bool isStatic();
 };
 
