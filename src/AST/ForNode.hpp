@@ -13,6 +13,8 @@ public:
 
 	virtual void generate_code(CodeGneratorVistor *codeGneratorVistor);
 
+	bool type_checking();
+
 	virtual Node* optmize(OptimizationVistor *);
 
 	virtual void accept(TypeErrorVisitor *);
