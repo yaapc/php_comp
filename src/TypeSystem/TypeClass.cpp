@@ -165,7 +165,7 @@ TypeClass* TypeClass::buildObjectClass() {
 
 
 TypeExpression* TypeClass::opEqual(int secondTypeId) {
-	if (secondTypeId == CLASS_TYPE_ID)
+	if (secondTypeId > 7)
 		return TypeBoolean::getInstance();
 	return new TypeError(TypeSystemHelper::getTypeName(secondTypeId) + " Type doesn't support == operation");
 }

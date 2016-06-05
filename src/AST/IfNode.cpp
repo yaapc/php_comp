@@ -46,9 +46,11 @@ Node* IfNode::optmize(OptimizationVistor *optimizationVistor)
 	  if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
 		  //this for second passes, if the current node is free of TypeError no need to re type_check it
 		  this->body->type_checking();
+		  this->condition->type_checking();
 		  return true; // pass it this time
 	  }
 
+	  this->condition->type_checking();
 	  if (this->condition->getNodeType()->getTypeId() == BOOLEAN_TYPE_ID) {
 		  this->nodeType = TypesTable::getInstance()->getType(VOID_TYPE_ID);
 		  this->body->type_checking();

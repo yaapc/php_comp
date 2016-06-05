@@ -71,6 +71,8 @@ void CheckerVisitor::visit(ScalarNode* node, TypeExpression* context) {
 }
 
 void CheckerVisitor::visit(VariableNode* node, TypeExpression* context) {
+	if(dynamic_cast<TypeError*>(node->getNodeType()) != nullptr)
+		return;
 
 	//Static and Dynamic members check:
 	if (dynamic_cast<TypeFunction*>(context) != nullptr && this->classTracker != nullptr) {
@@ -81,10 +83,20 @@ void CheckerVisitor::visit(VariableNode* node, TypeExpression* context) {
 				return;                          // we have the variable in the params of the function
 		}
 
+		MemberWrapper* staticMem = TypeClass::getStaticProperty(dynamic_cast<TypeClass*>(this->classTracker)->getName(), node->variableName);
+	    if(staticMem == nullptr){
+			PropertyWrapper* propMem = dynamic_cast<TypeClass*>(this->classTracker)->lookupMembers(node->variableName);
+			if(propMem != nullptr){
+				node->setNodeType(new TypeError("Can't access non-statics in static contexts. line:" + to_string(node->line) + ", col:" + to_string(node->col)));
+				return;
+			}else 
+				return;
+		}
+		/*
 		if (dynamic_cast<TypeFunction*>(context)->isStaticMethod && !node->variable->isStatic) {
 			node->setNodeType(new TypeError("Can't access non-statics in static contexts. line:" + to_string(node->line) + ". col:" + to_string(node->col)));
 			return;
-		}
+		}*/
 	}
 
 }
