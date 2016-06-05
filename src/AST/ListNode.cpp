@@ -6,7 +6,7 @@
 #include "../Code Generator/OptimizationVistor.hpp"
 #include "AST_Visitors\TypeErrorVisitor.hpp"
 #include "AST_Visitors\CheckerVisitor.hpp"
-
+#include "../TypeSystem/TypesTable.h"
 
 ListNode::ListNode()
 {
@@ -30,9 +30,10 @@ ListNode* ListNode::add_node(Node* node) {
     for (auto node : nodes) {
       //result = result &&  node->type_checking();
 	  //TODO: remove the condition when all nodes has implemented type_check()
-	  if(node != nullptr && dynamic_cast<TypeError*>(node->getNodeType()))
+	  if(node != nullptr && dynamic_cast<TypeError*>(node->getNodeType()) != nullptr)
 			node->type_checking();
     }
+	this->nodeType = TypesTable::getInstance()->getType(VOID_TYPE_ID);
     return result;
   }
 

@@ -7,6 +7,7 @@
 #include "Code Generator\CodeGeneratorVistor.hpp"
 #include "Code Generator\OptimizationVistor.hpp"
 #include "AST/AST_Visitors/TypeErrorVisitor.hpp"
+#include "AST\AST_Visitors\CheckerVisitor.hpp"
 #include "TypeSystem\TypesTable.h"
 #include <iostream>
 #include <fstream>
@@ -25,6 +26,7 @@ extern vector<string> requires; // a vector of require_once strings
 CodeGneratorVistor codeGeneratorVistor;
 OptimizationVistor optimizationVistor;
 TypeErrorVisitor errorsVisitor;
+CheckerVisitor checkerVisitor;
 
 void print_ast(Node *root, std::ostream &os,string name);
 void print_errors_vector(vector<TypeExpression*>);
@@ -92,6 +94,8 @@ int main(int argc, char** argv) {
 	TypeClass::tryReDefine();
 	TypeFunction::tryReDefine();
 	tree->type_checking(); cout << "Second TypeChecking Pass\n";
+
+	checkerVisitor.visit(tree, nullptr);
 
 	errorsVisitor.visit(tree);
 	if (errorsVisitor.errQ.size() > 0) {
