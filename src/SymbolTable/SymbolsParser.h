@@ -43,7 +43,8 @@ public :
 
 
 	/* this method finishes the class declaration and adds additional information about the class symbol */
-	Symbol* finishClassInsertion(char* inhertedFrom, Class* classSymbol, Scope* scope);
+	Symbol* finishClassInsertion(Class* classSymbol);
+	Symbol* startClassInsertion(char* inhertedFrom, Class* classSymbol, Scope* scope);
 
 	/* this method finishes data member declarations */
 	Symbol* finishDataMembersDeclaration(DataMember* dataMem, int *modifiers, int modCount, char* type);

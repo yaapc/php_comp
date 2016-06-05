@@ -184,20 +184,11 @@ Scope* SymbolsParser::insertParams(Symbol* paramSymbol,Scope* scope){
 	return scope;
 }
 
-Symbol* SymbolsParser::finishClassInsertion(char* inhertedFrom, Class* classSymbol, Scope* scope){
 
+Symbol* SymbolsParser::startClassInsertion(char* inhertedFrom, Class* classSymbol, Scope* scope) {
 	//if there is extends_from add it to @Class.inhertedFrom
 	if (inhertedFrom != nullptr)
 		classSymbol->setInhertedFrom(inhertedFrom);
-
-	//** DEFAULT CONSTRUCTOR CHECKING:
-	if (scope->getSymbolTable()->lookup(classSymbol->getName()) == nullptr) { // look up  in the class' scope for a constructor i.e look for any symbol with the same name of the class
-		Method* constructor = new Method(classSymbol->getName(), nullptr, classSymbol->getColNo(), classSymbol->getLineNo(), nullptr, PUBLIC_ACCESS , DEFAULT_STORAGE);
-		constructor->isConstructor = true;//TODO : encapsualte in a constructor
-		constructor->isDefaultConstr = true;
-		insertSymbol(constructor, scope);
-		classSymbol->addToMethodMembers(constructor);
-	}
 
 	//** "THIS" Symbol Checking:
 	if (scope->getSymbolTable()->lookup("$this") == nullptr) { // there is no symbol called "this"
@@ -220,6 +211,21 @@ Symbol* SymbolsParser::finishClassInsertion(char* inhertedFrom, Class* classSymb
 
 	classSymbol->setBodyScope(scope);
 	scope->setOwnerSymbol(classSymbol);
+    
+	return classSymbol;
+}
+
+Symbol* SymbolsParser::finishClassInsertion(Class* classSymbol){
+
+	
+	//** DEFAULT CONSTRUCTOR CHECKING:
+	if (classSymbol->getBodyScope()->getSymbolTable()->lookup(classSymbol->getName()) == nullptr) { // look up  in the class' scope for a constructor i.e look for any symbol with the same name of the class
+		Method* constructor = new Method(classSymbol->getName(), nullptr, classSymbol->getColNo(), classSymbol->getLineNo(), nullptr, PUBLIC_ACCESS , DEFAULT_STORAGE);
+		constructor->isConstructor = true;//TODO : encapsualte in a constructor
+		constructor->isDefaultConstr = true;
+		insertSymbol(constructor, classSymbol->getBodyScope());
+		classSymbol->addToMethodMembers(constructor);
+	}
 
 	return classSymbol;
 }

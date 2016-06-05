@@ -532,13 +532,14 @@ function_header:
 ;
 
 class_declaration_statement:
-	class_entry extends_from implements_list open_par class_statement_list close_par
+	 class_entry class_statement_list close_par
 		{
 			pl.log("class_declaration_statement");
-			symbolsParser->finishClassInsertion($<r.str>2, dynamic_cast<Class*>($<r.symbol>1), $<r.scope>4);
+			
 			$<r.symbol>$ = symbolsParser->getCurrentClassSym();
-			$<r.node>$ = new ClassDefineNode($<r.symbol>$, $<r.node>5, $<r.line_no>1, $<r.col_no>1);
+			$<r.node>$ = new ClassDefineNode($<r.symbol>$, $<r.node>2, $<r.line_no>1, $<r.col_no>1);
 			symbolsParser->popFromClassesStack();
+			symbolsParser->finishClassInsertion(dynamic_cast<Class*>($<r.symbol>$));
 		}
 	| T_INTERFACE T_STRING interface_extends_list open_par class_statement_list close_par {pl.log("interface:", 0); pl.log($<r.str>2);}
 	| class_entry_without_name extends_from implements_list open_par class_statement_list close_par
@@ -553,99 +554,110 @@ class_declaration_statement:
 ;
 
 class_entry:
-	  T_CLASS T_STRING
+	  T_CLASS T_STRING extends_from implements_list open_par
 		{
 			//starting class declaration
-			pl.log("class_entry") ;
+			pl.log("class_entry ",0) ; pl.log($<r.str>2);
 			// TODO: encapsulate
 			Class* classSym = new Class($<r.str>2, $<r.col_no>1, $<r.line_no>1, false,false);
-			$<r.symbol>$ = symbolsParser->insertSymbol(classSym);
+			$<r.symbol>$ = symbolsParser->insertSymbol(classSym, dynamic_cast<Scope*>($<r.scope>5)->getParentScope());
 			//symbolsParser->setCurrentClassSym(classSym);
 			symbolsParser->pushToClassesStack(classSym);
+			symbolsParser->startClassInsertion($<r.str>3,dynamic_cast<Class*>($<r.symbol>$),$<r.scope>5);
+			
 		}
-	| T_ABSTRACT T_CLASS T_STRING
+	| T_ABSTRACT T_CLASS T_STRING extends_from implements_list open_par 
 		{
 			pl.log("class_entry") ;
 			Class* classSym = new Class($<r.str>3, $<r.col_no>1, $<r.line_no>1, false,true );
-			$<r.symbol>$ = symbolsParser->insertSymbol(classSym);
+			$<r.symbol>$ = symbolsParser->insertSymbol(classSym, dynamic_cast<Scope*>($<r.scope>6)->getParentScope());
 //			symbolsParser->setCurrentClassSym(classSym);
 			symbolsParser->pushToClassesStack(classSym);
+			symbolsParser->startClassInsertion($<r.str>4, dynamic_cast<Class*>($<r.symbol>$), $<r.scope>6);
 		}
-	| T_FINAL T_CLASS T_STRING
+	| T_FINAL T_CLASS T_STRING extends_from implements_list open_par 
 		{
 			pl.log("class_entry") ;
 			Class* classSym = new Class($<r.str>3, $<r.col_no>1, $<r.line_no>1, true,false);
-			$<r.symbol>$ = symbolsParser->insertSymbol(classSym);
+			$<r.symbol>$ = symbolsParser->insertSymbol(classSym, dynamic_cast<Scope*>($<r.scope>6)->getParentScope());
 			//symbolsParser->setCurrentClassSym(classSym);
 			symbolsParser->pushToClassesStack(classSym);
+			symbolsParser->startClassInsertion($<r.str>4, dynamic_cast<Class*>($<r.symbol>$), $<r.scope>6);
 		}
-	| T_ABSTRACT T_FINAL T_CLASS T_STRING
+	| T_ABSTRACT T_FINAL T_CLASS T_STRING extends_from implements_list open_par
 		{
 			pl.log("class_entry") ;
 			/* ERROR RULE: abstract final class*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Abstract final class not allowed","");
 			Class* classSym = new Class($<r.str>4, $<r.col_no>1, $<r.line_no>1, false,false);
-			$<r.symbol>$ = symbolsParser->insertSymbol(classSym); // assuming not final and not abstract
+			$<r.symbol>$ = symbolsParser->insertSymbol(classSym, dynamic_cast<Scope*>($<r.scope>7)->getParentScope()); // assuming not final and not abstract
 			symbolsParser->pushToClassesStack(classSym);
+			symbolsParser->startClassInsertion($<r.str>5, dynamic_cast<Class*>($<r.symbol>$), $<r.scope>7);
 		}
-	| T_FINAL T_ABSTRACT T_CLASS T_STRING
+	| T_FINAL T_ABSTRACT T_CLASS T_STRING extends_from implements_list open_par
 		{
 			pl.log("class_entry") ;
 			/* ERROR RULE: final abctract class*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Final abstract class not allowed","");
 			Class* classSym = new Class($<r.str>4, $<r.col_no>1, $<r.line_no>1, false,false);
-			$<r.symbol>$ = symbolsParser->insertSymbol(classSym); // assuming not final and not abstract
+			$<r.symbol>$ = symbolsParser->insertSymbol(classSym, dynamic_cast<Scope*>($<r.scope>7)->getParentScope()); // assuming not final and not abstract
 			symbolsParser->pushToClassesStack(classSym);
+			symbolsParser->startClassInsertion($<r.str>5, dynamic_cast<Class*>($<r.symbol>$), $<r.scope>7);
 		}
 ;
 
 
 class_entry_without_name:
-	 T_CLASS
+	 T_CLASS extends_from implements_list open_par
 		{
 			//starting class declaration
 			pl.log("class_entry_without_name") ;
 			// TODO: encapsulate
 			Class* classSym = new Class("ERR_CLASS",$<r.col_no>1, $<r.line_no>1, false,false);
-			$<r.symbol>$ = symbolsParser->insertSymbol(classSym);
+			$<r.symbol>$ = symbolsParser->insertSymbol(classSym, dynamic_cast<Scope*>($<r.scope>4)->getParentScope());
 			//symbolsParser->setCurrentClassSym(classSym);
 			symbolsParser->pushToClassesStack(classSym);
+			symbolsParser->startClassInsertion($<r.str>2, dynamic_cast<Class*>($<r.symbol>$), $<r.scope>4);
 		}
-	| T_ABSTRACT T_CLASS
+	| T_ABSTRACT T_CLASS extends_from implements_list open_par
 		{
 			pl.log("class_entry_without_name") ;
 			Class* classSym = new Class("ERR_CLASS", $<r.col_no>1, $<r.line_no>1, false,true );
-			$<r.symbol>$ = symbolsParser->insertSymbol(classSym);
+			$<r.symbol>$ = symbolsParser->insertSymbol(classSym, dynamic_cast<Scope*>($<r.scope>5)->getParentScope());
 			//symbolsParser->setCurrentClassSym(classSym);
 			symbolsParser->pushToClassesStack(classSym);
+			symbolsParser->startClassInsertion($<r.str>3, dynamic_cast<Class*>($<r.symbol>$), $<r.scope>5);
 		}
-	| T_FINAL T_CLASS
+	| T_FINAL T_CLASS extends_from implements_list open_par
 		{
 			pl.log("class_entry_without_name") ;
 			Class* classSym = new Class("ERR_CLASS", $<r.col_no>1, $<r.line_no>1, true,false);
-			$<r.symbol>$ = symbolsParser->insertSymbol(classSym);
+			$<r.symbol>$ = symbolsParser->insertSymbol(classSym, dynamic_cast<Scope*>($<r.scope>5)->getParentScope());
 			//symbolsParser->setCurrentClassSym(classSym);
 			symbolsParser->pushToClassesStack(classSym);
+			symbolsParser->startClassInsertion($<r.str>3, dynamic_cast<Class*>($<r.symbol>$), $<r.scope>5);
 		}
-	| T_ABSTRACT T_FINAL T_CLASS
+	| T_ABSTRACT T_FINAL T_CLASS extends_from implements_list open_par
 		{
 			pl.log("class_entry_without_name") ;
 			/* ERROR RULE: abstract final class*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Abstract final class not allowed","");
 			Class* classSym = new Class("ERR_CLASS", $<r.col_no>1, $<r.line_no>1, false,false);
-			$<r.symbol>$ = symbolsParser->insertSymbol(classSym); // assuming not final and not abstract
+			$<r.symbol>$ = symbolsParser->insertSymbol(classSym, dynamic_cast<Scope*>($<r.scope>6)->getParentScope()); // assuming not final and not abstract
 			//symbolsParser->setCurrentClassSym(classSym);
 			symbolsParser->pushToClassesStack(classSym);
+			symbolsParser->startClassInsertion($<r.str>4, dynamic_cast<Class*>($<r.symbol>$), $<r.scope>6);
 		}
-	| T_FINAL T_ABSTRACT	T_CLASS
+	| T_FINAL T_ABSTRACT	T_CLASS extends_from implements_list open_par
 		{
 			pl.log("class_entry_without_name") ;
 			/* ERROR RULE: final abctract class*/
 			errorRec.errQ->enqueue($<r.line_no>1,$<r.col_no>1,"Final abstract class not allowed","");
 			Class* classSym = new Class("ERR_CLASS", $<r.col_no>1, $<r.line_no>1, false,false);
-			$<r.symbol>$ = symbolsParser->insertSymbol(classSym); // assuming not final and not abstract
+			$<r.symbol>$ = symbolsParser->insertSymbol(classSym, dynamic_cast<Scope*>($<r.scope>6)->getParentScope()); // assuming not final and not abstract
 			//symbolsParser->setCurrentClassSym(classSym);
 			symbolsParser->pushToClassesStack(classSym);
+			symbolsParser->startClassInsertion($<r.str>4, dynamic_cast<Class*>($<r.symbol>$), $<r.scope>6);
 		}
 ;
 
