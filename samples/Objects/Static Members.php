@@ -13,6 +13,14 @@
         $y *= 2.0;
         $z = $z + "@";
      }
+	 
+	public static function echoStatic() : void {
+		echo "Static Members:";
+		echo $x;
+		echo $y;
+		echo $z;
+		
+	}
   }
 
     A $a;
@@ -28,6 +36,8 @@
     echo A::$y;
     echo A::$z;
 
+	echo "================================";
 
-    echo $a->a;
+	A::echoStatic();
+    
 ?>
