@@ -91,7 +91,22 @@ TypeExpression* TypeClass::buildClass(ClassDefineNode* classNode, Class* classSy
 				dynamic_cast<TypeFunction*>(method->getNodeType())->setReturnTypeExpression(typeClass);
 			}
 
+
+
 			MethodWrapper* methodWrapper = new MethodWrapper(method->getNodeType(), method->methodSym);
+
+
+			//a method may return the current class being built
+			//here we solve this scenario:
+			//if not a contructor (with null returnType) and return type equals current class
+			if (method->methodSym->getReturnType() != nullptr && strcmp(method->methodSym->getReturnType(), typeClass->getName().c_str()) == 0) {
+				methodWrapper->setReturnType(typeClass);
+				//use specific function type builder for this job
+				TypeExpression* methodType = TypeFunction::buildMethod(method, method->methodSym, typeClass);
+				method->setNodeType(methodType);
+				methodWrapper->setTypeExpr(methodType);
+				TypeClass::errorTypeClasses.push_back(classNode);
+			}
 
 			if (methodWrapper->isStatic()){
 				typeClass->staticMembers.push_back(methodWrapper);
@@ -445,7 +460,11 @@ bool PropertyWrapper::isConst() {
 MethodWrapper::MethodWrapper(TypeExpression* type, Method* method) {
 	this->setTypeExpr(type);
 	this->methodSymbol = method;
-	this->returnType = dynamic_cast<TypeFunction*>(type)->getReturnTypeExpression();
+	if (dynamic_cast<TypeError*>(type) != nullptr) {
+		//we have an error return type, not a function type
+		this->returnType = type;
+	}else
+		this->returnType = dynamic_cast<TypeFunction*>(type)->getReturnTypeExpression();
 	this->accessModifier = this->methodSymbol->getAccessModifier();
 }
 
@@ -480,4 +499,8 @@ bool MethodWrapper::isDefaultContructor() {
 
 TypeExpression* MethodWrapper::getReturnType() {
 	return this->returnType;
+}
+
+void MethodWrapper::setReturnType(TypeExpression* te) {
+	this->returnType = te;
 }

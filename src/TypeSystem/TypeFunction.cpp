@@ -3,6 +3,7 @@
 #include "TypeFunction.hpp"
 #include "TypesTable.h"
 #include "TypeError.hpp"
+#include "TypeClass.hpp"
 #include <string>
 #include "../AST/FunctionCallNode.hpp"
 #include "../AST/ParameterNode.hpp"
@@ -69,6 +70,39 @@ TypeExpression* TypeFunction::buildMethod(ClassMethodNode* methodNode, Method* m
 	//check if a returnType exists in the symbol (might be a constructor)
 	if (methodSymbol->getReturnType() != nullptr) {
 		typeFunction->returnType = TypesTable::getInstance()->getType(methodSymbol->getReturnType());
+
+		//if return type not found, return a TypeError
+		TypeError* errorReturnType = dynamic_cast<TypeError*>(typeFunction->returnType);
+		if (errorReturnType != nullptr)
+			return new TypeError("return type: " + string(methodSymbol->getReturnType()) + " is undefied.");
+	}
+
+	//everything is ok
+	//now let's resize according to the new params
+	typeFunction->resize();
+
+	return typeFunction;
+}
+
+TypeExpression* TypeFunction::buildMethod(ClassMethodNode* methodNode, Method* methodSymbol, TypeExpression* returnType) {
+
+	//let's build the FunctionType:
+	TypeFunction* typeFunction = new TypeFunction(methodSymbol->functionSignatures, methodSymbol->getName()
+		, methodSymbol->getUniqueName());
+
+	//extract params TypeExpressions and add them to @paramsTE
+	for (auto &paramNode : methodNode->paramsList->nodes) {
+		typeFunction->addToParams(paramNode->getNodeType());
+	}
+
+	//extract return type: 
+	//check if a returnType exists in the symbol (might be a constructor)
+	if (methodSymbol->getReturnType() != nullptr) {
+		typeFunction->returnType = TypesTable::getInstance()->getType(methodSymbol->getReturnType());
+
+		if (strcmp(methodSymbol->getReturnType(), dynamic_cast<TypeClass*>(returnType)->getName().c_str()) == 0) {
+			typeFunction->returnType = returnType;
+		}
 
 		//if return type not found, return a TypeError
 		TypeError* errorReturnType = dynamic_cast<TypeError*>(typeFunction->returnType);

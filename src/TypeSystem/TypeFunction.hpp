@@ -32,6 +32,8 @@ public:
 	//used to build default constructors in TypeClass
 	static TypeExpression* buildConstructor(Method* methodSym);
 
+	static TypeExpression* buildMethod(ClassMethodNode*, Method*, TypeExpression*);
+
 	/*
 	 * This method is responsable for looking for a given signature of @FunctionType in the @functionInstances.
 	 * if none is found, it will return a TypeError as not defined.
