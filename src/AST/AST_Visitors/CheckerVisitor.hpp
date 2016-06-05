@@ -29,5 +29,9 @@ public:
 	virtual void visit(ContinueNode 	*continueNode, TypeExpression* context);
 	virtual void visit(StaticCallNode 	*staticCallNode, TypeExpression* context);
 
+
+private:
+	bool doesReturn = false;
+
 };
 

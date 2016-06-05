@@ -38,7 +38,8 @@ Node* ReturnNode::optmize(OptimizationVistor *optimizationVistor)
 bool ReturnNode::type_checking() {
 	if (this->nodeType != nullptr && dynamic_cast<TypeError*>(this->nodeType) == nullptr) {
 		//this for second passes, if the current node is free of TypeError no need to re type_check it
-		this->returned_node->type_checking();
+		if(returned_node != nullptr) // not a void return
+			this->returned_node->type_checking();
 		return true; // pass it this time
 	}
 
