@@ -4,7 +4,7 @@
 #include "../all.hpp"
 #include "../../definitions.h"
 #include "../../TypeSystem/TypeError.hpp"
-
+#include "../../TypeSystem/TypeFunction.hpp"
 
 void CheckerVisitor::visit(AssignmentNode* assNode, TypeExpression* context) {
 	assNode->lhs->accept(this, context);
@@ -44,7 +44,9 @@ void CheckerVisitor::visit(ListNode* listNode, TypeExpression* context) {
 }
 
 void CheckerVisitor::visit(ReturnNode* node, TypeExpression* context) {
-	node->returned_node->accept(this, context);
+	if (!node->returned_node->getNodeType()->equivelantTo(dynamic_cast<TypeFunction*>(context)->getReturnTypeExpression()->getTypeId()))
+		node->setNodeType(new TypeError("return value type doesn't match function type. line:" + to_string(node->line) + ". col:" + to_string(node->col)));
+	
 }
 
 void CheckerVisitor::visit(ScalarNode* node, TypeExpression* context) {
@@ -64,7 +66,8 @@ void CheckerVisitor::visit(FunctionCallNode* node, TypeExpression* context) {
 }
 
 void CheckerVisitor::visit(FunctionDefineNode* node, TypeExpression* context) {
-
+	//return type checking:
+	node->bodySts->accept(this, node->getNodeType());
 }
 
 void CheckerVisitor::visit(ParameterNode* node, TypeExpression* context) {
@@ -84,7 +87,7 @@ void CheckerVisitor::visit(ClassMemNode* node, TypeExpression* context) {
 }
 
 void CheckerVisitor::visit(ClassMethodNode* node, TypeExpression* context) {
-	node->bodySts->accept(this, context);
+	node->bodySts->accept(this, node->getNodeType());
 }
 
 void CheckerVisitor::visit(ClassCallNode* node, TypeExpression* context) {
