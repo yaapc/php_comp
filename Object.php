@@ -10,11 +10,7 @@ class Object {
   }
   
     public function equal(Object $o) : bool {
-    if ($this == $o){
-      return true;
-    }else{
-      return false;
-    }
+    return ($this == $o);
   }
 }
 

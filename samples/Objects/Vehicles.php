@@ -2,7 +2,7 @@
   class Vehicle{
   
      function  Vehicle(){}
-     
+          
       function move() : void {
         echo "Vehicles can move !!";
       }
@@ -13,8 +13,11 @@
       function  MotorBike(){}
       
       function move() : void {
-        echo $this;
         echo "MotorBike can move !!";
+      }
+      
+      function toString() : string {
+        return "MotorBike";
       }
   }
   
@@ -23,18 +26,24 @@
       function  Track(){}
       
       function move() : void {
-        echo $this;
         echo "Track can move !!";
      }
+     
+       function toString() : string {
+        return "Track";
+      }
    }
   
    class Bicycle extends Vehicle{
    
       function  Bicycle(){}
       function move() : void {
-        echo $this->toString();
         echo "Bicycle can move !!";
      }
+     
+       function toString() : string {
+        return "Bicycle";
+      }
   }
   
   
@@ -59,6 +68,7 @@
     }
     
     $v->move();
+    echo $v;
     $i+=1;
     echo "------------------------------------------";
   }
