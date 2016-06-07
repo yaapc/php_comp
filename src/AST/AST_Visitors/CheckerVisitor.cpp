@@ -74,7 +74,17 @@ void CheckerVisitor::visit(VariableNode* node, TypeExpression* context) {
 	if(dynamic_cast<TypeError*>(node->getNodeType()) != nullptr)
 		return;
 
+	if(context == nullptr) // variable in root scope
+		return;
+
+	if(dynamic_cast<TypeClass*>(context) != nullptr)
+		return;
+
+
 	//Static and Dynamic members check:
+	if(!dynamic_cast<TypeFunction*>(context)->isStaticMethod)
+		return;
+
 	if (dynamic_cast<TypeFunction*>(context) != nullptr && this->classTracker != nullptr) {
 		// we are in class method definition
 		TypeFunction* typeFunction = dynamic_cast<TypeFunction*>(context);
