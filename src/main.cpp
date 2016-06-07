@@ -33,6 +33,8 @@ void print_errors_vector(vector<TypeExpression*>);
 
 bool GC				= 0;
 bool withComments	= 1;
+bool HTML			= 1;
+
 
 int main(int argc, char** argv) {
 	initSymbolsParser();
@@ -63,11 +65,7 @@ int main(int argc, char** argv) {
 		yyparse();
 	}
 
-	//Draw Complate AST
-	ofstream ast_dot("ast.dot");
-	print_ast(tree, ast_dot,"Complate");
-	ast_dot.close();
-	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
+
 	
 	//Draw Symbol Table
 	ofstream dot_file("symbol_table.dot");
@@ -105,6 +103,12 @@ int main(int argc, char** argv) {
 	}	
 
 
+	//Draw Complate AST
+	ofstream ast_dot("ast.dot");
+	print_ast(tree, ast_dot,"Complate");
+	ast_dot.close();
+	ShellExecute(NULL, NULL, "dot.exe", "-Tsvg ast.dot -o ast.svg", NULL, SW_HIDE);
+
 	//Optimize AST
 	optimizationVistor.optmize(tree);
 
@@ -118,8 +122,11 @@ int main(int argc, char** argv) {
 	codeGeneratorVistor.generate(tree);
 
 
-	system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");
-
+	if (HTML){
+		system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm > output_file.html");
+	}else{
+		system("java -jar ./src/\"Code Generator\"/Mars.jar ./src/\"Code Generator\"/AssemblyCode.asm");
+	}
 
 
 	cout << "\n\ncompilation done" << endl;
