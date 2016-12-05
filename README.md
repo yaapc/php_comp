@@ -20,7 +20,7 @@ The first release of the project contains the following:
 * **src/DependencyGraph**: the structure of Dependency graph used in Syntactic phase.
 
 # Versions
-- The current project state is last version developed at the end of the second semester.
+- The current project state is the last version developed at the end of the second semester.
 - [The (60 Marks) version](https://github.com/yaapc/php_comp/archive/2.0.zip(Download))
 - [The first semester version](https://github.com/yaapc/php_comp/archive/v1.0.zip(Download))
 
