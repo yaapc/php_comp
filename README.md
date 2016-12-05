@@ -24,8 +24,13 @@ The first release of the project contains the following:
 - [The (60 Marks) version](https://github.com/yaapc/php_comp/archive/2.0.zip(Download))
 - [The first semester version](https://github.com/yaapc/php_comp/archive/v1.0.zip(Download))
 
+# Wiki
+check the [Wiki](https://github.com/yaapc/php_comp/wiki) for some usefull stuff.
+
 # Authors
 * [Mohammed Ghanem](https://github.com/ghanem-mhd)
 * [Mohammed Alow](https://github.com/m-alow)
 * [M. Bassel Shmali](https://github.com/bass3l)
 
+# License
+GPL 2.0 - all books and articles are under copyrights of thier respectful owners.
