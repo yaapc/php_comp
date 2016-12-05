@@ -11,12 +11,18 @@ The final release of the project has the following structure:
 * **src/SymbolTable**: an implementation for **Symbol Table**.
 * **src/TypeSystem**: an implementation for the **Type System**.
 * **src/DependencyGraph**: the structure of Dependency graph used in Syntactic-Semantic phases.
+* **/samples**: the samples used in the demo of the project.
 
 The first release of the project contains the following:
 * **src/lexer.l**: a lexer file which defines **php tokens**.
 * **src/grammar.y**: a yacc/grammar file which defines **php syntax**, **Symbol Table integration** and simple **Error Recovery rules**.
 * **src/SymbolTable**: an implementation for **Symbol Table**.
 * **src/DependencyGraph**: the structure of Dependency graph used in Syntactic phase.
+
+# Versions
+- The current project state is last version developed at the end of the second semester.
+- [The (60 Marks) version](https://github.com/yaapc/php_comp/archive/2.0.zip(Download))
+- [The first semester version](https://github.com/yaapc/php_comp/archive/v1.0.zip(Download))
 
 # Authors
 * [Mohammed Ghanem](https://github.com/ghanem-mhd)
