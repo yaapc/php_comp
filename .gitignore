@@ -13,8 +13,6 @@ grammar.output
 *.asm
 Debug/
 
-Docs/
-
 Release/
 
 libiconv2.dll
